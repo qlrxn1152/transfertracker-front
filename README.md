@@ -29,7 +29,7 @@ BACKEND_URL=https://transfertracker-back-v1-production.up.railway.app node serve
 
 프록시는 `GET /api/transfers/team/{teamId}`도 전달하며 쿼리 파라미터를 유지합니다. 현재 화면에서는 팀별 이적 API를 호출하지 않으므로, 이 경로 추가만으로 새로운 팀별 이적 UI가 생기지는 않습니다.
 
-실제 데이터 모드는 백엔드의 `GET /api/transfers?page=0`, `GET /api/teams`, `GET /api/teams/league?leagueCode=EPL` 등 5대 리그별 조회, `GET /api/players?page=0`, `GET /api/team/test/{teamId}`, `GET /api/player/{playerId}`, `GET /api/player/transfer/{playerId}`를 호출합니다. 같은 로컬 서버가 API를 중계하므로 백엔드의 CORS 설정을 바꿀 필요가 없습니다. 백엔드가 꺼져 있거나 DB가 비어 있을 때는 상단의 **샘플 보기**를 눌러 레이아웃만 확인할 수 있습니다. 샘플 데이터는 실제 응답과 구분되어 표시됩니다.
+실제 데이터 모드는 백엔드의 `GET /api/transfers?page=0&keyWord=`, `GET /api/teams`, `GET /api/teams/league?leagueCode=EPL` 등 5대 리그별 조회, `GET /api/players?page=0&keyWord=`, `GET /api/team/test/{teamId}`, `GET /api/player/{playerId}`, `GET /api/player/transfer/{playerId}`를 호출합니다. 같은 로컬 서버가 API를 중계하므로 백엔드의 CORS 설정을 바꿀 필요가 없습니다. 백엔드가 꺼져 있거나 DB가 비어 있을 때는 상단의 **샘플 보기**를 눌러 레이아웃만 확인할 수 있습니다. 샘플 데이터는 실제 응답과 구분되어 표시됩니다.
 
 **기자 소식** 탭은 백엔드 API `GET /api/transfer/posts/{source}`로 `FABRIZIO_ROMANO`, `DAVID_ORNSTEIN`, `MATTEO_MORETTO`를 각각 조회합니다. 응답의 `posts` 배열에는 `postId`, `externalPostId`, `content`, `source`, `postCreatedAt`, 이적 관련 여부가 포함됩니다. 세 기자를 합쳐 최신순으로 보거나 기자별로 필터링하고 본문을 검색할 수 있습니다. 게시물 ID가 유효하면 X의 원문 링크가 표시됩니다. 새로고침은 백엔드에 **이미 저장된 게시물**을 다시 읽으며 외부 X 동기화를 실행하지 않습니다. 기자 한 명의 조회가 실패해도 다른 기자의 게시물은 표시됩니다. 샘플 게시물은 실제 기자의 발언이 아닙니다.
 
@@ -55,9 +55,9 @@ BACKEND_URL=https://transfertracker-back-v1-production.up.railway.app node serve
 
 ## 목록 페이징
 
-이적 목록은 `/api/transfers?page={page}`로 20건씩 최신순, 선수 목록은 `/api/players?page={page}`로 50명씩 이름순 조회합니다. API 페이지는 0부터 시작하고 화면에는 1부터 표시합니다. 응답은 기존 배열과 `hasNext`, `hasPrevious` boolean을 포함해야 합니다. 전체 건수/전체 페이지 수는 제공되지 않으므로 현재 페이지의 건수만 표시합니다. 각 목록의 페이지를 독립적으로 유지하며 새로고침은 현재 페이지를 다시 조회합니다. 샘플 모드 전환 시 첫 페이지로 초기화합니다.
+이적 목록은 `/api/transfers?page={page}&keyWord={name}`로 20건씩 최신순, 선수 목록은 `/api/players?page={page}&keyWord={name}`로 50명씩 이름순 조회합니다. API 페이지는 0부터 시작하고 화면에는 1부터 표시합니다. 응답은 기존 배열과 `hasNext`, `hasPrevious` boolean을 포함해야 합니다. 전체 건수/전체 페이지 수는 제공되지 않으므로 현재 페이지의 건수만 표시합니다. 각 목록의 페이지를 독립적으로 유지하며 새로고침은 현재 페이지를 다시 조회합니다. 샘플 모드 전환 시 첫 페이지로 초기화합니다.
 
-검색·이적료 필터는 현재 페이지 안에서 동작합니다. 이적 목록은 같은 페이지의 동일 선수를 한 카드로 묶고, 클릭 시 `/api/player/{id}` 및 `/api/player/transfer/{id}`로 전체 이력을 조회합니다. 현재 API는 이적 건 단위로 페이지를 자르므로 동일 선수가 다른 페이지에 다시 나올 수 있고, 카드 대표 기록은 해당 페이지에서 가장 최근인 이적입니다. 전체 목록에서 선수당 최신 이적 하나를 보장하려면 백엔드에서 선수별 최신 이적을 먼저 선택한 후 페이징해야 합니다. 전체 검색·금액 필터 역시 서버 파라미터 지원이 필요합니다.
+선수·이적 검색은 `keyWord`로 전체 DB의 선수 이름을 검색한 결과를 페이징합니다. 검색어가 없어도 `keyWord=`를 전달합니다. 검색어 변경 시 첫 페이지로 돌아가고, 이전·다음 페이지와 새로고침에서도 검색어를 유지합니다. 입력 완료 후 300ms에 조회하며 Enter로 즉시 조회할 수 있습니다. 한글 조합 중 조회를 미루고 늦게 도착한 이전 검색 응답을 무시합니다. 샘플 모드도 검색 후 페이지를 나눕니다. 이적료 필터는 현재 페이지 안에서 동작합니다. 이적 목록은 같은 페이지의 동일 선수를 한 카드로 묶고, 클릭 시 `/api/player/{id}` 및 `/api/player/transfer/{id}`로 전체 이력을 조회합니다. 현재 API는 이적 건 단위로 페이지를 자르므로 동일 선수가 다른 페이지에 다시 나올 수 있고, 카드 대표 기록은 해당 페이지에서 가장 최근인 이적입니다. 전체 목록에서 선수당 최신 이적 하나를 보장하려면 백엔드에서 선수별 최신 이적을 먼저 선택한 후 페이징해야 합니다. 전체 결과에 대한 이적료 필터는 추가 서버 파라미터 지원이 필요합니다. 현재 서버 검색은 선수 이름만 지원하며 클럽명·선수 ID 검색을 포함하지 않습니다. 선수 ID 조회는 별도 입력창을 사용합니다.
 
 선수 DTO는 소속팀을 포함하지 않으므로 팀 엠블럼은 현재 불러온 이적 페이지에서 확인 가능한 팀에만 표시됩니다. 정확한 현재 소속팀 표시에는 선수 목록 DTO에 `teamId`, `teamName`, `logoUrl` 필드가 필요합니다.
 
@@ -103,3 +103,4 @@ BACKEND_URL=https://transfertracker-back-v1-production.up.railway.app npm run de
 그리고 브라우저에서 `http://localhost:5173`을 엽니다.
 
 `railway.toml`은 프론트를 Railway에 배포하고 싶을 때 사용할 수 있는 대안 설정으로 남겨두었습니다. Vercel 배포에는 사용되지 않습니다.
+

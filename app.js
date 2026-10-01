@@ -35,9 +35,10 @@ let sample = false, transfers = [], teams = [], players = [], visibleHistories =
 let playerRequestId = 0, teamPageRequestId = 0, activeTeamId = null, reloadRequestId = 0;
 let teamLoadError = '';
 const listPages = {
-  transfers: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0},
-  players: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0}
+  transfers: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:''},
+  players: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:''}
 };
+const listSearchTimers = {transfers:null, players:null};
 function renderPagination(kind) {
   const state = listPages[kind];
   const label = kind === 'transfers' ? '이적 목록' : '선수 목록';
@@ -48,7 +49,10 @@ function renderPagination(kind) {
 async function loadListPage(kind, page = listPages[kind].page) {
   const state = listPages[kind];
   if (!Number.isSafeInteger(page) || page < 0) return;
+  clearTimeout(listSearchTimers[kind]);
+  listSearchTimers[kind] = null;
   const requestId = ++state.requestId;
+  const keyWord = state.keyWord;
   const sampleMode = sample;
   state.loading = true;
   state.error = '';
@@ -58,8 +62,9 @@ async function loadListPage(kind, page = listPages[kind].page) {
   $(kind === 'transfers' ? '#transfersEmpty' : '#playersEmpty').classList.add('hidden');
   try {
     const size = kind === 'transfers' ? 20 : 50;
-    const source = sampleMode ? demo[kind] : null;
-    const data = sampleMode ? {[kind]:source.slice(page * size, (page + 1) * size),hasNext:(page + 1) * size < source.length,hasPrevious:page > 0} : await getJson(`/api/${kind}?page=${page}`);
+    const source = sampleMode ? demo[kind].filter(item => text(item.playerName).includes(text(keyWord))) : null;
+    const params = new URLSearchParams({page:String(page), keyWord});
+    const data = sampleMode ? {[kind]:source.slice(page * size, (page + 1) * size),hasNext:(page + 1) * size < source.length,hasPrevious:page > 0} : await getJson(`/api/${kind}?${params}`);
     if (sampleMode !== sample || requestId !== state.requestId) return;
     if (!Array.isArray(data[kind]) || typeof data.hasNext !== 'boolean' || typeof data.hasPrevious !== 'boolean') throw new Error('예상과 다른 페이징 응답 형식입니다. 최신 백엔드를 확인해 주세요.');
     if (page > 0 && !data[kind].length) {
@@ -278,14 +283,14 @@ function renderFilters() {
 }
 function renderTransfers(error = listPages.transfers.error) {
   if (listPages.transfers.loading) return;
-  const query = text($('#transferSearch').value.trim());
+  const query = listPages.transfers.keyWord;
   const groups = new Map();
   for (const item of transfers) {
     const key = item.playerId != null ? `id:${item.playerId}` : `name:${item.playerName}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(item);
   }
-  const list = [...groups.values()].map(history => history.sort((a,b) => text(b.date).localeCompare(text(a.date)))).filter(history => history.some(item => [item.playerName,item.inTeamName,item.outTeamName].some(value => text(value).includes(query))) && (feeFilter === 'all' || feeBand(history[0]) === feeFilter)).sort((a,b) => text(b[0].date).localeCompare(text(a[0].date)));
+  const list = [...groups.values()].map(history => history.sort((a,b) => text(b.date).localeCompare(text(a.date)))).filter(history => (feeFilter === 'all' || feeBand(history[0]) === feeFilter)).sort((a,b) => text(b[0].date).localeCompare(text(a[0].date)));
   visibleHistories = list;
   $('#transferCount').textContent = `현재 페이지 ${groups.size.toLocaleString()}명`;
   $('#transfersBody').innerHTML = list.map((history, index) => {
@@ -298,7 +303,7 @@ function renderTransfers(error = listPages.transfers.error) {
   $('#transfersEmpty').textContent = error || (query || feeFilter !== 'all' ? '검색 조건에 맞는 이적 기록이 없습니다.' : '아직 등록된 이적 기록이 없습니다.');
   $('#transfersEmpty').classList.toggle('hidden', list.length > 0 && !error);
   $('#transfersEmpty').classList.toggle('error', !!error);
-  $('#transferShowing').textContent = `${listPages.transfers.page + 1} 페이지 · ${list.length}명 표시 / 이적 ${transfers.length}건 · 검색·금액 필터는 현재 페이지에 적용됩니다.`;
+  $('#transferShowing').textContent = `${listPages.transfers.page + 1} 페이지 · ${list.length}명 표시 / 이적 ${transfers.length}건 · ${query ? `검색어 “${query}” · ` : ''}금액 필터는 현재 페이지에 적용됩니다.`;
 }
 function renderTeams(error = teamLoadError) {
   const query = text($('#teamSearch').value.trim());
@@ -318,8 +323,8 @@ function renderTeams(error = teamLoadError) {
 }
 function renderPlayers(error = listPages.players.error) {
   if (listPages.players.loading) return;
-  const query = text($('#playerSearch').value.trim());
-  const list = players.filter(item => text(item.playerName).includes(query) || String(item.playerId).includes(query));
+  const query = listPages.players.keyWord;
+  const list = players;
   const nameCounts = new Map();
   for (const player of players) nameCounts.set(player.playerName, (nameCounts.get(player.playerName) || 0) + 1);
   const latestByPlayer = new Map();
@@ -370,6 +375,33 @@ async function reload() {
   const failed = teamLoadError || listPages.transfers.error || listPages.players.error;
   status(failed ? '일부 연결 실패' : '로컬 API 연결됨', failed ? 'offline' : 'online');
   stats(); renderTeams(); renderPlayers(); if (activeView === 'posts') renderPosts();
+}
+
+function bindListSearch(kind, selector) {
+  const input = $(selector);
+  const schedule = (immediate = false) => {
+    const state = listPages[kind];
+    clearTimeout(listSearchTimers[kind]);
+    state.keyWord = input.value.trim();
+    state.page = 0;
+    state.hasNext = false;
+    state.hasPrevious = false;
+    state.error = '';
+    state.requestId++;
+    state.loading = true;
+    if (kind === 'transfers') { transfers = []; visibleHistories = []; }
+    else players = [];
+    $(kind === 'transfers' ? '#transfersBody' : '#playerGrid').innerHTML = '<div class="empty list-loading">검색 결과를 불러오는 중…</div>';
+    $(kind === 'transfers' ? '#transfersEmpty' : '#playersEmpty').classList.add('hidden');
+    renderPagination(kind);
+    if (immediate) loadListPage(kind, 0);
+    else listSearchTimers[kind] = setTimeout(() => loadListPage(kind, 0), 300);
+  };
+  input.addEventListener('input', event => { if (!event.isComposing) schedule(); });
+  input.addEventListener('compositionend', () => schedule());
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); schedule(true); }
+  });
 }
 
 document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
@@ -424,7 +456,7 @@ $('#postSources').addEventListener('click', event => {
   postSourceFilter = button.dataset.postSource;
   renderPosts();
 });
-$('#transferSearch').addEventListener('input', () => renderTransfers());
+bindListSearch('transfers', '#transferSearch');
 $('#teamSearch').addEventListener('input', () => renderTeams());
 $('#leagueFilters').addEventListener('click', event => {
   const button = event.target.closest('[data-league]');
@@ -432,7 +464,7 @@ $('#leagueFilters').addEventListener('click', event => {
   leagueFilter = button.dataset.league;
   renderTeams();
 });
-$('#playerSearch').addEventListener('input', () => renderPlayers());
+bindListSearch('players', '#playerSearch');
 $('#feeFilters').addEventListener('click', event => { const button = event.target.closest('[data-fee-filter]'); if (!button || button.disabled) return; feeFilter = button.dataset.feeFilter; renderFilters(); renderTransfers(); });
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-list-page]');
