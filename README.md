@@ -104,3 +104,14 @@ BACKEND_URL=https://transfertracker-back-v1-production.up.railway.app npm run de
 
 `railway.toml`은 프론트를 Railway에 배포하고 싶을 때 사용할 수 있는 대안 설정으로 남겨두었습니다. Vercel 배포에는 사용되지 않습니다.
 
+
+
+## 기자 게시물 한국어 번역
+
+백엔드 `TransferPostItemResponseDto`의 `translatedContent`를 사용합니다. 값이 있으면 한국어 번역문을 본문에 우선 표시하고, `원문 보기`에서 기존 `content`를 확인할 수 있습니다. `translatedContent`가 null 또는 빈 문자열이면 기존 `content`를 그대로 표시합니다. 게시물 검색은 번역문과 원문을 모두 대상으로 합니다.
+
+## 클럽 한글 이름
+
+클럽 이름은 `teamNameKo ?? teamName`으로 표시합니다. 클럽 목록·상세·기자 소식의 팀 선택과 배너·선수 카드의 팀 정보에 적용되며, 클럽 검색은 한글명과 기존 영문명을 모두 지원합니다. 클럽 정렬도 화면에 표시하는 이름 기준입니다.
+
+이적 응답에는 한글 팀명이 없으므로 FROM/TO 및 선수 이적 이력은 클럽 목록의 기존 `teamName`을 대조해 일치하는 클럽의 한글 이름을 표시합니다. 클럽 목록에서 유일하게 식별되지 않거나 한글 이름이 null이면 기존 이름을 표시합니다. 영문 `teamName`과 팀 ID는 데이터 연결 기준으로 유지합니다.
