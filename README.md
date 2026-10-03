@@ -115,3 +115,13 @@ BACKEND_URL=https://transfertracker-back-v1-production.up.railway.app npm run de
 클럽 이름은 `teamNameKo ?? teamName`으로 표시합니다. 클럽 목록·상세·기자 소식의 팀 선택과 배너·선수 카드의 팀 정보에 적용되며, 클럽 검색은 한글명과 기존 영문명을 모두 지원합니다. 클럽 정렬도 화면에 표시하는 이름 기준입니다.
 
 이적 응답에는 한글 팀명이 없으므로 FROM/TO 및 선수 이적 이력은 클럽 목록의 기존 `teamName`을 대조해 일치하는 클럽의 한글 이름을 표시합니다. 클럽 목록에서 유일하게 식별되지 않거나 한글 이름이 null이면 기존 이름을 표시합니다. 영문 `teamName`과 팀 ID는 데이터 연결 기준으로 유지합니다.
+
+
+## 리그/클럽 서버 필터
+
+최신 백엔드 필터를 프론트에서 사용합니다.
+
+- 이적 목록: `GET /api/transfers?page={page}&keyWord={name}&leagueCode={leagueCode}`
+- 선수 목록: `GET /api/players?page={page}&keyWord={name}&leagueCode={leagueCode}&teamId={teamId}`
+- `leagueCode`와 `teamId`를 선택하지 않으면 해당 쿼리 파라미터를 보내지 않습니다.
+- 이적 응답의 `inTeamNameKo`, `outTeamNameKo`가 존재하면 FROM/TO와 이적 이력에서 한글 팀명을 우선 표시합니다.

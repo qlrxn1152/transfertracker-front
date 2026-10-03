@@ -35,8 +35,8 @@ let sample = false, transfers = [], teams = [], players = [], visibleHistories =
 let playerRequestId = 0, teamPageRequestId = 0, activeTeamId = null, reloadRequestId = 0;
 let teamLoadError = '';
 const listPages = {
-  transfers: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:''},
-  players: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:''}
+  transfers: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:'', leagueCode:''},
+  players: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:'', leagueCode:'', teamId:''}
 };
 const listSearchTimers = {transfers:null, players:null};
 function renderPagination(kind) {
@@ -62,9 +62,49 @@ async function loadListPage(kind, page = listPages[kind].page) {
   $(kind === 'transfers' ? '#transfersEmpty' : '#playersEmpty').classList.add('hidden');
   try {
     const size = kind === 'transfers' ? 20 : 50;
-    const source = sampleMode ? demo[kind].filter(item => text(item.playerName).includes(text(keyWord))) : null;
     const params = new URLSearchParams({page:String(page), keyWord});
-    const data = sampleMode ? {[kind]:source.slice(page * size, (page + 1) * size),hasNext:(page + 1) * size < source.length,hasPrevious:page > 0} : await getJson(`/api/${kind}?${params}`);
+    if (state.leagueCode) params.set('leagueCode', state.leagueCode);
+    if (kind === 'players' && state.teamId) params.set('teamId', state.teamId);
+
+    let source = null;
+    if (sampleMode) {
+      source = demo[kind].filter(item => text(item.playerName).includes(text(keyWord)));
+
+      if (state.leagueCode) {
+        if (kind === 'players') {
+          const allowedTeamNames = new Set(
+            demo.teams
+              .filter(team => team.leagueCode === state.leagueCode)
+              .map(team => team.teamName)
+          );
+          source = source.filter(player =>
+            Object.entries(demo.teamPlayers).some(([teamName, members]) =>
+              allowedTeamNames.has(teamName) &&
+              members.some(member => member.playerName === player.playerName)
+            )
+          );
+        } else {
+          const allowedTeamNames = new Set(
+            demo.teams
+              .filter(team => team.leagueCode === state.leagueCode)
+              .map(team => team.teamName)
+          );
+          source = source.filter(transfer =>
+            allowedTeamNames.has(transfer.inTeamName) || allowedTeamNames.has(transfer.outTeamName)
+          );
+        }
+      }
+
+      if (kind === 'players' && state.teamId) {
+        const selectedTeam = demo.teams.find(team => String(team.teamId) === String(state.teamId));
+        const memberNames = new Set((demo.teamPlayers[selectedTeam?.teamName] || []).map(member => member.playerName));
+        source = source.filter(player => memberNames.has(player.playerName));
+      }
+    }
+
+    const data = sampleMode
+      ? {[kind]:source.slice(page * size, (page + 1) * size),hasNext:(page + 1) * size < source.length,hasPrevious:page > 0}
+      : await getJson(`/api/${kind}?${params}`);
     if (sampleMode !== sample || requestId !== state.requestId) return;
     if (!Array.isArray(data[kind]) || typeof data.hasNext !== 'boolean' || typeof data.hasPrevious !== 'boolean') throw new Error('예상과 다른 페이징 응답 형식입니다. 최신 백엔드를 확인해 주세요.');
     if (page > 0 && !data[kind].length) {
@@ -115,6 +155,44 @@ const teamDisplayName = team => team?.teamNameKo ?? team?.teamName;
 function transferTeamDisplayName(name) {
   const matches = teams.filter(team => team.teamName === name);
   return matches.length === 1 ? teamDisplayName(matches[0]) : name;
+}
+const transferOutTeamName = item => item?.outTeamNameKo ?? transferTeamDisplayName(item?.outTeamName);
+const transferInTeamName = item => item?.inTeamNameKo ?? transferTeamDisplayName(item?.inTeamName);
+
+function renderListFilters() {
+  for (const kind of ['transfers', 'players']) {
+    const state = listPages[kind];
+    const target = $(`#${kind}LeagueFilters`);
+    if (!target) continue;
+
+    target.innerHTML = [
+      ['', '전체'],
+      ...leagues
+        .filter(([code]) => code !== 'unclassified')
+        .map(([code, name]) => [code, name])
+    ].map(([code, name]) =>
+      `<button type="button" class="compact-filter ${state.leagueCode === code ? 'selected' : ''}" data-list-league="${kind}" data-league-code="${code}" aria-pressed="${state.leagueCode === code}">${safe(name)}</button>`
+    ).join('');
+  }
+
+  const state = listPages.players;
+  const select = $('#playerTeamFilter');
+  if (!select) return;
+
+  const candidates = teams
+    .filter(team => !state.leagueCode || teamLeague(team) === state.leagueCode)
+    .sort((a, b) => String(teamDisplayName(a) ?? '').localeCompare(String(teamDisplayName(b) ?? ''), 'ko'));
+
+  select.innerHTML = `<option value="">전체 클럽</option>${candidates.map(team =>
+    `<option value="${Number(team.teamId)}">${safe(teamDisplayName(team))}</option>`
+  ).join('')}`;
+
+  if (state.teamId && candidates.some(team => String(team.teamId) === String(state.teamId))) {
+    select.value = String(state.teamId);
+  } else {
+    state.teamId = '';
+    select.value = '';
+  }
 }
 
 function feeMillions(item) {
@@ -305,13 +383,14 @@ function renderTransfers(error = listPages.transfers.error) {
     const item = history[0];
     const picture = photoUrl(item.photoUrl);
     const cover = `<div class="card-cover" aria-hidden="true"><span class="cover-lines"></span><span class="photo-fallback">${safe((item.playerName || '?').slice(0,1))}</span>${picture ? `<img class="player-photo" src="${safe(picture)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}<span class="cover-label">TRANSFER TRACKER</span></div>`;
-    const content = `<div class="card-content"><div class="card-top"><span class="badge ${feeMillions(item) === null ? 'other' : ''}">${safe(feeMillions(item) === null ? typeLabel(item.type) : '이적료')}</span><time class="date-cell">${safe(date(item.date))}</time></div><h3>${safe(item.playerName)}</h3><div class="club-move"><div><small>FROM</small><strong>${safe(transferTeamDisplayName(item.outTeamName))}</strong></div><span class="move-arrow" aria-hidden="true">→</span><div><small>TO</small><strong>${safe(transferTeamDisplayName(item.inTeamName))}</strong></div></div>${feeMillions(item) !== null ? `<span class="card-fee">${safe(item.fee ?? item.transferFee ?? item.type)}</span>` : ''}<span class="expand-label">전체 이적 이력 보기 <span class="expand-chevron" aria-hidden="true">↗</span></span></div>`;
+    const content = `<div class="card-content"><div class="card-top"><span class="badge ${feeMillions(item) === null ? 'other' : ''}">${safe(feeMillions(item) === null ? typeLabel(item.type) : '이적료')}</span><time class="date-cell">${safe(date(item.date))}</time></div><h3>${safe(item.playerName)}</h3><div class="club-move"><div><small>FROM</small><strong>${safe(transferOutTeamName(item))}</strong></div><span class="move-arrow" aria-hidden="true">→</span><div><small>TO</small><strong>${safe(transferInTeamName(item))}</strong></div></div>${feeMillions(item) !== null ? `<span class="card-fee">${safe(item.fee ?? item.transferFee ?? item.type)}</span>` : ''}<span class="expand-label">전체 이적 이력 보기 <span class="expand-chevron" aria-hidden="true">↗</span></span></div>`;
     return `<button class="transfer-card transfer-card-button" type="button" data-history-index="${index}" aria-label="${safe(item.playerName)} 전체 이적 이력 보기">${cover}${content}</button>`;
   }).join('');
   $('#transfersEmpty').textContent = error || (query || feeFilter !== 'all' ? '검색 조건에 맞는 이적 기록이 없습니다.' : '아직 등록된 이적 기록이 없습니다.');
   $('#transfersEmpty').classList.toggle('hidden', list.length > 0 && !error);
   $('#transfersEmpty').classList.toggle('error', !!error);
-  $('#transferShowing').textContent = `${listPages.transfers.page + 1} 페이지 · ${list.length}명 표시 / 이적 ${transfers.length}건 · ${query ? `검색어 “${query}” · ` : ''}금액 필터는 현재 페이지에 적용됩니다.`;
+  const leagueLabel = listPages.transfers.leagueCode ? leagueName(listPages.transfers.leagueCode) : '전체 리그';
+  $('#transferShowing').textContent = `${listPages.transfers.page + 1} 페이지 · ${list.length}명 표시 / 이적 ${transfers.length}건 · ${leagueLabel}${query ? ` · 검색어 “${query}”` : ''} · 금액 필터는 현재 페이지에 적용됩니다.`;
 }
 function renderTeams(error = teamLoadError) {
   const query = text($('#teamSearch').value.trim());
@@ -334,6 +413,17 @@ function renderPlayers(error = listPages.players.error) {
   const query = listPages.players.keyWord;
   const list = players;
   $('#playerCount').textContent = `현재 페이지 ${players.length.toLocaleString()}명`;
+  const playerShowing = $('#playerShowing');
+  if (playerShowing) {
+    const filters = [];
+    if (listPages.players.leagueCode) filters.push(leagueName(listPages.players.leagueCode));
+    if (listPages.players.teamId) {
+      const selectedTeam = teams.find(team => String(team.teamId) === String(listPages.players.teamId));
+      if (selectedTeam) filters.push(teamDisplayName(selectedTeam));
+    }
+    if (query) filters.push(`검색어 “${query}”`);
+    playerShowing.textContent = `${listPages.players.page + 1} 페이지 · ${players.length}명 표시${filters.length ? ` · ${filters.join(' · ')}` : ''}`;
+  }
   $('#playerGrid').innerHTML = list.map(item => {
     const displayTeamName = item.teamNameKo ?? item.teamName;
     const team = teams.find(team => team.teamName === item.teamName) || null;
@@ -350,6 +440,7 @@ async function reload() {
   if (sample) {
     teams = demo.teams; teamLoadError = ''; status('샘플 데이터', '');
     await Promise.allSettled(listRequests);
+    renderListFilters();
     stats(); renderTeams(); renderTransfers(); renderPlayers(); if (activeView === 'posts') renderPosts(); return;
   }
   status('불러오는 중', '');
@@ -368,7 +459,8 @@ async function reload() {
   teams = teams.map(team => ({...team, leagueCode: leagueById.get(String(team.teamId)) || team.leagueCode}));
   teamLoadError = clubs.status === 'rejected' ? clubs.reason.message : !Array.isArray(clubs.value.teams) ? '예상과 다른 클럽 응답 형식입니다.' : failedLeagues.length ? `${failedLeagues.join(', ')} 팀 목록을 불러오지 못했습니다. 새로고침해 주세요.` : '';
   const failed = teamLoadError || listPages.transfers.error || listPages.players.error;
-  status(failed ? '일부 연결 실패' : '로컬 API 연결됨', failed ? 'offline' : 'online');
+  status(failed ? '일부 연결 실패' : 'API 연결됨', failed ? 'offline' : 'online');
+  renderListFilters();
   stats(); renderTeams(); renderTransfers(); renderPlayers(); if (activeView === 'posts') renderPosts();
 }
 
@@ -409,6 +501,8 @@ $('#modeButton').addEventListener('click', () => {
   for (const state of Object.values(listPages)) {
     state.requestId++;
     state.page = 0; state.hasNext = false; state.hasPrevious = false; state.error = ''; state.loading = false;
+    state.leagueCode = '';
+    if ('teamId' in state) state.teamId = '';
   }
   transfers = []; players = []; visibleHistories = [];
   playerRequestId++;
@@ -460,6 +554,38 @@ $('#leagueFilters').addEventListener('click', event => {
   renderTeams();
 });
 bindListSearch('players', '#playerSearch');
+
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-list-league]');
+  if (!button) return;
+
+  const kind = button.dataset.listLeague;
+  const state = listPages[kind];
+  if (!state || state.loading) return;
+
+  state.leagueCode = button.dataset.leagueCode || '';
+  state.page = 0;
+  state.hasNext = false;
+  state.hasPrevious = false;
+
+  if (kind === 'players') state.teamId = '';
+
+  renderListFilters();
+  loadListPage(kind, 0);
+});
+
+$('#playerTeamFilter').addEventListener('change', event => {
+  const state = listPages.players;
+  if (state.loading) return;
+
+  state.teamId = event.target.value;
+  state.page = 0;
+  state.hasNext = false;
+  state.hasPrevious = false;
+
+  loadListPage('players', 0);
+});
+
 $('#feeFilters').addEventListener('click', event => { const button = event.target.closest('[data-fee-filter]'); if (!button || button.disabled) return; feeFilter = button.dataset.feeFilter; renderFilters(); renderTransfers(); });
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-list-page]');
@@ -477,7 +603,7 @@ $('#transfersBody').addEventListener('click', event => {
   const history = visibleHistories[Number(card.dataset.historyIndex)];
   if (!history) return;
   if (!sample && Number.isSafeInteger(history[0].playerId)) { showPlayer(history[0].playerId); return; }
-  $('#transferDetail').innerHTML = `<p class="eyebrow">TRANSFER HISTORY</p><h3>${safe(history[0].playerName)}</h3><p class="dialog-subtitle">이적 이력 ${history.length}건 · 최신순</p><div class="transfer-history"><ol>${history.map(move => `<li><time>${safe(date(move.date))}</time><span class="history-route">${safe(transferTeamDisplayName(move.outTeamName))} <span aria-hidden="true">→</span> ${safe(transferTeamDisplayName(move.inTeamName))}</span><span class="history-type">${safe(typeLabel(move.type))}</span></li>`).join('')}</ol></div>`;
+  $('#transferDetail').innerHTML = `<p class="eyebrow">TRANSFER HISTORY</p><h3>${safe(history[0].playerName)}</h3><p class="dialog-subtitle">이적 이력 ${history.length}건 · 최신순</p><div class="transfer-history"><ol>${history.map(move => `<li><time>${safe(date(move.date))}</time><span class="history-route">${safe(transferOutTeamName(move))} <span aria-hidden="true">→</span> ${safe(transferInTeamName(move))}</span><span class="history-type">${safe(typeLabel(move.type))}</span></li>`).join('')}</ol></div>`;
   $('#transferDialog').showModal();
 });
 $('#teamGrid').addEventListener('click', event => {
@@ -509,7 +635,7 @@ async function showPlayer(id) {
     if (!dialog.open || requestId !== playerRequestId) return;
     if (!Array.isArray(history.playerTransfers)) throw new Error('예상과 다른 이적 이력 응답 형식입니다.');
     const moves = [...history.playerTransfers].sort((a,b) => text(b.date).localeCompare(text(a.date)));
-    result.innerHTML = `<p class="eyebrow">PLAYER PROFILE / #${safe(player.playerId)}</p><h3>${safe(player.playerName)}</h3><p class="dialog-subtitle">이적 이력 ${moves.length}건 · 최신순</p>${moves.length ? `<div class="transfer-history"><ol>${moves.map(item => `<li><time>${safe(date(item.date))}</time><span class="history-route">${safe(transferTeamDisplayName(item.outTeamName))} <span aria-hidden="true">→</span> ${safe(transferTeamDisplayName(item.inTeamName))}</span><span class="history-type">${safe(typeLabel(item.type))}</span></li>`).join('')}</ol></div>` : '<div class="empty">아직 이적 이력이 없습니다.</div>'}`;
+    result.innerHTML = `<p class="eyebrow">PLAYER PROFILE / #${safe(player.playerId)}</p><h3>${safe(player.playerName)}</h3><p class="dialog-subtitle">이적 이력 ${moves.length}건 · 최신순</p>${moves.length ? `<div class="transfer-history"><ol>${moves.map(item => `<li><time>${safe(date(item.date))}</time><span class="history-route">${safe(transferOutTeamName(item))} <span aria-hidden="true">→</span> ${safe(transferInTeamName(item))}</span><span class="history-type">${safe(typeLabel(item.type))}</span></li>`).join('')}</ol></div>` : '<div class="empty">아직 이적 이력이 없습니다.</div>'}`;
   } catch (error) { if (dialog.open && requestId === playerRequestId) result.innerHTML = `<div class="empty error">${safe(error.message)}</div>`; }
 }
 $('#playerGrid').addEventListener('click', event => {
