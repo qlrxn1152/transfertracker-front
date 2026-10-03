@@ -4,6 +4,22 @@
     {
       "source": "/api/:path*",
       "destination": "https://transfertracker-back-v1-production.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/posts",
+      "destination": "/"
+    },
+    {
+      "source": "/teams",
+      "destination": "/"
+    },
+    {
+      "source": "/teams/:teamId",
+      "destination": "/"
+    },
+    {
+      "source": "/players",
+      "destination": "/"
     }
   ],
   "headers": [

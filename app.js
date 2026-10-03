@@ -220,11 +220,50 @@ async function getJson(path) {
   return response.json();
 }
 function status(message, state) { $('#connection').className = `connection ${state}`; $('#connection').innerHTML = `<i></i> ${safe(message)}`; }
-function setView(view) {
+
+const routePath = (view, teamId = null) => {
+  if (view === 'posts') return '/posts';
+  if (view === 'teams') return '/teams';
+  if (view === 'lookup') return '/players';
+  if (view === 'teamPage' && Number.isSafeInteger(Number(teamId))) return `/teams/${Number(teamId)}`;
+  return '/';
+};
+
+function readRoute() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+
+  if (path === '/') return {view:'transfers'};
+  if (path === '/posts') return {view:'posts'};
+  if (path === '/teams') return {view:'teams'};
+  if (path === '/players') return {view:'lookup'};
+
+  const teamMatch = path.match(/^\/teams\/(\d+)$/);
+  if (teamMatch) return {view:'teamPage', teamId:Number(teamMatch[1])};
+
+  return {view:'transfers'};
+}
+
+function writeRoute(view, teamId = null, replace = false) {
+  const path = routePath(view, teamId);
+  if (window.location.pathname === path) return;
+
+  const state = {view, teamId: teamId == null ? null : Number(teamId)};
+  if (replace) history.replaceState(state, '', path);
+  else history.pushState(state, '', path);
+}
+
+function setView(view, {historyMode = 'push', teamId = null, scroll = true} = {}) {
   activeView = view;
+
+  if (historyMode !== 'none') {
+    writeRoute(view, teamId, historyMode === 'replace');
+  }
+
   for (const id of ['transfers','posts','teams','teamPage','lookup']) $(`#${id}View`).classList.toggle('hidden', id !== view);
   document.querySelectorAll('[data-view]').forEach(button => button.classList.toggle('active', button.dataset.view === (view === 'teamPage' ? 'teams' : view)));
-  document.querySelector('.tabs').scrollIntoView({behavior:'smooth',block:'start'});
+
+  if (scroll) document.querySelector('.tabs').scrollIntoView({behavior:'smooth',block:'start'});
+
   if (view === 'posts') {
     if (postTeamFilter !== 'all' && teamPostsLoadedId !== postTeamFilter && !teamPostsLoading) loadTeamPosts(postTeamFilter);
     else if (postTeamFilter === 'all' && !postsLoaded && !postsLoading) loadPosts();
@@ -343,12 +382,12 @@ function renderTeamPage(data) {
   const count = Number.isSafeInteger(team.teamPlayerCount) && team.teamPlayerCount >= 0 ? team.teamPlayerCount : roster.length;
   $('#teamPageBody').innerHTML = `<header class="team-page-hero"><div class="team-page-watermark" aria-hidden="true">${picture ? `<img src="${safe(picture)}" alt="" referrerpolicy="no-referrer" class="club-emblem">` : safe((teamDisplayName(team) || '?').slice(0,1))}</div><div class="team-page-identity"><span class="team-page-emblem">${safe((teamDisplayName(team) || '?').slice(0,1))}${picture ? `<img src="${safe(picture)}" class="club-emblem" alt="" referrerpolicy="no-referrer">` : ''}</span><div><p class="eyebrow">CLUB PROFILE ${sample ? '/ SAMPLE' : ''}</p><h2>${safe(teamDisplayName(team))}</h2><span>${league === 'unclassified' ? '리그 미분류' : safe(leagueName(league))} · 클럽 ID #${safe(team.teamId)}</span></div></div><div class="team-page-stats"><div><strong>${count.toLocaleString()}</strong><span>소속 선수</span></div><div><strong>${news.length.toLocaleString()}</strong><span>관련 게시물</span></div></div></header><div class="team-page-columns"><section class="team-page-panel"><div class="team-page-panel-head"><div><p class="eyebrow">THE SQUAD</p><h3>소속 선수 <span>${roster.length}</span></h3></div></div>${roster.length ? `<ul class="team-page-players">${roster.map(player => `<li><span class="roster-avatar" aria-hidden="true">${safe((player.playerName || '?').slice(0,1))}${photoUrl(player.photoUrl) ? `<img class="player-photo" src="${safe(player.photoUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}</span><strong>${safe(player.playerName)}</strong><small>#${safe(player.playerId)}</small></li>`).join('')}</ul>` : '<div class="team-page-empty">아직 등록된 소속 선수가 없습니다.</div>'}</section><section class="team-page-panel"><div class="team-page-panel-head"><div><p class="eyebrow">CLUB JOURNAL</p><h3>관련 게시물 <span>${news.length}</span></h3></div>${supportedPostLeagues.has(league) ? `<button class="team-page-posts-more" type="button" data-team-page-posts="${Number(team.teamId)}">필터로 보기 ↗</button>` : ''}</div>${news.length ? `<div class="team-page-feed">${news.map(postCardHtml).join('')}</div>` : '<div class="team-page-empty">이 클럽에 연결된 게시물이 아직 없습니다.</div>'}</section></div>`;
 }
-async function showTeamPage(id, scroll = true) {
+async function showTeamPage(id, scroll = true, historyMode = 'push') {
   if (!Number.isSafeInteger(id) || id < 1) return;
   const requestId = ++teamPageRequestId;
   activeTeamId = id;
   $('#teamPageBody').innerHTML = '<div class="empty">클럽 정보를 불러오는 중...</div>';
-  if (scroll || activeView !== 'teamPage') setView('teamPage');
+  setView('teamPage', {historyMode, teamId:id, scroll:scroll || activeView !== 'teamPage'});
   try {
     const selected = teams.find(team => Number(team.teamId) === id);
     const data = sample ? {teams:{...selected,teamPlayerCount:(demo.teamPlayers[selected?.teamName] || []).length},players:{teamPlayers:demo.teamPlayers[selected?.teamName] || []},posts:{posts:demo.teamPosts[selected?.teamName] || []}} : await getJson(`/api/team/test/${id}`);
@@ -507,7 +546,7 @@ $('#modeButton').addEventListener('click', () => {
   transfers = []; players = []; visibleHistories = [];
   playerRequestId++;
   if ($('#transferDialog').open) $('#transferDialog').close();
-  if (activeView === 'teamPage') { teamPageRequestId++; setView('teams'); }
+  if (activeView === 'teamPage') { teamPageRequestId++; setView('teams', {historyMode:'replace'}); }
   postsRequestId++;
   teamPostsRequestId++;
   postsLoaded = false;
@@ -611,7 +650,7 @@ $('#teamGrid').addEventListener('click', event => {
   if (button) showTeamPage(Number(button.dataset.teamId));
 });
 $('#teamPageBack').addEventListener('click', () => { teamPageRequestId++; setView('teams'); });
-$('#teamPageRefresh').addEventListener('click', () => { if (activeTeamId !== null) showTeamPage(activeTeamId, false); });
+$('#teamPageRefresh').addEventListener('click', () => { if (activeTeamId !== null) showTeamPage(activeTeamId, false, 'none'); });
 $('#teamPageBody').addEventListener('click', event => {
   const button = event.target.closest('[data-team-page-posts]');
   if (!button) return;
@@ -646,4 +685,30 @@ $('#playerForm').addEventListener('submit', event => {
   event.preventDefault();
   showPlayer(Number($('#playerId').value));
 });
+
+window.addEventListener('popstate', () => {
+  const route = readRoute();
+
+  if (route.view === 'teamPage') {
+    showTeamPage(route.teamId, false, 'none');
+    return;
+  }
+
+  teamPageRequestId++;
+  setView(route.view, {historyMode:'none', scroll:false});
+});
+
+const initialRoute = readRoute();
+history.replaceState(
+  {view:initialRoute.view, teamId:initialRoute.teamId ?? null},
+  '',
+  routePath(initialRoute.view, initialRoute.teamId)
+);
+
+if (initialRoute.view === 'teamPage') {
+  showTeamPage(initialRoute.teamId, false, 'none');
+} else {
+  setView(initialRoute.view, {historyMode:'none', scroll:false});
+}
+
 reload();

@@ -125,3 +125,17 @@ BACKEND_URL=https://transfertracker-back-v1-production.up.railway.app npm run de
 - 선수 목록: `GET /api/players?page={page}&keyWord={name}&leagueCode={leagueCode}&teamId={teamId}`
 - `leagueCode`와 `teamId`를 선택하지 않으면 해당 쿼리 파라미터를 보내지 않습니다.
 - 이적 응답의 `inTeamNameKo`, `outTeamNameKo`가 존재하면 FROM/TO와 이적 이력에서 한글 팀명을 우선 표시합니다.
+
+
+## 브라우저 뒤로가기 / URL 라우팅
+
+화면 전환을 브라우저 History API와 연결했습니다.
+
+- `/` → 이적 현황
+- `/posts` → 기자 소식
+- `/teams` → 클럽 목록
+- `/teams/{teamId}` → 클럽 상세
+- `/players` → 선수 조회
+
+클럽 목록에서 클럽 상세로 이동한 뒤 브라우저 뒤로가기를 누르면 클럽 목록으로 돌아갑니다.
+앞으로가기 역시 같은 화면 상태를 복원합니다. Vercel에서는 위 경로를 `/`로 rewrite해 새로고침/직접 접속도 지원합니다.
