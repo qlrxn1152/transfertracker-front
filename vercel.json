@@ -1,5 +1,4 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -7,43 +6,19 @@
     },
     {
       "source": "/posts",
-      "destination": "/"
+      "destination": "/index.html"
     },
     {
       "source": "/teams",
-      "destination": "/"
+      "destination": "/index.html"
     },
     {
       "source": "/teams/:teamId",
-      "destination": "/"
+      "destination": "/index.html"
     },
     {
       "source": "/players",
-      "destination": "/"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
-    },
-    {
-      "source": "/api/:path*",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
-      ]
+      "destination": "/index.html"
     }
   ]
 }
