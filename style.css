@@ -96,3 +96,11 @@
   .team-select-filter{display:grid;grid-template-columns:auto 1fr;align-items:start}
   .team-select-filter select{min-width:0;width:100%}
 }
+
+
+/* Transfer list team filter */
+.transfer-api-filters{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:0 0 21px}
+.transfer-api-filters .list-filter-toolbar{margin:0}
+@media(max-width:760px){
+  .transfer-api-filters{display:grid;gap:12px}
+}

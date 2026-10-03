@@ -139,3 +139,13 @@ BACKEND_URL=https://transfertracker-back-v1-production.up.railway.app npm run de
 
 클럽 목록에서 클럽 상세로 이동한 뒤 브라우저 뒤로가기를 누르면 클럽 목록으로 돌아갑니다.
 앞으로가기 역시 같은 화면 상태를 복원합니다. Vercel에서는 위 경로를 `/`로 rewrite해 새로고침/직접 접속도 지원합니다.
+
+
+## 이적 목록 팀 필터
+
+백엔드 `GET /api/transfers`의 최신 `teamId` 선택 파라미터를 프론트에 연결했습니다.
+
+- 리그 필터와 팀 필터를 함께 사용할 수 있습니다.
+- 리그를 바꾸면 팀 선택은 초기화되고, 선택한 리그 소속 팀만 드롭다운에 표시됩니다.
+- 요청 예: `/api/transfers?page=0&keyWord=&leagueCode=EPL&teamId=33`
+- 팀을 선택하지 않으면 `teamId` 파라미터를 보내지 않습니다.

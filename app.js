@@ -35,7 +35,7 @@ let sample = false, transfers = [], teams = [], players = [], visibleHistories =
 let playerRequestId = 0, teamPageRequestId = 0, activeTeamId = null, reloadRequestId = 0;
 let teamLoadError = '';
 const listPages = {
-  transfers: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:'', leagueCode:''},
+  transfers: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:'', leagueCode:'', teamId:''},
   players: {page:0, hasNext:false, hasPrevious:false, loading:false, error:'', requestId:0, keyWord:'', leagueCode:'', teamId:''}
 };
 const listSearchTimers = {transfers:null, players:null};
@@ -64,7 +64,7 @@ async function loadListPage(kind, page = listPages[kind].page) {
     const size = kind === 'transfers' ? 20 : 50;
     const params = new URLSearchParams({page:String(page), keyWord});
     if (state.leagueCode) params.set('leagueCode', state.leagueCode);
-    if (kind === 'players' && state.teamId) params.set('teamId', state.teamId);
+    if (state.teamId) params.set('teamId', state.teamId);
 
     let source = null;
     if (sampleMode) {
@@ -95,10 +95,17 @@ async function loadListPage(kind, page = listPages[kind].page) {
         }
       }
 
-      if (kind === 'players' && state.teamId) {
+      if (state.teamId) {
         const selectedTeam = demo.teams.find(team => String(team.teamId) === String(state.teamId));
-        const memberNames = new Set((demo.teamPlayers[selectedTeam?.teamName] || []).map(member => member.playerName));
-        source = source.filter(player => memberNames.has(player.playerName));
+
+        if (kind === 'players') {
+          const memberNames = new Set((demo.teamPlayers[selectedTeam?.teamName] || []).map(member => member.playerName));
+          source = source.filter(player => memberNames.has(player.playerName));
+        } else {
+          source = source.filter(transfer =>
+            transfer.inTeamName === selectedTeam?.teamName || transfer.outTeamName === selectedTeam?.teamName
+          );
+        }
       }
     }
 
@@ -175,23 +182,25 @@ function renderListFilters() {
     ).join('');
   }
 
-  const state = listPages.players;
-  const select = $('#playerTeamFilter');
-  if (!select) return;
+  for (const kind of ['transfers', 'players']) {
+    const state = listPages[kind];
+    const select = $(`#${kind === 'transfers' ? 'transferTeamFilter' : 'playerTeamFilter'}`);
+    if (!select) continue;
 
-  const candidates = teams
-    .filter(team => !state.leagueCode || teamLeague(team) === state.leagueCode)
-    .sort((a, b) => String(teamDisplayName(a) ?? '').localeCompare(String(teamDisplayName(b) ?? ''), 'ko'));
+    const candidates = teams
+      .filter(team => !state.leagueCode || teamLeague(team) === state.leagueCode)
+      .sort((a, b) => String(teamDisplayName(a) ?? '').localeCompare(String(teamDisplayName(b) ?? ''), 'ko'));
 
-  select.innerHTML = `<option value="">전체 클럽</option>${candidates.map(team =>
-    `<option value="${Number(team.teamId)}">${safe(teamDisplayName(team))}</option>`
-  ).join('')}`;
+    select.innerHTML = `<option value="">전체 클럽</option>${candidates.map(team =>
+      `<option value="${Number(team.teamId)}">${safe(teamDisplayName(team))}</option>`
+    ).join('')}`;
 
-  if (state.teamId && candidates.some(team => String(team.teamId) === String(state.teamId))) {
-    select.value = String(state.teamId);
-  } else {
-    state.teamId = '';
-    select.value = '';
+    if (state.teamId && candidates.some(team => String(team.teamId) === String(state.teamId))) {
+      select.value = String(state.teamId);
+    } else {
+      state.teamId = '';
+      select.value = '';
+    }
   }
 }
 
@@ -429,7 +438,11 @@ function renderTransfers(error = listPages.transfers.error) {
   $('#transfersEmpty').classList.toggle('hidden', list.length > 0 && !error);
   $('#transfersEmpty').classList.toggle('error', !!error);
   const leagueLabel = listPages.transfers.leagueCode ? leagueName(listPages.transfers.leagueCode) : '전체 리그';
-  $('#transferShowing').textContent = `${listPages.transfers.page + 1} 페이지 · ${list.length}명 표시 / 이적 ${transfers.length}건 · ${leagueLabel}${query ? ` · 검색어 “${query}”` : ''} · 금액 필터는 현재 페이지에 적용됩니다.`;
+  const selectedTransferTeam = listPages.transfers.teamId
+    ? teams.find(team => String(team.teamId) === String(listPages.transfers.teamId))
+    : null;
+  const teamLabel = selectedTransferTeam ? ` · ${teamDisplayName(selectedTransferTeam)}` : '';
+  $('#transferShowing').textContent = `${listPages.transfers.page + 1} 페이지 · ${list.length}명 표시 / 이적 ${transfers.length}건 · ${leagueLabel}${teamLabel}${query ? ` · 검색어 “${query}”` : ''} · 금액 필터는 현재 페이지에 적용됩니다.`;
 }
 function renderTeams(error = teamLoadError) {
   const query = text($('#teamSearch').value.trim());
@@ -607,23 +620,25 @@ document.addEventListener('click', event => {
   state.hasNext = false;
   state.hasPrevious = false;
 
-  if (kind === 'players') state.teamId = '';
+  state.teamId = '';
 
   renderListFilters();
   loadListPage(kind, 0);
 });
 
-$('#playerTeamFilter').addEventListener('change', event => {
-  const state = listPages.players;
-  if (state.loading) return;
+for (const [kind, selector] of [['transfers', '#transferTeamFilter'], ['players', '#playerTeamFilter']]) {
+  $(selector).addEventListener('change', event => {
+    const state = listPages[kind];
+    if (state.loading) return;
 
-  state.teamId = event.target.value;
-  state.page = 0;
-  state.hasNext = false;
-  state.hasPrevious = false;
+    state.teamId = event.target.value;
+    state.page = 0;
+    state.hasNext = false;
+    state.hasPrevious = false;
 
-  loadListPage('players', 0);
-});
+    loadListPage(kind, 0);
+  });
+}
 
 $('#feeFilters').addEventListener('click', event => { const button = event.target.closest('[data-fee-filter]'); if (!button || button.disabled) return; feeFilter = button.dataset.feeFilter; renderFilters(); renderTransfers(); });
 document.addEventListener('click', event => {
