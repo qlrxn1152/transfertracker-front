@@ -106,6 +106,8 @@ function AppRoutes() {
           element={
             <Layout
               sample={sample}
+              teams={teams}
+              onPlayerOpen={setPlayerId}
               onToggleSample={toggleSample}
               connection={connection}
             />

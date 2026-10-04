@@ -497,3 +497,11 @@
     max-width:100px;
   }
 }
+
+.transfer-market-player-button{width:100%;border:0;background:transparent;padding:0;color:inherit;text-align:left}
+.transfer-market-player-button:hover strong{color:#0b8f68}
+.transfer-market-team-link{color:inherit;text-decoration:none;border-radius:8px;padding:4px;margin:-4px}
+.transfer-market-team-link:hover{background:#f0f7f3}
+.transfer-market-open{padding:0;background:#fff}
+.transfer-market-open:hover{border-color:#13a778;background:#effaf4}
+@media(max-width:760px){.transfer-market-player-button{display:contents}}

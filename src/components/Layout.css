@@ -13,7 +13,7 @@
   margin:0 auto;
   padding:0 24px;
   display:grid;
-  grid-template-columns:auto 1fr auto;
+  grid-template-columns:auto auto 1fr auto;
   align-items:center;
   gap:30px;
 }
@@ -133,8 +133,9 @@
   .app-header-inner{
     min-height:58px;
     grid-template-columns:auto 1fr auto;
-    gap:12px;
-    padding:0 16px;
+    grid-template-rows:58px auto;
+    gap:0 12px;
+    padding:0 16px 10px;
   }
 
   .app-brand{

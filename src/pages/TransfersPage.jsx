@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getTransfers } from '../api/client';
 import { demo } from '../demo';
 import { FEE_BANDS } from '../constants';
@@ -44,10 +45,19 @@ function transferStatus(item) {
 }
 
 export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen }) {
-  const [state, setState] = useState(initial);
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialKeyword = searchParams.get('q') || '';
+
+  const [state, setState] = useState({
+    ...initial,
+    page: Math.max(0, Number(searchParams.get('page') || 0) || 0),
+    keyWord: initialKeyword,
+    leagueCode: searchParams.get('league') || '',
+    teamId: searchParams.get('teamId') || ''
+  });
+  const [search, setSearch] = useState(initialKeyword);
   const [transfers, setTransfers] = useState([]);
-  const [feeFilter, setFeeFilter] = useState('all');
+  const [feeFilter, setFeeFilter] = useState(searchParams.get('fee') || 'all');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,6 +68,16 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (state.page > 0) params.set('page', String(state.page));
+    if (state.keyWord) params.set('q', state.keyWord);
+    if (state.leagueCode) params.set('league', state.leagueCode);
+    if (state.teamId) params.set('teamId', state.teamId);
+    if (feeFilter !== 'all') params.set('fee', feeFilter);
+    setSearchParams(params, { replace: true });
+  }, [state.page, state.keyWord, state.leagueCode, state.teamId, feeFilter, setSearchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -252,72 +272,92 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
               const status = transferStatus(item);
 
               return (
-                <button
+                <article
                   className="transfer-market-row"
-                  type="button"
                   key={`${item.playerId ?? item.playerName}-${index}`}
-                  onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
                 >
                   <time className="transfer-market-date">{displayDate(item.date)}</time>
 
-                  <span className="transfer-market-player">
+                  <button
+                    className="transfer-market-player transfer-market-player-button"
+                    type="button"
+                    onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
+                  >
                     <span className="transfer-market-avatar">
                       {(item.playerName || '?').slice(0, 1)}
                       {picture && (
-                        <img
-                          src={picture}
-                          alt=""
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
+                        <img src={picture} alt="" loading="lazy" referrerPolicy="no-referrer" />
                       )}
                     </span>
 
                     <span className="transfer-market-player-copy">
                       <strong>{item.playerName}</strong>
                       <small>
-                        {history.length > 1
-                          ? `이적 기록 ${history.length}건`
-                          : `PLAYER #${item.playerId ?? '—'}`}
+                        {history.length > 1 ? `이적 기록 ${history.length}건` : `PLAYER #${item.playerId ?? '—'}`}
                       </small>
                     </span>
-                  </span>
+                  </button>
 
-                  <span className="transfer-market-team">
-                    <span className="transfer-market-team-logo">
-                      {(item.outTeamName || '?').slice(0, 1)}
-                      {fromLogo && <img src={fromLogo} alt="" referrerPolicy="no-referrer" />}
+                  {findTeam(item.outTeamName) ? (
+                    <Link className="transfer-market-team transfer-market-team-link" to={`/teams/${findTeam(item.outTeamName).teamId}`}>
+                      <span className="transfer-market-team-logo">
+                        {(item.outTeamName || '?').slice(0, 1)}
+                        {fromLogo && <img src={fromLogo} alt="" referrerPolicy="no-referrer" />}
+                      </span>
+                      <span>
+                        <strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong>
+                        <small>FROM</small>
+                      </span>
+                    </Link>
+                  ) : (
+                    <span className="transfer-market-team">
+                      <span className="transfer-market-team-logo">{(item.outTeamName || '?').slice(0, 1)}</span>
+                      <span>
+                        <strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong>
+                        <small>FROM</small>
+                      </span>
                     </span>
-                    <span>
-                      <strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong>
-                      <small>FROM</small>
-                    </span>
-                  </span>
+                  )}
 
                   <span className="transfer-market-arrow" aria-hidden="true">→</span>
 
-                  <span className="transfer-market-team">
-                    <span className="transfer-market-team-logo">
-                      {(item.inTeamName || '?').slice(0, 1)}
-                      {toLogo && <img src={toLogo} alt="" referrerPolicy="no-referrer" />}
+                  {findTeam(item.inTeamName) ? (
+                    <Link className="transfer-market-team transfer-market-team-link" to={`/teams/${findTeam(item.inTeamName).teamId}`}>
+                      <span className="transfer-market-team-logo">
+                        {(item.inTeamName || '?').slice(0, 1)}
+                        {toLogo && <img src={toLogo} alt="" referrerPolicy="no-referrer" />}
+                      </span>
+                      <span>
+                        <strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong>
+                        <small>TO</small>
+                      </span>
+                    </Link>
+                  ) : (
+                    <span className="transfer-market-team">
+                      <span className="transfer-market-team-logo">{(item.inTeamName || '?').slice(0, 1)}</span>
+                      <span>
+                        <strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong>
+                        <small>TO</small>
+                      </span>
                     </span>
-                    <span>
-                      <strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong>
-                      <small>TO</small>
-                    </span>
-                  </span>
+                  )}
 
-                  <span className={`transfer-market-status ${status.tone}`}>
-                    {status.label}
-                  </span>
+                  <span className={`transfer-market-status ${status.tone}`}>{status.label}</span>
 
                   <span className="transfer-market-fee">
                     <strong>{feeText(item)}</strong>
                     <small>{feeMillions(item) === null ? '금액 정보 없음' : 'TRANSFER FEE'}</small>
                   </span>
 
-                  <span className="transfer-market-open" aria-hidden="true">↗</span>
-                </button>
+                  <button
+                    className="transfer-market-open"
+                    type="button"
+                    onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
+                    aria-label={`${item.playerName} 상세 보기`}
+                  >
+                    ↗
+                  </button>
+                </article>
               );
             })}
           </div>

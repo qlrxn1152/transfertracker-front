@@ -1,9 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import './Layout.css';
+import GlobalSearch from './GlobalSearch';
 
 const navClass = ({ isActive }) => `app-nav-link ${isActive ? 'active' : ''}`;
 
-export default function Layout({ sample, onToggleSample, connection }) {
+export default function Layout({ sample, teams, onPlayerOpen, onToggleSample, connection }) {
   return (
     <>
       <header className="app-header">
@@ -11,6 +12,8 @@ export default function Layout({ sample, onToggleSample, connection }) {
           <NavLink className="app-brand" to="/" aria-label="TransferTracker 홈">
             <span>Transfer</span><strong>Tracker</strong>
           </NavLink>
+
+          <GlobalSearch sample={sample} teams={teams} onPlayerOpen={onPlayerOpen} />
 
           <nav className="app-nav" aria-label="주요 메뉴">
             <NavLink end className={navClass} to="/">홈</NavLink>
