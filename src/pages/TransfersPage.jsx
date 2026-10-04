@@ -7,12 +7,14 @@ import {
   feeBand,
   feeMillions,
   leagueName,
+  logoUrl,
   photoUrl,
   teamDisplayName,
   typeLabel
 } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
+import './TransfersPage.css';
 
 const initial = {
   page: 0,
@@ -24,6 +26,22 @@ const initial = {
   loading: true,
   error: ''
 };
+
+function feeText(item) {
+  const raw = item?.fee ?? item?.transferFee;
+  if (typeof raw === 'string' && raw.trim()) return raw.trim();
+  return '비공개';
+}
+
+function transferStatus(item) {
+  const label = typeLabel(item?.type);
+  const upper = String(item?.type || '').toUpperCase();
+
+  if (upper === 'LOAN') return { label, tone: 'loan' };
+  if (upper === 'FREE') return { label, tone: 'free' };
+  if (upper === 'OUT') return { label, tone: 'out' };
+  return { label, tone: 'default' };
+}
 
 export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen }) {
   const [state, setState] = useState(initial);
@@ -37,6 +55,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         ? current
         : { ...current, page: 0, keyWord: search.trim() });
     }, 300);
+
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -118,14 +137,27 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
   }, [transfers, feeFilter]);
 
   const latest = useMemo(() => {
-    const dates = transfers.map(item => item.date).filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || ''));
+    const dates = transfers
+      .map(item => item.date)
+      .filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || ''));
+
     return dates.length ? displayDate([...dates].sort().at(-1)) : '—';
   }, [transfers]);
 
+  const findTeam = name => {
+    const matches = teams.filter(team => team.teamName === name);
+    return matches.length === 1 ? matches[0] : null;
+  };
+
   const transferName = (name, ko) => {
     if (ko) return ko;
-    const matches = teams.filter(team => team.teamName === name);
-    return matches.length === 1 ? teamDisplayName(matches[0]) : name;
+    const team = findTeam(name);
+    return team ? teamDisplayName(team) : name;
+  };
+
+  const teamLogo = name => {
+    const team = findTeam(name);
+    return team ? logoUrl(team.logoUrl) : null;
   };
 
   const selectedTeam = state.teamId
@@ -138,25 +170,30 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
       : '아직 등록된 이적 기록이 없습니다.');
 
   return (
-    <section className="view">
-      <div className="section-head">
+    <section className="view transfer-market-view">
+      <div className="transfer-market-head">
         <div>
-          <p className="eyebrow">LATEST MOVES</p>
-          <h2>이적 현황 <span className="count">현재 페이지 {groups.length.toLocaleString()}명</span></h2>
+          <p className="eyebrow">TRANSFER MARKET</p>
+          <h2>이적 현황</h2>
           <p>
-            최신순으로 이적 기록을 살펴보세요.
-            <span className="latest-note"> 페이지 최근 기록 <span>{latest}</span></span>
+            선수의 최신 이적을 한눈에 비교하세요.
+            <span> 페이지 최근 기록 {latest}</span>
           </p>
+        </div>
+
+        <div className="transfer-market-count">
+          <strong>{groups.length.toLocaleString()}</strong>
+          <span>현재 페이지 선수</span>
         </div>
       </div>
 
-      <div className="toolbar">
-        <label className="search">
+      <div className="transfer-market-toolbar">
+        <label className="search transfer-market-search">
           <span aria-hidden="true">⌕</span>
           <input
             value={search}
             onChange={event => setSearch(event.target.value)}
-            placeholder="전체 선수 이름 검색"
+            placeholder="선수 이름 검색"
             aria-label="이적 검색"
           />
         </label>
@@ -175,7 +212,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         }
       />
 
-      <div className="fee-toolbar">
+      <div className="transfer-market-fees">
         <span>이적료</span>
         <div className="filter-group" aria-label="이적료 범위">
           {FEE_BANDS.map(([value, label]) => (
@@ -191,69 +228,105 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         </div>
       </div>
 
-      {!!transfers.length && !transfers.some(item => feeMillions(item) !== null) && (
-        <p className="fee-notice">
-          숫자로 표시된 이적료가 없습니다. 금액 미공개 기록은 N/A로 볼 수 있습니다.
-        </p>
-      )}
-
       {state.loading ? (
         <div className="empty list-loading">목록을 불러오는 중…</div>
       ) : groups.length ? (
-        <div className="transfer-grid" aria-live="polite">
-          {groups.map((history, index) => {
-            const item = history[0];
-            const picture = photoUrl(item.photoUrl);
-            const fee = feeMillions(item);
+        <div className="transfer-market-board" aria-live="polite">
+          <div className="transfer-market-columns" aria-hidden="true">
+            <span>날짜</span>
+            <span>선수</span>
+            <span>이전 팀</span>
+            <span />
+            <span>새 팀</span>
+            <span>유형</span>
+            <span>이적료</span>
+            <span />
+          </div>
 
-            return (
-              <button
-                className="transfer-card transfer-card-button"
-                type="button"
-                key={`${item.playerId ?? item.playerName}-${index}`}
-                onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
-              >
-                <div className="card-cover" aria-hidden="true">
-                  <span className="cover-lines" />
-                  <span className="photo-fallback">{(item.playerName || '?').slice(0, 1)}</span>
-                  {picture && <img className="player-photo" src={picture} alt="" loading="lazy" referrerPolicy="no-referrer" />}
-                  <span className="cover-label">TRANSFER TRACKER</span>
-                </div>
+          <div className="transfer-market-list">
+            {groups.map((history, index) => {
+              const item = history[0];
+              const picture = photoUrl(item.photoUrl);
+              const fromLogo = teamLogo(item.outTeamName);
+              const toLogo = teamLogo(item.inTeamName);
+              const status = transferStatus(item);
 
-                <div className="card-content">
-                  <div className="card-top">
-                    <span className={`badge ${fee === null ? 'other' : ''}`}>
-                      {fee === null ? typeLabel(item.type) : '이적료'}
+              return (
+                <button
+                  className="transfer-market-row"
+                  type="button"
+                  key={`${item.playerId ?? item.playerName}-${index}`}
+                  onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
+                >
+                  <time className="transfer-market-date">{displayDate(item.date)}</time>
+
+                  <span className="transfer-market-player">
+                    <span className="transfer-market-avatar">
+                      {(item.playerName || '?').slice(0, 1)}
+                      {picture && (
+                        <img
+                          src={picture}
+                          alt=""
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
                     </span>
-                    <time className="date-cell">{displayDate(item.date)}</time>
-                  </div>
 
-                  <h3>{item.playerName}</h3>
+                    <span className="transfer-market-player-copy">
+                      <strong>{item.playerName}</strong>
+                      <small>
+                        {history.length > 1
+                          ? `이적 기록 ${history.length}건`
+                          : `PLAYER #${item.playerId ?? '—'}`}
+                      </small>
+                    </span>
+                  </span>
 
-                  <div className="club-move">
-                    <div>
-                      <small>FROM</small>
+                  <span className="transfer-market-team">
+                    <span className="transfer-market-team-logo">
+                      {(item.outTeamName || '?').slice(0, 1)}
+                      {fromLogo && <img src={fromLogo} alt="" referrerPolicy="no-referrer" />}
+                    </span>
+                    <span>
                       <strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong>
-                    </div>
-                    <span className="move-arrow" aria-hidden="true">→</span>
-                    <div>
-                      <small>TO</small>
-                      <strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong>
-                    </div>
-                  </div>
+                      <small>FROM</small>
+                    </span>
+                  </span>
 
-                  {fee !== null && <span className="card-fee">{item.fee ?? item.transferFee ?? item.type}</span>}
-                  <span className="expand-label">전체 이적 이력 보기 <span className="expand-chevron">↗</span></span>
-                </div>
-              </button>
-            );
-          })}
+                  <span className="transfer-market-arrow" aria-hidden="true">→</span>
+
+                  <span className="transfer-market-team">
+                    <span className="transfer-market-team-logo">
+                      {(item.inTeamName || '?').slice(0, 1)}
+                      {toLogo && <img src={toLogo} alt="" referrerPolicy="no-referrer" />}
+                    </span>
+                    <span>
+                      <strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong>
+                      <small>TO</small>
+                    </span>
+                  </span>
+
+                  <span className={`transfer-market-status ${status.tone}`}>
+                    {status.label}
+                  </span>
+
+                  <span className="transfer-market-fee">
+                    <strong>{feeText(item)}</strong>
+                    <small>{feeMillions(item) === null ? '금액 정보 없음' : 'TRANSFER FEE'}</small>
+                  </span>
+
+                  <span className="transfer-market-open" aria-hidden="true">↗</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className={`empty ${state.error ? 'error' : ''}`}>{emptyText}</div>
       )}
 
-      <p className="showing">
+      <p className="showing transfer-market-showing">
         {state.page + 1} 페이지 · {groups.length}명 표시 / 이적 {transfers.length}건 ·
         {' '}{state.leagueCode ? leagueName(state.leagueCode) : '전체 리그'}
         {selectedTeam ? ` · ${teamDisplayName(selectedTeam)}` : ''}
