@@ -4,6 +4,7 @@ export const LEAGUES = [
   ['BUNDESLIGA', '분데스리가', '독일'],
   ['LIGUE_1', '리그 1', '프랑스'],
   ['SERIE_A', '세리에 A', '이탈리아'],
+  ['K_LEAGUE', 'K리그', '대한민국'],
   ['unclassified', '기타 팀', '리그 미분류']
 ];
 
