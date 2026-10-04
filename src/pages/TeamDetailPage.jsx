@@ -125,7 +125,7 @@ function NewsRow({ post, sample }) {
   );
 }
 
-export default function TeamDetailPage({ sample, teams, onSelectTeamPosts }) {
+export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPlayerOpen }) {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const id = Number(teamId);
@@ -348,7 +348,7 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts }) {
                     </div>
 
                     {group.players.map(player => (
-                      <div className="team-roster-player" key={player.playerId}>
+                      <button className="team-roster-player" type="button" key={player.playerId} onClick={() => onPlayerOpen(Number(player.playerId))}>
                         <span className="team-roster-avatar">
                           {(player.playerName || '?').slice(0, 1)}
                           {photoUrl(player.photoUrl) && (
@@ -365,7 +365,7 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts }) {
                           <strong>{player.playerName}</strong>
                           <small>PLAYER #{player.playerId}</small>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ))}
@@ -378,7 +378,7 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts }) {
                     </div>
 
                     {unknownPlayers.map(player => (
-                      <div className="team-roster-player" key={player.playerId}>
+                      <button className="team-roster-player" type="button" key={player.playerId} onClick={() => onPlayerOpen(Number(player.playerId))}>
                         <span className="team-roster-avatar">
                           {(player.playerName || '?').slice(0, 1)}
                           {photoUrl(player.photoUrl) && (
@@ -395,7 +395,7 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts }) {
                           <strong>{player.playerName}</strong>
                           <small>PLAYER #{player.playerId}</small>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}

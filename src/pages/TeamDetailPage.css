@@ -646,3 +646,12 @@
     display:none;
   }
 }
+
+.team-roster-player{
+  width:100%;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+}
+.team-roster-player:hover{background:#f7faf8;border-radius:8px}

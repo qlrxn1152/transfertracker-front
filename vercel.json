@@ -5,6 +5,10 @@
       "destination": "https://transfertracker-back-v1-production.up.railway.app/api/:path*"
     },
     {
+      "source": "/transfers",
+      "destination": "/index.html"
+    },
+    {
       "source": "/posts",
       "destination": "/index.html"
     },

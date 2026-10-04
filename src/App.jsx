@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Layout from './components/Layout';
 import PlayerDialog from './components/PlayerDialog';
+import HomePage from './pages/HomePage';
 import TransfersPage from './pages/TransfersPage';
 import PostsPage from './pages/PostsPage';
 import TeamsPage from './pages/TeamsPage';
@@ -113,6 +114,17 @@ function AppRoutes() {
           <Route
             path="/"
             element={
+              <HomePage
+                sample={sample}
+                teams={teams}
+                refreshKey={refreshKey}
+                onPlayerOpen={setPlayerId}
+              />
+            }
+          />
+          <Route
+            path="/transfers"
+            element={
               <TransfersPage
                 sample={sample}
                 teams={teams}
@@ -140,6 +152,7 @@ function AppRoutes() {
                 sample={sample}
                 teams={teams}
                 onSelectTeamPosts={selectTeamPosts}
+                onPlayerOpen={setPlayerId}
               />
             }
           />

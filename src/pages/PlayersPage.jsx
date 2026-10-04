@@ -4,6 +4,7 @@ import { demo } from '../demo';
 import { leagueName, logoUrl, photoUrl, teamDisplayName } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
+import './PlayersPage.css';
 
 export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen }) {
   const [state, setState] = useState({
@@ -18,7 +19,6 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
   });
   const [search, setSearch] = useState('');
   const [players, setPlayers] = useState([]);
-  const [manualId, setManualId] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,18 +43,6 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
             String(item.playerName || '').toLowerCase().includes(state.keyWord.toLowerCase())
           );
 
-          if (state.leagueCode) {
-            const allowed = new Set(
-              demo.teams.filter(team => team.leagueCode === state.leagueCode).map(team => team.teamName)
-            );
-            source = source.filter(player => allowed.has(player.teamNameKo));
-          }
-
-          if (state.teamId) {
-            const selected = demo.teams.find(team => String(team.teamId) === String(state.teamId));
-            source = source.filter(player => player.teamNameKo === selected?.teamName);
-          }
-
           const size = 50;
           data = {
             players: source.slice(state.page * size, (state.page + 1) * size),
@@ -65,9 +53,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
           data = await getPlayers(state, controller.signal);
         }
 
-        if (!Array.isArray(data.players)) {
-          throw new Error('예상과 다른 선수 목록 응답 형식입니다.');
-        }
+        if (!Array.isArray(data.players)) throw new Error('예상과 다른 선수 목록 응답 형식입니다.');
 
         setPlayers(data.players);
         setState(current => ({
@@ -95,24 +81,24 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
     const selected = teams.find(team => String(team.teamId) === String(state.teamId));
     if (selected) filters.push(teamDisplayName(selected));
   }
-  if (state.keyWord) filters.push(`검색어 “${state.keyWord}”`);
 
   return (
-    <section className="view">
-      <div className="section-head">
+    <section className="players-page">
+      <header className="players-head">
         <div>
           <p className="eyebrow">PLAYER DIRECTORY</p>
-          <h2>선수 목록 <span className="count">현재 페이지 {players.length.toLocaleString()}명</span></h2>
-          <p>선수를 찾아 현재 소속팀과 이적 이력을 확인하세요.</p>
+          <h1>선수</h1>
+          <p>선수를 검색하고 현재 소속팀과 이적 기록으로 바로 이동하세요.</p>
         </div>
-      </div>
+        <strong>{players.length}<span>현재 페이지</span></strong>
+      </header>
 
-      <label className="search player-search">
+      <label className="search players-search">
         <span aria-hidden="true">⌕</span>
         <input
           value={search}
           onChange={event => setSearch(event.target.value)}
-          placeholder="전체 선수 이름 검색"
+          placeholder="선수 이름 검색"
           aria-label="선수 검색"
         />
       </label>
@@ -122,16 +108,14 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
         leagueCode={state.leagueCode}
         teamId={state.teamId}
         teams={teams}
-        onLeagueChange={leagueCode =>
-          setState(current => ({ ...current, page: 0, leagueCode, teamId: '' }))
-        }
+        onLeagueChange={leagueCode => setState(current => ({ ...current, page: 0, leagueCode, teamId: '' }))}
         onTeamChange={teamId => setState(current => ({ ...current, page: 0, teamId }))}
       />
 
       {state.loading ? (
         <div className="empty list-loading">목록을 불러오는 중…</div>
       ) : players.length ? (
-        <div className="player-grid" aria-live="polite">
+        <div className="players-cards" aria-live="polite">
           {players.map(item => {
             const displayTeamName = item.teamNameKo ?? item.teamName;
             const team = teams.find(candidate => candidate.teamName === item.teamName)
@@ -139,38 +123,26 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
             const picture = photoUrl(item.photoUrl);
 
             return (
-              <button
-                className="player-card"
-                type="button"
-                key={item.playerId}
-                onClick={() => onPlayerOpen(Number(item.playerId))}
-              >
-                <span className="player-avatar" aria-hidden="true">
-                  {(item.playerName || '?').slice(0, 1)}
-                  {picture && <img className="player-photo" src={picture} alt="" loading="lazy" referrerPolicy="no-referrer" />}
-                </span>
+              <button className="players-card" type="button" key={item.playerId} onClick={() => onPlayerOpen(Number(item.playerId))}>
+                <div className="players-photo">
+                  <span>{(item.playerName || '?').slice(0,1)}</span>
+                  {picture && <img src={picture} alt="" loading="lazy" referrerPolicy="no-referrer" />}
+                </div>
 
-                <span className="player-card-copy">
-                  <small>PLAYER / #{item.playerId}</small>
-                  <span className="player-name-row">
-                    <strong>{item.playerName}</strong>
-                    {displayTeamName && (
-                      <span
-                        className="player-team-emblem"
-                        aria-label={`현재 소속팀 ${displayTeamName}`}
-                        title={`현재 소속팀: ${displayTeamName}`}
-                      >
-                        {displayTeamName.slice(0, 1)}
-                        {team && logoUrl(team.logoUrl) && (
-                          <img className="club-emblem" src={team.logoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" />
-                        )}
-                      </span>
-                    )}
-                  </span>
-                  <span className="player-team-name">{displayTeamName || '소속팀 정보 없음'}</span>
-                </span>
+                <div className="players-card-copy">
+                  <small>PLAYER #{item.playerId}</small>
+                  <h3>{item.playerName}</h3>
 
-                <span className="player-card-arrow" aria-hidden="true">↗</span>
+                  <div className="players-team">
+                    <span>
+                      {displayTeamName?.slice(0,1) || '?'}
+                      {team && logoUrl(team.logoUrl) && <img src={team.logoUrl} alt="" referrerPolicy="no-referrer" />}
+                    </span>
+                    <strong>{displayTeamName || '소속팀 정보 없음'}</strong>
+                  </div>
+                </div>
+
+                <span className="players-open">상세 →</span>
               </button>
             );
           })}
@@ -193,30 +165,6 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
         loading={state.loading}
         onPage={page => setState(current => ({ ...current, page }))}
       />
-
-      <form
-        className="lookup-form"
-        onSubmit={event => {
-          event.preventDefault();
-          const id = Number(manualId);
-          if (Number.isSafeInteger(id) && id > 0) onPlayerOpen(id);
-        }}
-      >
-        <label htmlFor="playerId">목록에 없는 선수 ID로 직접 조회</label>
-        <div>
-          <input
-            id="playerId"
-            type="number"
-            min="1"
-            step="1"
-            required
-            value={manualId}
-            onChange={event => setManualId(event.target.value)}
-            placeholder="예: 1"
-          />
-          <button type="submit">조회하기 ↗</button>
-        </div>
-      </form>
     </section>
   );
 }
