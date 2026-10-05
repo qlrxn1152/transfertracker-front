@@ -44,40 +44,79 @@ function transferStatus(item) {
   return { label, tone: 'default' };
 }
 
+function readFilterParams(params) {
+  return {
+    page: Math.max(0, Number(params.get('page') || 0) || 0),
+    keyWord: params.get('q') || '',
+    leagueCode: params.get('league') || '',
+    teamId: params.get('teamId') || '',
+    fee: params.get('fee') || 'all'
+  };
+}
+
 export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialKeyword = searchParams.get('q') || '';
+  const paramsKey = searchParams.toString();
+  const first = readFilterParams(searchParams);
 
   const [state, setState] = useState({
     ...initial,
-    page: Math.max(0, Number(searchParams.get('page') || 0) || 0),
-    keyWord: initialKeyword,
-    leagueCode: searchParams.get('league') || '',
-    teamId: searchParams.get('teamId') || ''
+    page: first.page,
+    keyWord: first.keyWord,
+    leagueCode: first.leagueCode,
+    teamId: first.teamId
   });
-  const [search, setSearch] = useState(initialKeyword);
+  const [search, setSearch] = useState(first.keyWord);
   const [transfers, setTransfers] = useState([]);
-  const [feeFilter, setFeeFilter] = useState(searchParams.get('fee') || 'all');
+  const [feeFilter, setFeeFilter] = useState(first.fee);
 
+  // URL을 필터 상태의 기준(source of truth)으로 사용한다.
+  // 브라우저 뒤로가기/앞으로가기로 URL이 바뀌면 화면 상태도 같이 복원된다.
+  useEffect(() => {
+    const params = new URLSearchParams(paramsKey);
+    const next = readFilterParams(params);
+
+    setSearch(current => current === next.keyWord ? current : next.keyWord);
+    setFeeFilter(current => current === next.fee ? current : next.fee);
+
+    setState(current => {
+      if (
+        current.page === next.page
+        && current.keyWord === next.keyWord
+        && current.leagueCode === next.leagueCode
+        && current.teamId === next.teamId
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        page: next.page,
+        keyWord: next.keyWord,
+        leagueCode: next.leagueCode,
+        teamId: next.teamId
+      };
+    });
+  }, [paramsKey]);
+
+  // 검색어 변경은 debounce 후 새 history entry로 남긴다.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setState(current => current.keyWord === search.trim()
-        ? current
-        : { ...current, page: 0, keyWord: search.trim() });
+      const value = search.trim();
+      const current = new URLSearchParams(paramsKey);
+      const currentValue = current.get('q') || '';
+
+      if (currentValue === value) return;
+
+      if (value) current.set('q', value);
+      else current.delete('q');
+
+      current.delete('page');
+      setSearchParams(current);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (state.page > 0) params.set('page', String(state.page));
-    if (state.keyWord) params.set('q', state.keyWord);
-    if (state.leagueCode) params.set('league', state.leagueCode);
-    if (state.teamId) params.set('teamId', state.teamId);
-    if (feeFilter !== 'all') params.set('fee', feeFilter);
-    setSearchParams(params, { replace: true });
-  }, [state.page, state.keyWord, state.leagueCode, state.teamId, feeFilter, setSearchParams]);
+  }, [search, paramsKey, setSearchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -180,6 +219,47 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
     return team ? logoUrl(team.logoUrl) : null;
   };
 
+  const pushFilterParams = mutate => {
+    const params = new URLSearchParams(paramsKey);
+    mutate(params);
+    setSearchParams(params);
+  };
+
+  const changeLeague = leagueCode => {
+    pushFilterParams(params => {
+      if (leagueCode) params.set('league', leagueCode);
+      else params.delete('league');
+
+      params.delete('teamId');
+      params.delete('page');
+    });
+  };
+
+  const changeTeam = teamId => {
+    pushFilterParams(params => {
+      if (teamId) params.set('teamId', teamId);
+      else params.delete('teamId');
+
+      params.delete('page');
+    });
+  };
+
+  const changeFee = value => {
+    pushFilterParams(params => {
+      if (value !== 'all') params.set('fee', value);
+      else params.delete('fee');
+
+      params.delete('page');
+    });
+  };
+
+  const changePage = page => {
+    pushFilterParams(params => {
+      if (page > 0) params.set('page', String(page));
+      else params.delete('page');
+    });
+  };
+
   const selectedTeam = state.teamId
     ? teams.find(team => String(team.teamId) === String(state.teamId))
     : null;
@@ -224,12 +304,8 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         leagueCode={state.leagueCode}
         teamId={state.teamId}
         teams={teams}
-        onLeagueChange={leagueCode =>
-          setState(current => ({ ...current, page: 0, leagueCode, teamId: '' }))
-        }
-        onTeamChange={teamId =>
-          setState(current => ({ ...current, page: 0, teamId }))
-        }
+        onLeagueChange={changeLeague}
+        onTeamChange={changeTeam}
       />
 
       <div className="transfer-market-fees">
@@ -240,7 +316,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
               key={value}
               className={`filter ${feeFilter === value ? 'selected' : ''}`}
               type="button"
-              onClick={() => setFeeFilter(value)}
+              onClick={() => changeFee(value)}
             >
               {label}
             </button>
@@ -379,7 +455,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         hasPrevious={state.hasPrevious}
         hasNext={state.hasNext}
         loading={state.loading}
-        onPage={page => setState(current => ({ ...current, page }))}
+        onPage={changePage}
       />
     </section>
   );

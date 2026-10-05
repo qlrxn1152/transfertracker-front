@@ -11,6 +11,7 @@ import {
   teamDisplayName
 } from '../utils';
 import './HomePage.css';
+import './HomeFeature.css';
 
 export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
   const [state, setState] = useState({
@@ -96,6 +97,8 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
   };
 
   const top = transferGroups[0];
+  const topFrom = top ? findTeam(top.outTeamName) : null;
+  const topTo = top ? findTeam(top.inTeamName) : null;
 
   return (
     <section className="home-page">
@@ -111,19 +114,62 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
           </div>
         </div>
 
-        <div className="home-hero-feature">
+        <div className="home-hero-feature home-feature-shell">
           {top ? (
-            <button type="button" onClick={() => top.playerId && onPlayerOpen(Number(top.playerId))}>
-              <div className="home-feature-player">
-                <span>{(top.playerName || '?').slice(0,1)}</span>
-                {photoUrl(top.photoUrl) && <img src={top.photoUrl} alt="" referrerPolicy="no-referrer" />}
+            <button
+              className="home-feature-card"
+              type="button"
+              onClick={() => top.playerId && onPlayerOpen(Number(top.playerId))}
+            >
+              <div className="home-feature-top">
+                <span>Latest transfer</span>
+                <time>{displayDate(top.date)}</time>
               </div>
-              <small>최신 이적 기록 · {displayDate(top.date)}</small>
-              <h2>{top.playerName}</h2>
-              <div className="home-feature-route">
-                <strong>{teamName(top.outTeamName, top.outTeamNameKo)}</strong>
-                <span>→</span>
-                <strong>{teamName(top.inTeamName, top.inTeamNameKo)}</strong>
+
+              <div className="home-feature-profile">
+                <span className="home-feature-portrait">
+                  {(top.playerName || '?').slice(0, 1)}
+                  {photoUrl(top.photoUrl) && (
+                    <img src={top.photoUrl} alt="" referrerPolicy="no-referrer" />
+                  )}
+                </span>
+
+                <div>
+                  <small>PLAYER #{top.playerId ?? '—'}</small>
+                  <h2>{top.playerName}</h2>
+                  <p>최근 등록된 선수 이동</p>
+                </div>
+              </div>
+
+              <div className="home-feature-club-route">
+                <span className="home-feature-club">
+                  <i>
+                    {(top.outTeamName || '?').slice(0, 1)}
+                    {topFrom && logoUrl(topFrom.logoUrl) && (
+                      <img src={topFrom.logoUrl} alt="" referrerPolicy="no-referrer" />
+                    )}
+                  </i>
+                  <small>FROM</small>
+                  <strong>{teamName(top.outTeamName, top.outTeamNameKo)}</strong>
+                </span>
+
+                <b aria-hidden="true">→</b>
+
+                <span className="home-feature-club">
+                  <i>
+                    {(top.inTeamName || '?').slice(0, 1)}
+                    {topTo && logoUrl(topTo.logoUrl) && (
+                      <img src={topTo.logoUrl} alt="" referrerPolicy="no-referrer" />
+                    )}
+                  </i>
+                  <small>TO</small>
+                  <strong>{teamName(top.inTeamName, top.inTeamNameKo)}</strong>
+                </span>
+              </div>
+
+              <div className="home-feature-bottom">
+                <span>이적 기록 보기</span>
+                <strong>↗</strong>
               </div>
             </button>
           ) : (

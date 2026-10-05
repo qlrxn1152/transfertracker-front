@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { getTeamDetail } from '../api/client';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { getTeamDetail, getTransfers } from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES, SUPPORTED_POST_LEAGUES } from '../constants';
 import {
+  displayDate,
   formatPostDate,
   leagueName,
   logoUrl,
   photoUrl,
   postTransferFlag,
   teamDisplayName,
-  teamLeague
+  teamLeague,
+  typeLabel
 } from '../utils';
 import './TeamDetailPage.css';
+import './TeamTransfers.css';
 
 const POSITION_ORDER = ['GK', 'DF', 'MF', 'FW'];
 
@@ -47,6 +50,17 @@ function positionOf(player) {
   if (raw.includes('MID') || raw === 'M') return 'MF';
   if (raw.includes('ATT') || raw.includes('FOR') || raw === 'F') return 'FW';
   return '';
+}
+
+function transferFee(move) {
+  const raw = move?.fee ?? move?.transferFee;
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : '비공개';
+}
+
+function resolveTeamName(name, ko, teams) {
+  if (ko) return ko;
+  const found = teams.find(team => team.teamName === name);
+  return found ? teamDisplayName(found) : (name || '—');
 }
 
 function FeaturedPost({ post, sample, index }) {
@@ -125,6 +139,41 @@ function NewsRow({ post, sample }) {
   );
 }
 
+function TeamTransferRow({ move, direction, teams, currentTeamName, onPlayerOpen }) {
+  const otherName = direction === 'in'
+    ? resolveTeamName(move.outTeamName, move.outTeamNameKo, teams)
+    : resolveTeamName(move.inTeamName, move.inTeamNameKo, teams);
+
+  return (
+    <button
+      className="team-transfer-row"
+      type="button"
+      onClick={() => move.playerId && onPlayerOpen(Number(move.playerId))}
+    >
+      <span className="team-transfer-player">
+        {(move.playerName || '?').slice(0, 1)}
+        {photoUrl(move.photoUrl) && (
+          <img src={move.photoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" />
+        )}
+      </span>
+
+      <span className="team-transfer-copy">
+        <strong>{move.playerName}</strong>
+        <small>
+          {direction === 'in'
+            ? `${otherName} → ${currentTeamName}`
+            : `${currentTeamName} → ${otherName}`}
+        </small>
+      </span>
+
+      <span className="team-transfer-meta">
+        <strong>{transferFee(move)}</strong>
+        <small>{displayDate(move.date)} · {typeLabel(move.type)}</small>
+      </span>
+    </button>
+  );
+}
+
 export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPlayerOpen }) {
   const { teamId } = useParams();
   const navigate = useNavigate();
@@ -144,6 +193,7 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPla
 
       try {
         let data;
+        let transfers = [];
 
         if (sample) {
           const selected = teams.find(team => Number(team.teamId) === id);
@@ -157,15 +207,41 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPla
             players: { teamPlayers: demo.teamPlayers[selected.teamName] || [] },
             posts: { posts: demo.teamPosts[selected.teamName] || [] }
           };
+
+          transfers = demo.transfers.filter(move =>
+            move.inTeamName === selected.teamName
+            || move.outTeamName === selected.teamName
+          );
         } else {
-          data = await getTeamDetail(id, controller.signal);
+          const [detailResult, transferResult] = await Promise.allSettled([
+            getTeamDetail(id, controller.signal),
+            getTransfers(
+              { page: 0, keyWord: '', leagueCode: '', teamId: id },
+              controller.signal
+            )
+          ]);
+
+          if (detailResult.status !== 'fulfilled') throw detailResult.reason;
+
+          data = detailResult.value;
+
+          if (
+            transferResult.status === 'fulfilled'
+            && Array.isArray(transferResult.value.transfers)
+          ) {
+            transfers = transferResult.value.transfers;
+          }
         }
 
         if (!data.teams || !Array.isArray(data.players?.teamPlayers) || !Array.isArray(data.posts?.posts)) {
           throw new Error('예상과 다른 클럽 상세 응답 형식입니다.');
         }
 
-        setState({ loading: false, error: '', data });
+        setState({
+          loading: false,
+          error: '',
+          data: { ...data, transfers }
+        });
       } catch (error) {
         if (error.name !== 'AbortError') {
           setState({ loading: false, error: error.message, data: null });
@@ -183,12 +259,27 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPla
     const team = state.data.teams;
     const known = teams.find(item => String(item.teamId) === String(team.teamId));
     const league = known ? teamLeague(known) : teamLeague(team);
+
     const roster = [...state.data.players.teamPlayers]
       .sort((a, b) => String(a.playerName || '').localeCompare(String(b.playerName || ''), 'ko'));
+
     const news = [...state.data.posts.posts]
       .sort((a, b) => (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0));
 
-    return { team, league, roster, news };
+    const transfers = [...(state.data.transfers || [])]
+      .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
+    const inbound = transfers.filter(move =>
+      String(move.inTeamId ?? '') === String(team.teamId)
+      || move.inTeamName === team.teamName
+    );
+
+    const outbound = transfers.filter(move =>
+      String(move.outTeamId ?? '') === String(team.teamId)
+      || move.outTeamName === team.teamName
+    );
+
+    return { team, league, roster, news, transfers, inbound, outbound };
   }, [state.data, teams]);
 
   if (state.loading) {
@@ -213,7 +304,7 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPla
     );
   }
 
-  const { team, league, roster, news } = content;
+  const { team, league, roster, news, transfers, inbound, outbound } = content;
   const picture = logoUrl(team.logoUrl);
   const count = Number.isSafeInteger(team.teamPlayerCount) && team.teamPlayerCount >= 0
     ? team.teamPlayerCount
@@ -264,10 +355,74 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPla
         </div>
 
         <div className="team-detail-hero-stat">
-          <strong>{news.length.toLocaleString()}</strong>
-          <span>관련 이적 소식</span>
+          <strong>{transfers.length.toLocaleString()}</strong>
+          <span>최근 관련 이적</span>
         </div>
       </header>
+
+      <section className="team-transfer-section">
+        <div className="team-transfer-head">
+          <div>
+            <p className="eyebrow">RECENT TRANSFERS</p>
+            <h2>관련 이적</h2>
+            <p>{teamDisplayName(team)}의 최근 영입과 방출을 확인하세요.</p>
+          </div>
+
+          <Link to={`/transfers?teamId=${team.teamId}`}>
+            전체 이적 보기 →
+          </Link>
+        </div>
+
+        {transfers.length ? (
+          <div className="team-transfer-columns">
+            <div className="team-transfer-column inbound">
+              <div className="team-transfer-column-head">
+                <strong>영입</strong>
+                <span>{inbound.length}</span>
+              </div>
+
+              <div className="team-transfer-list">
+                {inbound.slice(0, 5).map((move, index) => (
+                  <TeamTransferRow
+                    key={`in-${move.playerId ?? move.playerName}-${move.date}-${index}`}
+                    move={move}
+                    direction="in"
+                    teams={teams}
+                    currentTeamName={teamDisplayName(team)}
+                    onPlayerOpen={onPlayerOpen}
+                  />
+                ))}
+                {!inbound.length && <p>최근 영입 기록이 없습니다.</p>}
+              </div>
+            </div>
+
+            <div className="team-transfer-column outbound">
+              <div className="team-transfer-column-head">
+                <strong>방출</strong>
+                <span>{outbound.length}</span>
+              </div>
+
+              <div className="team-transfer-list">
+                {outbound.slice(0, 5).map((move, index) => (
+                  <TeamTransferRow
+                    key={`out-${move.playerId ?? move.playerName}-${move.date}-${index}`}
+                    move={move}
+                    direction="out"
+                    teams={teams}
+                    currentTeamName={teamDisplayName(team)}
+                    onPlayerOpen={onPlayerOpen}
+                  />
+                ))}
+                {!outbound.length && <p>최근 방출 기록이 없습니다.</p>}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="team-detail-empty">
+            이 클럽에 연결된 최근 이적 기록이 없습니다.
+          </div>
+        )}
+      </section>
 
       <div className="team-detail-layout">
         <main className="team-detail-main">

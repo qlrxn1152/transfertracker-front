@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Layout from './components/Layout';
 import PlayerDialog from './components/PlayerDialog';
@@ -16,6 +16,7 @@ import { leagueName } from './utils';
 
 function AppRoutes() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sample, setSample] = useState(false);
   const [teams, setTeams] = useState([]);
   const [teamError, setTeamError] = useState('');
@@ -23,6 +24,13 @@ function AppRoutes() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [playerId, setPlayerId] = useState(null);
   const [postTeamId, setPostTeamId] = useState('all');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const value = Number(params.get('player'));
+
+    setPlayerId(Number.isSafeInteger(value) && value > 0 ? value : null);
+  }, [location.search]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -87,9 +95,37 @@ function AppRoutes() {
     return () => controller.abort();
   }, [sample, refreshKey]);
 
+  function openPlayer(id) {
+    const value = Number(id);
+    if (!Number.isSafeInteger(value) || value < 1) return;
+
+    // URL 업데이트와 별개로 모달 상태를 즉시 연다.
+    setPlayerId(value);
+
+    const params = new URLSearchParams(location.search);
+    params.set('player', String(value));
+
+    navigate({
+      pathname: location.pathname,
+      search: `?${params.toString()}`
+    });
+  }
+
+  function closePlayer() {
+    const params = new URLSearchParams(location.search);
+    params.delete('player');
+
+    const search = params.toString();
+
+    navigate({
+      pathname: location.pathname,
+      search: search ? `?${search}` : ''
+    }, { replace: true });
+  }
+
   function toggleSample() {
+    if (playerId) closePlayer();
     setSample(current => !current);
-    setPlayerId(null);
     setPostTeamId('all');
     setRefreshKey(value => value + 1);
   }
@@ -107,7 +143,7 @@ function AppRoutes() {
             <Layout
               sample={sample}
               teams={teams}
-              onPlayerOpen={setPlayerId}
+              onPlayerOpen={openPlayer}
               onToggleSample={toggleSample}
               connection={connection}
             />
@@ -120,7 +156,7 @@ function AppRoutes() {
                 sample={sample}
                 teams={teams}
                 refreshKey={refreshKey}
-                onPlayerOpen={setPlayerId}
+                onPlayerOpen={openPlayer}
               />
             }
           />
@@ -131,7 +167,7 @@ function AppRoutes() {
                 sample={sample}
                 teams={teams}
                 refreshKey={refreshKey}
-                onPlayerOpen={setPlayerId}
+                onPlayerOpen={openPlayer}
               />
             }
           />
@@ -154,7 +190,7 @@ function AppRoutes() {
                 sample={sample}
                 teams={teams}
                 onSelectTeamPosts={selectTeamPosts}
-                onPlayerOpen={setPlayerId}
+                onPlayerOpen={openPlayer}
               />
             }
           />
@@ -165,7 +201,7 @@ function AppRoutes() {
                 sample={sample}
                 teams={teams}
                 refreshKey={refreshKey}
-                onPlayerOpen={setPlayerId}
+                onPlayerOpen={openPlayer}
               />
             }
           />
@@ -176,7 +212,7 @@ function AppRoutes() {
         playerId={playerId}
         sample={sample}
         teams={teams}
-        onClose={() => setPlayerId(null)}
+        onClose={closePlayer}
       />
 
       <Analytics />

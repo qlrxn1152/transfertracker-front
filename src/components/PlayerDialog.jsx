@@ -81,7 +81,15 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
   }, [playerId, sample]);
 
   useEffect(() => {
-    if (playerId && ref.current && !ref.current.open) ref.current.showModal();
+    const dialog = ref.current;
+    if (!dialog) return;
+
+    if (playerId) {
+      if (!dialog.open) dialog.showModal();
+      return;
+    }
+
+    if (dialog.open) dialog.close();
   }, [playerId]);
 
   const latest = state.moves[0] ?? null;
@@ -106,21 +114,25 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
       : null;
   }, [latest, state.player, teams]);
 
-  if (!playerId) return null;
 
   return (
     <dialog
       ref={ref}
       className="player-detail-dialog"
-      onClose={onClose}
-      onCancel={onClose}
+      onClose={() => {
+        if (playerId) onClose();
+      }}
+      onCancel={event => {
+        event.preventDefault();
+        if (playerId) onClose();
+      }}
     >
       <form method="dialog" className="player-detail-close-wrap">
         <button className="player-detail-close" aria-label="닫기">×</button>
       </form>
 
-      {state.loading && <div className="empty player-detail-state">선수 정보를 불러오는 중...</div>}
-      {state.error && <div className="empty error player-detail-state">{state.error}</div>}
+      {playerId && state.loading && <div className="empty player-detail-state">선수 정보를 불러오는 중...</div>}
+      {playerId && state.error && <div className="empty error player-detail-state">{state.error}</div>}
 
       {state.player && (
         <div className="player-detail">
