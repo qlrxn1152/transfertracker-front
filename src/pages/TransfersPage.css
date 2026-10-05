@@ -505,3 +505,79 @@
 .transfer-market-open{padding:0;background:#fff}
 .transfer-market-open:hover{border-color:#13a778;background:#effaf4}
 @media(max-width:760px){.transfer-market-player-button{display:contents}}
+
+/* MOBILE_LAYOUT_FIX_TRANSFER_V1
+   Mobile card children are anchors/buttons now, so nth-of-type no longer maps
+   FROM/TO correctly. Target the actual child positions instead. */
+@media(max-width:760px){
+  .transfer-market-row{
+    gap:13px 10px;
+    padding:14px;
+  }
+
+  .transfer-market-row>.transfer-market-team:nth-child(3){
+    grid-area:move;
+    justify-self:start;
+    width:calc(50% - 24px);
+  }
+
+  .transfer-market-row>.transfer-market-team:nth-child(5){
+    grid-area:move;
+    justify-self:end;
+    width:calc(50% - 24px);
+  }
+
+  .transfer-market-row>.transfer-market-team:nth-child(3),
+  .transfer-market-row>.transfer-market-team:nth-child(5){
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin:0;
+    padding:0;
+    text-align:center;
+  }
+
+  .transfer-market-arrow{
+    grid-area:move;
+    justify-self:center;
+    align-self:center;
+    margin-top:10px;
+  }
+
+  .transfer-market-team strong{
+    max-width:100%;
+    display:-webkit-box;
+    overflow:hidden;
+    white-space:normal;
+    text-overflow:clip;
+    line-height:1.25;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+  }
+
+  .transfer-market-team-link:hover{
+    background:transparent;
+  }
+
+  .transfer-market-status{
+    justify-self:start;
+  }
+
+  .transfer-market-fee{
+    justify-self:center;
+    text-align:center;
+  }
+}
+
+@media(max-width:420px){
+  .transfer-market-row>.transfer-market-team:nth-child(3),
+  .transfer-market-row>.transfer-market-team:nth-child(5){
+    width:calc(50% - 20px);
+  }
+
+  .transfer-market-team-logo{
+    width:40px;
+    height:40px;
+  }
+}

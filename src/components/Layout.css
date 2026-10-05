@@ -194,3 +194,21 @@
     display:none;
   }
 }
+
+/* MOBILE_LAYOUT_FIX_HEADER_V1 */
+@media(max-width:760px){
+  .app-header-inner{
+    grid-template-rows:50px auto;
+    padding-bottom:8px;
+  }
+
+  .app-brand{
+    font-size:16px;
+  }
+
+  .app-mode-button{
+    padding:6px 8px;
+    border-radius:7px;
+    font-size:9px;
+  }
+}

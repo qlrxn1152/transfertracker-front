@@ -162,3 +162,82 @@
   .home-transfer-list .home-transfer-club:last-of-type{grid-area:to;justify-self:end}
   .home-transfer-club span{max-width:95px}
 }
+
+/* MOBILE_LAYOUT_FIX_HOME_V1
+   Keep each home transfer route on one balanced row instead of allowing
+   the FROM club to collapse into the 45px avatar column. */
+@media(max-width:700px){
+  .home-panel,
+  .home-clubs{
+    padding:20px 16px;
+  }
+
+  .home-transfer-list>button{
+    position:relative;
+    grid-template-columns:48px minmax(0,1fr);
+    grid-template-areas:
+      "avatar name"
+      "move move";
+    gap:10px 12px;
+    min-height:0;
+    padding:14px 0;
+  }
+
+  .home-transfer-player{
+    grid-area:avatar;
+  }
+
+  .home-transfer-name{
+    grid-area:name;
+    align-self:center;
+  }
+
+  .home-transfer-name strong{
+    font-size:14px;
+  }
+
+  .home-transfer-list>button>.home-transfer-club:nth-child(3){
+    grid-area:move;
+    justify-self:start;
+    width:calc(50% - 22px);
+  }
+
+  .home-transfer-list>button>.home-transfer-club:nth-child(5){
+    grid-area:move;
+    justify-self:end;
+    width:calc(50% - 22px);
+  }
+
+  .home-transfer-list>button>.home-transfer-club:nth-child(3),
+  .home-transfer-list>button>.home-transfer-club:nth-child(5){
+    min-width:0;
+  }
+
+  .home-transfer-arrow{
+    grid-area:move;
+    justify-self:center;
+    align-self:center;
+    font-size:18px;
+  }
+
+  .home-transfer-club span{
+    max-width:100%;
+    display:-webkit-box;
+    overflow:hidden;
+    white-space:normal;
+    text-overflow:clip;
+    line-height:1.25;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+  }
+
+  .home-transfer-club img{
+    width:28px;
+    height:28px;
+  }
+
+  .home-transfer-list>button>.home-transfer-club:nth-child(5){
+    justify-content:flex-end;
+    text-align:right;
+  }
+}
