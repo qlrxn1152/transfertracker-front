@@ -1,5 +1,11 @@
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
+function apiUrl(path) {
+  return `${API_BASE_URL}${path}`;
+}
+
 export async function getJson(path, signal) {
-  const response = await fetch(path, { cache: 'no-store', signal });
+  const response = await fetch(apiUrl(path), { cache: 'no-store', signal });
 
   if (!response.ok) {
     if (response.status === 502) {

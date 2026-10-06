@@ -212,3 +212,19 @@
     font-size:9px;
   }
 }
+
+/* APPS_IN_TOSS_SAFE_AREA_V1 */
+.app-header{
+  padding-top:env(safe-area-inset-top);
+}
+
+@media(max-width:760px){
+  .app-nav{
+    min-height:calc(61px + env(safe-area-inset-bottom));
+    padding-bottom:max(8px, env(safe-area-inset-bottom));
+  }
+
+  .app-main{
+    padding-bottom:calc(82px + env(safe-area-inset-bottom));
+  }
+}
