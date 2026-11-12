@@ -1,0 +1,131 @@
+{
+   "checksum": "a617e1b0817b548a771ad187c6a04295",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "children": [ {
+               "date_added": "13414509267672083",
+               "date_last_used": "13415085471256405",
+               "guid": "502090e5-ca36-4f57-bace-a13090b46c2e",
+               "id": "34",
+               "meta_info": {
+                  "power_bookmark_meta": ""
+               },
+               "name": "토스증권",
+               "type": "url",
+               "url": "https://www.tossinvest.com/?focusedProductCode=AMX0240604001"
+            }, {
+               "date_added": "13412735266224385",
+               "date_last_used": "13424257207529646",
+               "guid": "68143e7b-b6be-40c7-91af-3e863c539a86",
+               "id": "30",
+               "meta_info": {
+                  "power_bookmark_meta": ""
+               },
+               "name": "토스커뮤니티 채용",
+               "type": "url",
+               "url": "https://toss.im/career/jobs"
+            }, {
+               "date_added": "13424323316542152",
+               "date_last_used": "13427086625588475",
+               "guid": "927f0788-6df6-4bb3-bf35-7c65de1be4b2",
+               "id": "82",
+               "meta_info": {
+                  "power_bookmark_meta": ""
+               },
+               "name": "앱인토스 개발자센터",
+               "type": "url",
+               "url": "https://developers-apps-in-toss.toss.im/revenue/overview.html"
+            } ],
+            "date_added": "13415005080133587",
+            "date_last_used": "0",
+            "date_modified": "13427086590187244",
+            "guid": "db1a7248-9f94-428a-b260-74a3c2e7edd7",
+            "id": "37",
+            "name": "Toss",
+            "type": "folder"
+         }, {
+            "children": [ {
+               "date_added": "13427086364405948",
+               "date_last_used": "0",
+               "guid": "0e2a43d5-b8b4-485d-84a0-4d58923c0864",
+               "id": "103",
+               "meta_info": {
+                  "power_bookmark_meta": ""
+               },
+               "name": "토스 기술블로그",
+               "type": "url",
+               "url": "https://toss.tech/category/engineering"
+            }, {
+               "date_added": "13427086430494303",
+               "date_last_used": "0",
+               "guid": "1e401721-b250-48a2-acc8-77a35ae701fe",
+               "id": "104",
+               "meta_info": {
+                  "power_bookmark_meta": ""
+               },
+               "name": "우아한형제들 기술블로그",
+               "type": "url",
+               "url": "https://techblog.woowahan.com/?paged=1&ptag=Backend"
+            }, {
+               "date_added": "13427086466389070",
+               "date_last_used": "0",
+               "guid": "cae4f89d-cf36-482a-b5c1-4a97d3a20a40",
+               "id": "105",
+               "meta_info": {
+                  "power_bookmark_meta": ""
+               },
+               "name": "카카오 기술블로그",
+               "type": "url",
+               "url": "https://tech.kakaopay.com/tag/be/"
+            } ],
+            "date_added": "13415005124008374",
+            "date_last_used": "0",
+            "date_modified": "13427086505522056",
+            "guid": "32a42524-66d7-4e17-89a0-3a5e8d0d4206",
+            "id": "38",
+            "name": "기술블로그 -",
+            "type": "folder"
+         }, {
+            "date_added": "13427105382771608",
+            "date_last_used": "13438075525987653",
+            "guid": "33446d6e-3c06-4b9a-a2d8-61d5489e89b7",
+            "id": "111",
+            "meta_info": {
+               "power_bookmark_meta": ""
+            },
+            "name": "코테",
+            "type": "url",
+            "url": "https://school.programmers.co.kr/learn/challenges?order=recent&levels=0%2C1&languages=mysql"
+         } ],
+         "date_added": "13410100914019296",
+         "date_last_used": "0",
+         "date_modified": "13427105399317408",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "북마크바",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13410100914019296",
+         "date_last_used": "0",
+         "date_modified": "13410100955549728",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "기타 북마크",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13410100914019296",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "모바일 북마크",
+         "type": "folder"
+      }
+   },
+   "version": 1
+}

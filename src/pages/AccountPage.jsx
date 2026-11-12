@@ -8,6 +8,7 @@ import {
   signUpMember
 } from '../api/client';
 import FcmTestPanel from '../components/FcmTestPanel';
+import { trackAnalyticsEvent } from '../firebase/analytics';
 import { logoUrl, teamDisplayName } from '../utils';
 import './AccountPage.css';
 
@@ -52,13 +53,17 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
 
     try {
       if (mode === 'signup') {
+        trackAnalyticsEvent('sign_up_submitted');
         await signUpMember({ loginId, password });
+        trackAnalyticsEvent('sign_up_completed');
         setStatus('회원가입이 완료됐습니다. 로그인해 주세요.');
         setPassword('');
         return;
       }
 
+      trackAnalyticsEvent('login_submitted');
       const nextSession = await loginMember({ loginId, password });
+      trackAnalyticsEvent('login_completed');
       onSessionChange(nextSession);
       navigate('/account', { replace: true });
     } catch (error) {
@@ -74,6 +79,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
     setStatus('');
     try {
       await addFavoriteTeams(session.accessToken, [Number(selectedTeamId)]);
+      trackAnalyticsEvent('favorite_team_added');
       const data = await getFavoriteTeams(session.accessToken);
       setFavorites(Array.isArray(data.teamDetails) ? data.teamDetails : []);
       setPosts(Array.isArray(data.postDetails) ? data.postDetails : []);
@@ -91,6 +97,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
     setStatus('');
     try {
       await deleteFavoriteTeam(session.accessToken, teamId);
+      trackAnalyticsEvent('favorite_team_removed');
       setFavorites(current => current.filter(team => String(team.teamId) !== String(teamId)));
       setPosts(current => current.filter(post => String(post.teamId) !== String(teamId)));
     } catch (error) {
@@ -173,7 +180,12 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
             {!posts.length && <p className="account-muted">표시할 새 소식이 없습니다.</p>}
           </div>
         </section>
-        <FcmTestPanel accessToken={session.accessToken} memberId={session.memberId} />
+        <FcmTestPanel
+          accessToken={session.accessToken}
+          memberId={session.memberId}
+          isAdmin={session.memberGrade === 'ADMIN'}
+          favoriteTeams={favorites}
+        />
         {status && <p className="account-status" role="status">{status}</p>}
       </section>
     );

@@ -1,23 +1,28 @@
-# 적용 방법
+# 맨체스터 유나이티드 팀 상세 배너 사진 적용
 
-현재 `transfertracker-front` 프로젝트 루트에서 실행하세요.
+사용자가 제공한 맨체스터 유나이티드 단체사진을 실제 프론트엔드 팀 상세 히어로 영역에 적용합니다.
+
+- 맨유 팀 상세만 단체사진 사용
+- 다른 팀은 기존 녹색 배너 유지
+- `teamName === Manchester United` 기준 적용
+- PC/모바일 반응형 배경 위치 조정
+- 기존 팀 로고 / 팀명 / 리그 / 선수 수 / 최근 관련 이적 UI 유지
+
+## 적용
+
+압축을 푼 뒤:
 
 ```bash
-python3 apply_apps_in_toss_frontend.py .
-npm install
+cd ~/Desktop/transfertracker-web
+python3 /압축푼경로/apply_manutd_hero.py .
 npm run build
-npm run build:ait
+npm run dev
 ```
 
-자동으로 처리되는 것:
-- Apps in Toss Web Framework 3.x 추가
-- `.ait` 전용 build script 추가
-- `apps-in-toss.config.ts` 생성
-- AIT에서는 Railway API 직접 호출
-- 기존 Vercel에서는 `/api` rewrite 유지
-- AIT에서 Service Worker 비활성화
-- 모바일 Safe Area 보정
-- 기존 Vercel `npm run build` 유지
+정상이면:
 
-현재 `appName`은 `transfertracker`로 넣었습니다.
-Apps in Toss 콘솔에서 다른 appName을 등록했다면 그 값만 바꾸면 됩니다.
+```bash
+git add src/pages/TeamDetailPage.jsx src/pages/TeamDetailPage.css public/team-hero/manchester-united-team.jpg
+git commit -m "feat: add Manchester United team hero photo"
+git push
+```

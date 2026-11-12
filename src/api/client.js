@@ -33,7 +33,8 @@ async function request(path, options = {}) {
   }
 
   if (response.status === 204) return null;
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 }
 
 export const getJson = (path, signal) => request(path, { signal });
@@ -106,4 +107,15 @@ export const registerFcmToken = (token, fcmToken) => request('/api/members/me/fc
   method: 'POST',
   token,
   body: JSON.stringify({ platform: 'WEB', token: fcmToken })
+});
+
+// 운영자만 호출 가능한 실제 FCM 흐름 점검용 게시물 발행 API입니다.
+export const publishNotificationTestPost = (token, teamId) => request(
+  `/external/api/posts/notification-test/${encodeURIComponent(teamId)}`,
+  { method: 'POST', token }
+);
+
+export const removeNotificationTestPosts = token => request('/external/api/posts/notification-test', {
+  method: 'DELETE',
+  token
 });

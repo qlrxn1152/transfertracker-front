@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Layout from './components/Layout';
@@ -14,8 +14,22 @@ import { getTeams, getTeamsByLeague } from './api/client';
 import { LEAGUES } from './constants';
 import { demo } from './demo';
 import { leagueName } from './utils';
+import { trackPageView } from './firebase/analytics';
 
 const SESSION_STORAGE_KEY = 'transfertracker.session';
+
+function analyticsPageName(pathname) {
+  if (pathname === '/') return 'home';
+  if (pathname === '/transfers') return 'transfers';
+  if (pathname === '/posts') return 'reporter_posts';
+  if (pathname === '/teams') return 'teams';
+  if (pathname.startsWith('/teams/')) return 'team_detail';
+  if (pathname === '/players') return 'players';
+  if (pathname === '/login') return 'login';
+  if (pathname === '/signup') return 'signup';
+  if (pathname === '/account') return 'account';
+  return 'other';
+}
 
 function readStoredSession() {
   try {
@@ -37,6 +51,17 @@ function AppRoutes() {
   const [playerId, setPlayerId] = useState(null);
   const [postTeamId, setPostTeamId] = useState('all');
   const [session, setSession] = useState(readStoredSession);
+  const lastTrackedPath = useRef('');
+
+  useEffect(() => {
+    if (lastTrackedPath.current === location.pathname) return;
+
+    lastTrackedPath.current = location.pathname;
+    trackPageView({
+      path: location.pathname,
+      pageName: analyticsPageName(location.pathname)
+    });
+  }, [location.pathname]);
 
   function updateSession(nextSession) {
     setSession(nextSession);
