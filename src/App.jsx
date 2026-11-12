@@ -9,10 +9,22 @@ import PostsPage from './pages/PostsPage';
 import TeamsPage from './pages/TeamsPage';
 import TeamDetailPage from './pages/TeamDetailPage';
 import PlayersPage from './pages/PlayersPage';
+import AccountPage from './pages/AccountPage';
 import { getTeams, getTeamsByLeague } from './api/client';
 import { LEAGUES } from './constants';
 import { demo } from './demo';
 import { leagueName } from './utils';
+
+const SESSION_STORAGE_KEY = 'transfertracker.session';
+
+function readStoredSession() {
+  try {
+    const value = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || 'null');
+    return value?.accessToken ? value : null;
+  } catch {
+    return null;
+  }
+}
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -24,6 +36,13 @@ function AppRoutes() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [playerId, setPlayerId] = useState(null);
   const [postTeamId, setPostTeamId] = useState('all');
+  const [session, setSession] = useState(readStoredSession);
+
+  function updateSession(nextSession) {
+    setSession(nextSession);
+    if (nextSession) localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession));
+    else localStorage.removeItem(SESSION_STORAGE_KEY);
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -31,6 +50,13 @@ function AppRoutes() {
 
     setPlayerId(Number.isSafeInteger(value) && value > 0 ? value : null);
   }, [location.search]);
+
+  useEffect(() => {
+    if (location.pathname !== '/posts') return;
+
+    const teamId = new URLSearchParams(location.search).get('teamId');
+    setPostTeamId(teamId || 'all');
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -146,6 +172,8 @@ function AppRoutes() {
               onPlayerOpen={openPlayer}
               onToggleSample={toggleSample}
               connection={connection}
+              session={session}
+              onLogout={() => updateSession(null)}
             />
           }
         >
@@ -204,6 +232,18 @@ function AppRoutes() {
                 onPlayerOpen={openPlayer}
               />
             }
+          />
+          <Route
+            path="/login"
+            element={<AccountPage mode="login" teams={teams} session={session} onSessionChange={updateSession} />}
+          />
+          <Route
+            path="/signup"
+            element={<AccountPage mode="signup" teams={teams} session={session} onSessionChange={updateSession} />}
+          />
+          <Route
+            path="/account"
+            element={<AccountPage mode="account" teams={teams} session={session} onSessionChange={updateSession} />}
           />
         </Route>
       </Routes>

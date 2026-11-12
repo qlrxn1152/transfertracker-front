@@ -2,11 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getTransfers } from '../api/client';
 import { demo } from '../demo';
-import { FEE_BANDS } from '../constants';
 import {
   displayDate,
-  feeBand,
-  feeMillions,
   leagueName,
   logoUrl,
   photoUrl,
@@ -28,12 +25,6 @@ const initial = {
   error: ''
 };
 
-function feeText(item) {
-  const raw = item?.fee ?? item?.transferFee;
-  if (typeof raw === 'string' && raw.trim()) return raw.trim();
-  return '비공개';
-}
-
 function transferStatus(item) {
   const label = typeLabel(item?.type);
   const upper = String(item?.type || '').toUpperCase();
@@ -49,8 +40,7 @@ function readFilterParams(params) {
     page: Math.max(0, Number(params.get('page') || 0) || 0),
     keyWord: params.get('q') || '',
     leagueCode: params.get('league') || '',
-    teamId: params.get('teamId') || '',
-    fee: params.get('fee') || 'all'
+    teamId: params.get('teamId') || ''
   };
 }
 
@@ -68,7 +58,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
   });
   const [search, setSearch] = useState(first.keyWord);
   const [transfers, setTransfers] = useState([]);
-  const [feeFilter, setFeeFilter] = useState(first.fee);
 
   // URL을 필터 상태의 기준(source of truth)으로 사용한다.
   // 브라우저 뒤로가기/앞으로가기로 URL이 바뀌면 화면 상태도 같이 복원된다.
@@ -77,8 +66,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
     const next = readFilterParams(params);
 
     setSearch(current => current === next.keyWord ? current : next.keyWord);
-    setFeeFilter(current => current === next.fee ? current : next.fee);
-
     setState(current => {
       if (
         current.page === next.page
@@ -191,9 +178,8 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
     return [...map.values()]
       .map(history => [...history].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))))
-      .filter(history => feeFilter === 'all' || feeBand(history[0]) === feeFilter)
       .sort((a, b) => String(b[0]?.date || '').localeCompare(String(a[0]?.date || '')));
-  }, [transfers, feeFilter]);
+  }, [transfers]);
 
   const latest = useMemo(() => {
     const dates = transfers
@@ -244,15 +230,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
     });
   };
 
-  const changeFee = value => {
-    pushFilterParams(params => {
-      if (value !== 'all') params.set('fee', value);
-      else params.delete('fee');
-
-      params.delete('page');
-    });
-  };
-
   const changePage = page => {
     pushFilterParams(params => {
       if (page > 0) params.set('page', String(page));
@@ -265,7 +242,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
     : null;
 
   const emptyText = state.error
-    || (state.keyWord || feeFilter !== 'all'
+    || (state.keyWord
       ? '검색 조건에 맞는 이적 기록이 없습니다.'
       : '아직 등록된 이적 기록이 없습니다.');
 
@@ -308,22 +285,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         onTeamChange={changeTeam}
       />
 
-      <div className="transfer-market-fees">
-        <span>이적료</span>
-        <div className="filter-group" aria-label="이적료 범위">
-          {FEE_BANDS.map(([value, label]) => (
-            <button
-              key={value}
-              className={`filter ${feeFilter === value ? 'selected' : ''}`}
-              type="button"
-              onClick={() => changeFee(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {state.loading ? (
         <div className="empty list-loading">목록을 불러오는 중…</div>
       ) : groups.length ? (
@@ -335,7 +296,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
             <span />
             <span>새 팀</span>
             <span>유형</span>
-            <span>이적료</span>
             <span />
           </div>
 
@@ -420,11 +380,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
                   <span className={`transfer-market-status ${status.tone}`}>{status.label}</span>
 
-                  <span className="transfer-market-fee">
-                    <strong>{feeText(item)}</strong>
-                    <small>{feeMillions(item) === null ? '금액 정보 없음' : 'TRANSFER FEE'}</small>
-                  </span>
-
                   <button
                     className="transfer-market-open"
                     type="button"
@@ -447,7 +402,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         {' '}{state.leagueCode ? leagueName(state.leagueCode) : '전체 리그'}
         {selectedTeam ? ` · ${teamDisplayName(selectedTeam)}` : ''}
         {state.keyWord ? ` · 검색어 “${state.keyWord}”` : ''}
-        {' '}· 금액 필터는 현재 페이지에 적용됩니다.
       </p>
 
       <Pagination

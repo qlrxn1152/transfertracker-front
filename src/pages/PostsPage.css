@@ -28,6 +28,8 @@
 .journal-feed{display:grid;gap:10px}
 .journal-feed .post-card{padding:20px 22px;border-radius:12px;box-shadow:none}
 .journal-feed .post-content{font-size:14px;line-height:1.75}
+.post-media{margin:16px 0 0;overflow:hidden;border:1px solid #e5ebe7;border-radius:10px;background:#f5f8f6}
+.post-media img{display:block;width:100%;max-height:480px;object-fit:cover;background:#f5f8f6}
 @media(max-width:650px){
   .journal-head h1{font-size:28px}
   .journal-head>strong{display:none}

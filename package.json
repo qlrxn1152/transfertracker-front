@@ -6,17 +6,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "node server.js",
     "preview": "vite preview",
     "build:ait:web": "vite build --mode ait",
     "build:ait": "npm run build:ait:web && ait build",
     "deploy:ait": "ait deploy"
   },
   "dependencies": {
+    "@apps-in-toss/web-framework": "^3.5.0",
     "@vercel/analytics": "^1.5.0",
+    "firebase": "^13.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.1",
-    "@apps-in-toss/web-framework": "^3.5.0"
+    "react-router-dom": "^7.9.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",

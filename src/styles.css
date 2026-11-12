@@ -76,6 +76,113 @@
 .post-original summary{width:max-content;cursor:pointer;color:#789082;font-size:11px;font-weight:750}
 .post-original p{margin:10px 0 0;padding:12px 14px;border-radius:7px;background:#f7f9f7;color:#718077;font-size:12px;line-height:1.65;overflow-wrap:anywhere}
 
+/* VEYRO brand system — night stadium, glass panels and lime signal. */
+:root{
+  --veyro-night:#071015;
+  --veyro-surface:#0d171e;
+  --veyro-surface-raised:#111d25;
+  --veyro-line:rgba(220,231,232,.12);
+  --veyro-text:#f4f7f5;
+  --veyro-muted:#98a7aa;
+  --veyro-lime:#d6f39b;
+  --veyro-lime-strong:#bde76d;
+  --veyro-ink:#101820;
+  color:var(--veyro-text);
+  background:var(--veyro-night);
+}
+
+body{
+  min-width:320px;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 82% -8%,rgba(214,243,155,.15),transparent 25rem),
+    radial-gradient(circle at 8% 18%,rgba(51,104,97,.14),transparent 26rem),
+    var(--veyro-night);
+  color:var(--veyro-text);
+}
+
+button:focus-visible,input:focus-visible,a:focus-visible,select:focus-visible{outline-color:var(--veyro-lime)}
+.container{max-width:1240px}
+.eyebrow,.league-kicker{color:var(--veyro-lime)}
+.app-main{min-height:calc(100vh - 66px)}
+
+/* Shared surfaces */
+.home-panel,.home-clubs,.journal-filter-row,.journal-team-banner,.account-card,.fcm-test-panel,
+.transfer-market-board,.team-page-panel,.player-card,.team-card,.league-filter,.detail-card,
+.lookup-form,.empty,.post-card,dialog,.transfer-dialog,.team-news-row{
+  border-color:var(--veyro-line)!important;
+  background:linear-gradient(145deg,rgba(17,29,37,.96),rgba(9,17,22,.96))!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.18)!important;
+  color:var(--veyro-text)!important;
+}
+
+.home-panel-head h2,.journal-head h1,.journal-feed-head strong,.account-page h1,.account-page h2,
+.team-card,.player-card,.transfer-market-row,.team-page-panel h3,.post-author strong,.post-content,
+.account-post-list a,.account-team a,.league-filter{color:var(--veyro-text)!important}
+
+.home-panel-head>a,.journal-source-tabs button.active,.app-account-link,.post-card-foot a,
+.team-page-posts-more,.account-post-related,.account-post-related small{color:var(--veyro-lime)!important}
+
+.search,.journal-team-select select,.account-add-row select,.account-form input,.team-select-filter select,
+.lookup-form input,.compact-filter,.journal-source-tabs button,.journal-transfer-only,.pagination button{
+  border-color:var(--veyro-line)!important;
+  background:rgba(255,255,255,.035)!important;
+  color:var(--veyro-text)!important;
+}
+.search input,.account-form input{color:var(--veyro-text)!important}
+.search input::placeholder{color:#718087}
+
+.account-primary,.home-primary-link,.home-feature-bottom strong{
+  background:var(--veyro-lime)!important;
+  color:var(--veyro-ink)!important;
+  box-shadow:0 8px 24px rgba(214,243,155,.16);
+}
+.home-secondary-link,.fcm-token-copy,.app-mode-button{
+  border-color:rgba(214,243,155,.35)!important;
+  background:rgba(214,243,155,.06)!important;
+  color:var(--veyro-lime)!important;
+}
+.filter.selected,.compact-filter.selected,.league-filter.selected,.journal-transfer-only.active{
+  border-color:var(--veyro-lime)!important;
+  background:rgba(214,243,155,.12)!important;
+  color:var(--veyro-lime)!important;
+}
+
+.home-hero{
+  position:relative;
+  border:1px solid rgba(214,243,155,.17);
+  background:
+    linear-gradient(90deg,rgba(5,13,18,.98) 0%,rgba(6,17,22,.90) 48%,rgba(8,21,24,.64) 100%),
+    radial-gradient(circle at 88% 16%,rgba(214,243,155,.34),transparent 16rem),
+    #071015;
+  box-shadow:0 28px 70px rgba(0,0,0,.32);
+}
+.home-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.22;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),rgba(214,243,155,.2) calc(10% - 1px),rgba(214,243,155,.2) 10%)}
+.home-hero-copy,.home-hero-feature{position:relative;z-index:1}
+.home-live{background:rgba(214,243,155,.14);color:var(--veyro-lime);border:1px solid rgba(214,243,155,.27)}
+.home-hero-copy>p{color:#aebbbe}
+.home-hero-feature,.home-feature-shell{background:radial-gradient(circle at 70% 12%,rgba(214,243,155,.23),transparent 33%),linear-gradient(145deg,#101c21,#071015 76%)!important}
+.home-feature-card{border-color:rgba(214,243,155,.18)!important;background:rgba(7,16,21,.52)!important}
+.home-feature-top span,.home-feature-club-route>b{color:var(--veyro-lime)!important}
+.home-feature-portrait{background:linear-gradient(145deg,#263238,#101820)!important;color:var(--veyro-lime)!important}
+
+.post-avatar,.home-news-avatar,.player-avatar,.club-logo,.team-page-emblem,.account-team a>span{
+  background:rgba(214,243,155,.12)!important;
+  color:var(--veyro-lime)!important;
+}
+.post-card-foot,.account-post-list a,.home-transfer-list>button,.home-news-list article,.team-news-row{border-color:var(--veyro-line)!important}
+.home-transfer-list>button{background:transparent!important;color:var(--veyro-text)!important}
+.home-transfer-name small,.home-news-meta time,.home-news-list p,.post-author span,.post-card-head time,
+.post-card-foot,.account-muted,.account-hero p,.account-card-head p,.journal-head>div>p:last-child{color:var(--veyro-muted)!important}
+
+.pagination span{color:var(--veyro-muted)}
+.app-footer{border-color:var(--veyro-line);color:#829095}.app-footer b{color:var(--veyro-lime);letter-spacing:.12em}
+
+@media(max-width:760px){
+  .app-nav{background:#0a141a!important;border-color:var(--veyro-line)!important;box-shadow:0 -12px 30px rgba(0,0,0,.32)!important}
+  .app-nav-link{color:#7f9093}.app-nav-link.active{color:var(--veyro-lime)!important}.app-nav-link.active::after{background:var(--veyro-lime)!important}
+}
+
 
 /* Server-side league/team filters */
 .list-filter-toolbar{display:flex;align-items:flex-start;gap:13px;margin:0 0 18px}
@@ -109,3 +216,54 @@
 a.nav-item{text-decoration:none}
 a.brand{text-decoration:none}
 .transfer-dialog[open]{display:block}
+
+/* Keep controls declared after the brand block inside the VEYRO dark system. */
+.list-filter-toolbar>span,.team-select-filter>span{color:var(--veyro-muted)}
+.team-select-filter select{
+  border-color:var(--veyro-line);
+  background:rgba(255,255,255,.035);
+  color:var(--veyro-text);
+}
+.compact-filter:hover,.pagination button:hover:not(:disabled){
+  border-color:var(--veyro-lime)!important;
+  background:rgba(214,243,155,.1)!important;
+  color:var(--veyro-lime)!important;
+}
+
+/* Lower contrast for data-dense pages: no pure-white slabs on the night canvas. */
+.transfer-market-view{--tm-dark:var(--veyro-text);--tm-muted:var(--veyro-muted);--tm-border:var(--veyro-line)}
+.transfer-market-count,.transfer-market-board,.transfer-market-row,.transfer-market-open,
+.players-card,.players-team>span,.global-search-panel,.global-search-panel button,
+.global-search-icon,.team-news-feature,.team-news-row-copy,.team-roster,.roster-list li,
+.transfer-history,.post-original p{
+  border-color:var(--veyro-line)!important;
+  background:#111d25!important;
+  color:var(--veyro-text)!important;
+}
+.transfer-market-columns{
+  border-color:var(--veyro-line)!important;
+  background:#0c161c!important;
+  color:#7f9093!important;
+}
+.transfer-market-row{border-bottom-color:var(--veyro-line)!important}
+.transfer-market-row:hover,.global-search-panel button:hover,.team-roster-player:hover{
+  background:#17252e!important;
+}
+.transfer-market-date,.transfer-market-player-copy small,.transfer-market-team small,
+.players-card-copy>small,.players-team strong,.global-search-panel h3,.global-search-panel small,
+.transfer-history>p,.transfer-history time,.post-original summary,.post-original p{
+  color:var(--veyro-muted)!important;
+}
+.transfer-market-player-copy strong,.transfer-market-team strong,.transfer-market-fee strong,
+.players-card h3,.players-team strong,.global-search-panel strong,.global-search-panel button,
+.transfer-history .history-route{color:var(--veyro-text)!important}
+.transfer-market-avatar,.players-photo,.global-search-icon.player{
+  background:linear-gradient(145deg,#203037,#111d25)!important;
+  color:var(--veyro-lime)!important;
+}
+.transfer-market-team-logo{border-color:var(--veyro-line)!important;background:#18242c!important;color:var(--veyro-muted)!important}
+.transfer-market-status{background:rgba(214,243,155,.13)!important;color:var(--veyro-lime)!important}
+.transfer-market-status.loan,.transfer-market-status.free,.transfer-market-status.out{background:rgba(255,255,255,.07)!important;color:#c4d0cf!important}
+.transfer-market-open{color:var(--veyro-lime)!important}
+.section-head>div>p:last-child,.players-head>div>p:last-child,.players-head>strong span{color:var(--veyro-muted)!important}
+.players-head h1,.section-head h2,.transfer-market-head h2{color:var(--veyro-text)!important}

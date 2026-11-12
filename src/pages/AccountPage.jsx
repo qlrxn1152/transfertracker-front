@@ -1,0 +1,197 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  addFavoriteTeams,
+  deleteFavoriteTeam,
+  getFavoriteTeams,
+  loginMember,
+  signUpMember
+} from '../api/client';
+import FcmTestPanel from '../components/FcmTestPanel';
+import { logoUrl, teamDisplayName } from '../utils';
+import './AccountPage.css';
+
+export default function AccountPage({ mode, teams, session, onSessionChange }) {
+  const navigate = useNavigate();
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [selectedTeamId, setSelectedTeamId] = useState('');
+
+  useEffect(() => {
+    if (mode !== 'account' || !session?.accessToken) return;
+
+    const controller = new AbortController();
+    getFavoriteTeams(session.accessToken, controller.signal)
+      .then(data => {
+        setFavorites(Array.isArray(data.teamDetails) ? data.teamDetails : []);
+        setPosts(Array.isArray(data.postDetails) ? data.postDetails : []);
+        setStatus('');
+      })
+      .catch(error => {
+        if (error.name === 'AbortError') return;
+        if (/401|403|인증|토큰/.test(error.message)) onSessionChange(null);
+        setStatus(error.message || '관심팀을 불러오지 못했습니다.');
+      });
+
+    return () => controller.abort();
+  }, [mode, onSessionChange, session?.accessToken]);
+
+  const availableTeams = useMemo(() => teams
+    .filter(team => !favorites.some(favorite => String(favorite.teamId) === String(team.teamId)))
+    .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko')),
+  [favorites, teams]);
+
+  async function submit(event) {
+    event.preventDefault();
+    setLoading(true);
+    setStatus('');
+
+    try {
+      if (mode === 'signup') {
+        await signUpMember({ loginId, password });
+        setStatus('회원가입이 완료됐습니다. 로그인해 주세요.');
+        setPassword('');
+        return;
+      }
+
+      const nextSession = await loginMember({ loginId, password });
+      onSessionChange(nextSession);
+      navigate('/account', { replace: true });
+    } catch (error) {
+      setStatus(error.message || '요청을 처리하지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function addTeam() {
+    if (!selectedTeamId || !session?.accessToken) return;
+    setLoading(true);
+    setStatus('');
+    try {
+      await addFavoriteTeams(session.accessToken, [Number(selectedTeamId)]);
+      const data = await getFavoriteTeams(session.accessToken);
+      setFavorites(Array.isArray(data.teamDetails) ? data.teamDetails : []);
+      setPosts(Array.isArray(data.postDetails) ? data.postDetails : []);
+      setSelectedTeamId('');
+    } catch (error) {
+      setStatus(error.message || '관심팀을 추가하지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function removeTeam(teamId) {
+    if (!session?.accessToken) return;
+    setLoading(true);
+    setStatus('');
+    try {
+      await deleteFavoriteTeam(session.accessToken, teamId);
+      setFavorites(current => current.filter(team => String(team.teamId) !== String(teamId)));
+      setPosts(current => current.filter(post => String(post.teamId) !== String(teamId)));
+    } catch (error) {
+      setStatus(error.message || '관심팀을 삭제하지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (mode === 'account') {
+    if (!session) {
+      return (
+        <section className="account-page account-empty">
+          <p className="eyebrow">MY TRANSFER DESK</p>
+          <h1>로그인이 필요합니다.</h1>
+          <Link className="account-primary" to="/login">로그인하기</Link>
+        </section>
+      );
+    }
+
+    return (
+      <section className="account-page">
+        <header className="account-hero">
+          <p className="eyebrow">MY TRANSFER DESK</p>
+          <h1>{session.loginId}님의 관심 팀</h1>
+          <p>관심 팀의 관련 기자 소식을 한곳에서 확인합니다. <span className="account-grade">{session.memberGrade || 'USER'}</span></p>
+        </header>
+
+        <section className="account-card">
+          <div className="account-card-head">
+            <div><h2>관심 팀 추가</h2><p>팀을 선택하면 내 소식 목록에 반영됩니다.</p></div>
+          </div>
+          <div className="account-add-row">
+            <select value={selectedTeamId} onChange={event => setSelectedTeamId(event.target.value)}>
+              <option value="">팀 선택</option>
+              {availableTeams.map(team => <option key={team.teamId} value={team.teamId}>{teamDisplayName(team)}</option>)}
+            </select>
+            <button type="button" className="account-primary" disabled={!selectedTeamId || loading} onClick={addTeam}>추가</button>
+          </div>
+        </section>
+
+        <section className="account-card">
+          <div className="account-card-head"><div><h2>내 팀</h2><p>{favorites.length}개 팀을 구독 중입니다.</p></div></div>
+          <div className="account-team-grid">
+            {favorites.map(team => (
+              <article key={team.teamId} className="account-team">
+                <Link to={`/teams/${team.teamId}`}>
+                  <span>{team.teamName?.slice(0, 1)}{logoUrl(team.logoUrl) && <img src={team.logoUrl} alt="" referrerPolicy="no-referrer" />}</span>
+                  <strong>{team.teamName}</strong>
+                </Link>
+                <button type="button" disabled={loading} onClick={() => removeTeam(team.teamId)} aria-label={`${team.teamName} 관심팀 해제`}>해제</button>
+              </article>
+            ))}
+            {!favorites.length && <p className="account-muted">아직 관심 팀이 없습니다.</p>}
+          </div>
+        </section>
+
+        <section className="account-card">
+          <div className="account-card-head"><div><h2>내 팀 최신 소식</h2><p>관심 팀과 연결된 최신 기자 게시물입니다.</p></div></div>
+          <div className="account-post-list">
+            {posts.map(post => {
+              const relatedTeam = favorites.find(team => String(team.teamId) === String(post.teamId))
+                || teams.find(team => String(team.teamId) === String(post.teamId));
+              const relatedTeamName = relatedTeam?.teamName || post.teamName || '관련 팀';
+
+              return (
+                <Link key={`${post.teamId}-${post.postId}`} to={`/posts?teamId=${post.teamId}`}>
+                  <strong>{post.postContent}</strong>
+                  <span className="account-post-related">
+                    <span className="account-post-team-logo" aria-hidden="true">
+                      {relatedTeamName.slice(0, 1)}
+                      {logoUrl(relatedTeam?.logoUrl) && <img src={relatedTeam.logoUrl} alt="" referrerPolicy="no-referrer" />}
+                    </span>
+                    <span>{relatedTeamName}</span>
+                    {post.sourcer && <small>{String(post.sourcer).replaceAll('_', ' ')}</small>}
+                  </span>
+                </Link>
+              );
+            })}
+            {!posts.length && <p className="account-muted">표시할 새 소식이 없습니다.</p>}
+          </div>
+        </section>
+        <FcmTestPanel accessToken={session.accessToken} memberId={session.memberId} />
+        {status && <p className="account-status" role="status">{status}</p>}
+      </section>
+    );
+  }
+
+  const isSignup = mode === 'signup';
+  return (
+    <section className="account-page account-auth">
+      <p className="eyebrow">TRANSFERTRACKER ACCOUNT</p>
+      <h1>{isSignup ? '회원가입' : '로그인'}</h1>
+      <p>{isSignup ? '관심 팀과 관련 소식을 나만의 목록으로 관리하세요.' : '관심 팀과 내 소식 목록을 이어서 확인하세요.'}</p>
+      <form className="account-form" onSubmit={submit}>
+        <label>아이디<input value={loginId} onChange={event => setLoginId(event.target.value)} autoComplete="username" required /></label>
+        <label>비밀번호<input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete={isSignup ? 'new-password' : 'current-password'} required /></label>
+        <button className="account-primary" disabled={loading} type="submit">{loading ? '처리 중...' : isSignup ? '회원가입' : '로그인'}</button>
+      </form>
+      {status && <p className="account-status" role="status">{status}</p>}
+      <p className="account-switch">{isSignup ? '이미 계정이 있나요?' : '아직 계정이 없나요?'} <Link to={isSignup ? '/login' : '/signup'}>{isSignup ? '로그인' : '회원가입'}</Link></p>
+    </section>
+  );
+}

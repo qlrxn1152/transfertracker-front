@@ -4,18 +4,39 @@ function apiUrl(path) {
   return `${API_BASE_URL}${path}`;
 }
 
-export async function getJson(path, signal) {
-  const response = await fetch(apiUrl(path), { cache: 'no-store', signal });
+async function readErrorMessage(response, fallback) {
+  const text = await response.text().catch(() => '');
+  if (!text) return fallback;
+
+  try {
+    const body = JSON.parse(text);
+    return body.message || fallback;
+  } catch {
+    return text;
+  }
+}
+
+async function request(path, options = {}) {
+  const response = await fetch(apiUrl(path), {
+    cache: 'no-store',
+    ...options,
+    headers: {
+      Accept: 'application/json',
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+      ...(options.headers || {})
+    }
+  });
 
   if (!response.ok) {
-    if (response.status === 502) {
-      throw new Error('백엔드에 연결할 수 없습니다. 백엔드 상태를 확인해 주세요.');
-    }
-    throw new Error(`요청 실패 (${response.status})`);
+    throw new Error(await readErrorMessage(response, `요청 실패 (${response.status})`));
   }
 
+  if (response.status === 204) return null;
   return response.json();
 }
+
+export const getJson = (path, signal) => request(path, { signal });
 
 export function getTransfers({ page, keyWord, leagueCode, teamId }, signal) {
   const params = new URLSearchParams({ page: String(page), keyWord: keyWord || '' });
@@ -37,14 +58,52 @@ export const getTeams = signal => getJson('/api/teams', signal);
 export const getTeamsByLeague = (leagueCode, signal) =>
   getJson(`/api/teams/league?leagueCode=${encodeURIComponent(leagueCode)}`, signal);
 
-export const getPlayer = (playerId, signal) => getJson(`/api/player/${playerId}`, signal);
+export const getPlayer = (playerId, signal) => getJson(`/api/players/${playerId}`, signal);
 export const getPlayerTransfers = (playerId, signal) =>
-  getJson(`/api/player/transfer/${playerId}`, signal);
+  getJson(`/api/players/${playerId}/transfers`, signal);
 
-export const getTeamDetail = (teamId, signal) => getJson(`/api/team/test/${teamId}`, signal);
+export const getTeamDetail = (teamId, signal) => getJson(`/api/teams/test/${teamId}`, signal);
 
-export const getPostsBySource = (source, signal) =>
-  getJson(`/api/transfer/posts/${source}`, signal);
+export const getPostSources = signal => getJson('/api/transfer-posts/post-sources', signal);
 
-export const getPostsByTeam = (teamId, signal) =>
-  getJson(`/api/transfer/posts/team/${teamId}`, signal);
+export const getPosts = (signal, page = 0) =>
+  getJson(`/api/transfer-posts?page=${page}`, signal);
+
+export const getPostsBySource = (source, signal, page = 0) =>
+  getJson(`/api/transfer-posts/source/${encodeURIComponent(source)}?page=${page}`, signal);
+
+export const getPostsByTeam = (teamId, signal, page = 0) =>
+  getJson(`/api/transfer-posts/team/${teamId}?page=${page}`, signal);
+
+export const getPost = (postId, signal) => getJson(`/api/transfer-posts/${postId}`, signal);
+
+export const signUpMember = ({ loginId, password }) => request('/api/members/signup', {
+  method: 'POST',
+  body: JSON.stringify({ loginId, password })
+});
+
+export const loginMember = ({ loginId, password }) => request('/api/members/login', {
+  method: 'POST',
+  body: JSON.stringify({ loginId, password })
+});
+
+export const getMyMemberId = (token, signal) => request('/api/members/me', { token, signal });
+export const getFavoriteTeams = (token, signal) =>
+  request('/api/members/favorite-teams?page=0', { token, signal });
+export const addFavoriteTeams = (token, teamIds) => request('/api/members/favorite-teams', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({ teamIds })
+});
+export const deleteFavoriteTeam = (token, teamId) => request(`/api/members/favorite-teams/${teamId}`, {
+  method: 'DELETE',
+  token
+});
+
+// FCM 토큰은 로그인한 회원에게 귀속된다. 백엔드는 관심 팀에 새 게시물이
+// 연결될 때 이 토큰으로 실제 알림을 보낸다.
+export const registerFcmToken = (token, fcmToken) => request('/api/members/me/fcm-tokens', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({ platform: 'WEB', token: fcmToken })
+});

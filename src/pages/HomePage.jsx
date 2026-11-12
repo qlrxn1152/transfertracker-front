@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getPostsBySource, getTransfers } from '../api/client';
+import { getPostSources, getPostsBySource, getTransfers } from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
 import {
@@ -13,11 +13,25 @@ import {
 import './HomePage.css';
 import './HomeFeature.css';
 
+function normalizeSources(values) {
+  return values.map(item => {
+    const code = item.source || item.code;
+    const fallback = POST_SOURCES.find(source => source.code === code);
+    return {
+      code,
+      name: fallback?.name || item.xUsername || String(code || '').replaceAll('_', ' '),
+      handle: item.xUsername || fallback?.handle || '',
+      initials: fallback?.initials || String(code || 'TT').split('_').map(value => value[0]).join('').slice(0, 2)
+    };
+  }).filter(source => source.code);
+}
+
 export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
   const [state, setState] = useState({
     loading: true,
     transfers: [],
     posts: [],
+    sources: POST_SOURCES,
     error: ''
   });
 
@@ -36,21 +50,29 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
             loading: false,
             transfers: demo.transfers.slice(0, 6),
             posts: posts.slice(0, 6),
+            sources: POST_SOURCES,
             error: ''
           });
           return;
         }
 
-        const [transferResult, ...postResults] = await Promise.allSettled([
+        const [transferResult, sourceResult] = await Promise.allSettled([
           getTransfers({ page: 0, keyWord: '', leagueCode: '', teamId: '' }, controller.signal),
-          ...POST_SOURCES.map(source => getPostsBySource(source.code, controller.signal))
+          getPostSources(controller.signal)
         ]);
+
+        const sources = sourceResult.status === 'fulfilled' && Array.isArray(sourceResult.value.sources)
+          ? normalizeSources(sourceResult.value.sources)
+          : POST_SOURCES;
+        const postResults = await Promise.allSettled(
+          sources.map(source => getPostsBySource(source.code, controller.signal))
+        );
 
         const transfers = transferResult.status === 'fulfilled' && Array.isArray(transferResult.value.transfers)
           ? transferResult.value.transfers
           : [];
 
-        const posts = POST_SOURCES.flatMap((source, index) => {
+        const posts = sources.flatMap((source, index) => {
           const result = postResults[index];
           if (result?.status !== 'fulfilled' || !Array.isArray(result.value.posts)) return [];
           return result.value.posts.map(post => ({ ...post, source: source.code }));
@@ -60,7 +82,10 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
           loading: false,
           transfers,
           posts,
-          error: !transfers.length && !posts.length ? '홈 데이터를 불러오지 못했습니다.' : ''
+          sources,
+          error: transferResult.status === 'rejected' && sourceResult.status === 'rejected'
+            ? '홈 데이터를 불러오지 못했습니다.'
+            : ''
         });
       } catch (error) {
         if (error.name !== 'AbortError') {
@@ -104,9 +129,9 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
     <section className="home-page">
       <section className="home-hero">
         <div className="home-hero-copy">
-          <span className="home-live">TRANSFER DESK</span>
-          <h1>축구 이적시장의<br />다음 움직임을 한곳에서.</h1>
-          <p>이적 기록, 팀별 이동, 기자 소식과 선수 정보를 하나의 흐름으로 확인하세요.</p>
+          <span className="home-live">VEYRO · TRANSFER DESK</span>
+          <h1>축구 이적의 흐름을<br />가장 먼저, 더 깊게.</h1>
+          <p>이적 기록과 신뢰할 수 있는 기자 소식을 한곳에서 읽는 축구 인텔리전스.</p>
 
           <div className="home-hero-actions">
             <Link className="home-primary-link" to="/transfers">이적 현황 보기 →</Link>
@@ -237,7 +262,7 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
 
           <div className="home-news-list">
             {state.posts.slice(0,5).map((post, index) => {
-              const source = POST_SOURCES.find(item => item.code === post.source);
+              const source = state.sources.find(item => item.code === post.source);
               return (
                 <article key={`${post.source}-${post.postId ?? post.externalPostId ?? index}`}>
                   <span className="home-news-avatar">{source?.initials || 'TT'}</span>

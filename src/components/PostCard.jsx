@@ -1,9 +1,23 @@
-import { POST_SOURCES } from '../constants';
 import { formatPostDate, postTransferFlag } from '../utils';
 
-export default function PostCard({ post, sample }) {
-  const source = POST_SOURCES.find(item => item.code === post.source);
-  if (!source) return null;
+function fallbackSource(post) {
+  const name = String(post.source || 'Unknown').replaceAll('_', ' ');
+  const initials = name.split(/\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 2).toUpperCase();
+
+  return { name, handle: '', initials: initials || 'X' };
+}
+
+function imageUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function PostCard({ post, sourceProfile, sample }) {
+  const source = sourceProfile || fallbackSource(post);
 
   const translated = typeof post.translatedContent === 'string' && post.translatedContent.trim()
     ? post.translatedContent
@@ -14,6 +28,7 @@ export default function PostCard({ post, sample }) {
     : null;
 
   const flag = postTransferFlag(post);
+  const photo = imageUrl(post.photoUrl);
 
   return (
     <article className="post-card">
@@ -38,6 +53,12 @@ export default function PostCard({ post, sample }) {
       </div>
 
       <p className="post-content">{translated ?? post.content ?? ''}</p>
+
+      {photo && (
+        <figure className="post-media">
+          <img src={photo} alt={`${source.name} 게시물 첨부 이미지`} loading="lazy" referrerPolicy="no-referrer" />
+        </figure>
+      )}
 
       {translated && post.content && (
         <details className="post-original">

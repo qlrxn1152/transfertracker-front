@@ -108,7 +108,6 @@
     32px
     minmax(135px,1fr)
     82px
-    110px
     32px;
   align-items:center;
   gap:12px;
@@ -311,7 +310,6 @@
       28px
       minmax(120px,1fr)
       72px
-      95px
       28px;
     gap:8px;
   }
@@ -372,7 +370,7 @@
     grid-template-areas:
       "avatar player date"
       "move move move"
-      "status fee open";
+      "status status open";
     min-height:0;
     gap:13px 12px;
     padding:16px;

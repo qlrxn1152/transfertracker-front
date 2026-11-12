@@ -1,0 +1,208 @@
+/*
+ * VEYRO — Football. Beyond the Game.
+ * A restrained night-editorial system: lime is a signal, never a fill color.
+ */
+:root{
+  --v-bg:#0c1215;
+  --v-bg-soft:#10181b;
+  --v-surface:#151f22;
+  --v-surface-raised:#1a2529;
+  --v-surface-hover:#202d31;
+  --v-line:#2a383b;
+  --v-line-soft:rgba(191,207,204,.11);
+  --v-text:#edf1ed;
+  --v-text-muted:#98a6a3;
+  --v-text-faint:#71817f;
+  --v-lime:#d6f39b;
+  --v-lime-dim:#a8c970;
+  --v-danger:#ed8b8b;
+}
+
+body{
+  background:
+    radial-gradient(ellipse 70% 34% at 50% -10%,rgba(81,113,83,.14),transparent 72%),
+    linear-gradient(145deg,#0d1518 0%,#0b1114 48%,#10191b 100%);
+  color:var(--v-text);
+}
+
+/* Header: quiet, compact, and closer to a premium sports publication. */
+.app-header{background:rgba(12,18,21,.94)!important;border-bottom-color:var(--v-line-soft)!important;box-shadow:0 8px 28px rgba(0,0,0,.14)}
+.app-header-inner{max-width:1240px!important;gap:26px!important}
+.app-brand-word{color:var(--v-text);font-weight:850;letter-spacing:.18em!important}
+.app-brand-mark i{background:var(--v-lime)!important;box-shadow:none!important}
+.app-brand small{color:var(--v-text-faint)!important}
+.app-nav-link{color:#84928f!important;font-weight:700!important}
+.app-nav-link:hover,.app-nav-link.active{color:var(--v-text)!important}
+.app-nav-link.active::after{height:2px!important;background:var(--v-lime)!important}
+.app-connection{color:var(--v-text-faint)!important}.app-connection.online i{background:var(--v-lime)!important}
+.app-mode-button,.fcm-token-copy{border-color:#354448!important;background:transparent!important;color:#b5c2bf!important}
+.app-mode-button:hover,.fcm-token-copy:hover{border-color:var(--v-lime)!important;color:var(--v-lime)!important}
+.app-account-link{color:#c7d2cf!important}
+
+/* Shared page rhythm and surfaces. */
+.app-main{padding-top:42px!important}
+.eyebrow,.league-kicker{color:var(--v-lime-dim)!important;font-size:10px!important;letter-spacing:.18em!important}
+.section-head h2,.players-head h1,.journal-head h1,.transfer-market-head h2,.account-page h1{color:var(--v-text)!important}
+.section-head>div>p:last-child,.players-head>div>p:last-child,.journal-head>div>p:last-child,.account-hero p,.account-card-head p{color:var(--v-text-muted)!important}
+
+.home-panel,.home-clubs,.transfer-market-board,.players-card,.team-card,.league-filter,
+.journal-filter-row,.journal-team-banner,.post-card,.account-card,.fcm-test-panel,
+.team-page-panel,.detail-card,.lookup-form,.empty,.global-search-panel,dialog{
+  background:var(--v-surface)!important;
+  border:1px solid var(--v-line-soft)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.12)!important;
+  color:var(--v-text)!important;
+}
+
+.home-panel,.home-clubs,.transfer-market-board,.team-page-panel{border-radius:14px!important}
+.home-panel-head{margin-bottom:20px!important}.home-panel-head h2{color:var(--v-text)!important}.home-panel-head>a{color:var(--v-lime-dim)!important}
+.home-panel-head>a:hover{color:var(--v-lime)!important}
+
+/* Hero: cinematic but not glossy. */
+.home-hero{
+  min-height:380px!important;
+  border:1px solid #28383a!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(98deg,rgba(8,14,16,.98) 0%,rgba(10,18,20,.92) 45%,rgba(10,19,21,.43) 100%),
+    radial-gradient(circle at 83% 18%,rgba(214,243,155,.16),transparent 25%),
+    url('/images/veyro-stadium-hero.png') center/cover no-repeat!important;
+  box-shadow:0 22px 52px rgba(0,0,0,.22)!important;
+}
+.home-hero::before{opacity:.12!important;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(12.5% - 1px),rgba(214,243,155,.26) calc(12.5% - 1px),rgba(214,243,155,.26) 12.5%)!important}
+.home-hero-copy{padding:54px!important}.home-live{border-color:rgba(214,243,155,.28)!important;background:rgba(214,243,155,.08)!important;color:var(--v-lime)!important}
+.home-hero h1{font-size:clamp(34px,4.8vw,56px)!important;letter-spacing:-.07em!important}.home-hero-copy>p{color:#a8b6b2!important;max-width:470px!important}
+.home-primary-link,.account-primary{border-radius:7px!important;background:var(--v-lime)!important;color:#18201d!important;box-shadow:none!important}
+.home-secondary-link{border-color:#3b4b4d!important;background:rgba(255,255,255,.025)!important;color:#cbd5d1!important}
+.home-feature-shell,.home-hero-feature{
+  background:linear-gradient(90deg,rgba(10,18,20,.08),rgba(7,13,15,.16))!important;
+}
+.home-feature-card{border-color:#324244!important;background:rgba(13,22,24,.72)!important;box-shadow:none!important}
+.home-feature-top span,.home-feature-club-route>b{color:var(--v-lime)!important}.home-feature-top time,.home-feature-profile small,.home-feature-club small{color:var(--v-text-faint)!important}
+.home-feature-profile p,.home-feature-bottom{color:var(--v-text-muted)!important}.home-feature-portrait{background:#1f2b2e!important;color:var(--v-lime)!important}
+.home-feature-club-route{border-color:var(--v-line-soft)!important;background:rgba(0,0,0,.16)!important}.home-feature-club strong{color:var(--v-text)!important}
+
+/* Lists and cards: soft divisions, no bright blocks. */
+.home-transfer-list>button{background:transparent!important;color:var(--v-text)!important;border-top-color:var(--v-line-soft)!important}
+.home-transfer-list>button:hover{background:rgba(255,255,255,.025)!important}.home-transfer-name small,.home-news-meta time,.home-news-list p{color:var(--v-text-muted)!important}
+.home-transfer-player,.home-news-avatar,.post-avatar,.player-avatar,.club-logo,.team-page-emblem,.account-team a>span{background:#203034!important;color:var(--v-lime)!important}
+.home-transfer-arrow{color:var(--v-lime-dim)!important}.home-club-list a{border-color:var(--v-line-soft)!important;color:var(--v-text)!important;background:rgba(255,255,255,.012)!important}.home-club-list a:hover{border-color:#41554e!important;background:rgba(255,255,255,.035)!important}
+
+/* Dense transfer table. */
+.transfer-market-count,.transfer-market-row,.transfer-market-open,.players-team>span{background:var(--v-surface)!important;border-color:var(--v-line-soft)!important;color:var(--v-text)!important}
+.transfer-market-columns{background:var(--v-bg-soft)!important;border-bottom-color:var(--v-line-soft)!important;color:var(--v-text-faint)!important}
+.transfer-market-row{border-bottom-color:var(--v-line-soft)!important}.transfer-market-row:hover{background:var(--v-surface-hover)!important}
+.transfer-market-date,.transfer-market-player-copy small,.transfer-market-team small,.players-card-copy>small{color:var(--v-text-muted)!important}
+.transfer-market-player-copy strong,.transfer-market-team strong,.transfer-market-fee strong,.players-card h3,.players-team strong{color:var(--v-text)!important}
+.transfer-market-avatar,.players-photo{background:#203034!important;color:var(--v-lime)!important}.transfer-market-team-logo{background:#1c292c!important;border-color:var(--v-line-soft)!important;color:var(--v-text-muted)!important}
+.transfer-market-status{background:rgba(214,243,155,.11)!important;color:var(--v-lime)!important}.transfer-market-status.loan,.transfer-market-status.free,.transfer-market-status.out{background:rgba(255,255,255,.06)!important;color:#bbc7c5!important}
+.transfer-market-open{color:var(--v-lime)!important}
+
+/* Controls and journalist feed. */
+.search,.journal-source-tabs button,.journal-team-select select,.journal-transfer-only,.compact-filter,.team-select-filter select,.pagination button,.account-add-row select,.account-form input{
+  border-color:#344346!important;background:#111b1e!important;color:var(--v-text)!important;
+}
+.search input,.account-form input{color:var(--v-text)!important}.search input::placeholder{color:var(--v-text-faint)!important}
+.journal-source-tabs button.active,.filter.selected,.compact-filter.selected,.league-filter.selected,.journal-transfer-only.active{border-color:rgba(214,243,155,.5)!important;background:rgba(214,243,155,.1)!important;color:var(--v-lime)!important}
+.journal-team-banner{background:#172326!important}.journal-team-banner>span{background:#213034!important;border-color:var(--v-line-soft)!important;color:var(--v-lime)!important}.journal-team-banner strong,.journal-feed-head strong{color:var(--v-text)!important}.journal-team-banner small,.journal-feed-head span{color:var(--v-text-muted)!important}
+.post-card{background:#141e21!important}.post-card-head time,.post-author span,.post-card-foot,.post-original summary,.post-original p{color:var(--v-text-muted)!important}.post-content{color:#dce4df!important}.post-card-foot,.post-original{border-color:var(--v-line-soft)!important}.post-original p{background:#10191c!important}.post-media{border-color:var(--v-line-soft)!important;background:#0e1719!important}
+
+/* Team, account, dialog, and search detail surfaces. */
+.team-page-hero{border-color:#324344!important;background:linear-gradient(120deg,#152124,#101a1c)!important}.team-page-identity h2,.team-page-panel h3,.team-page-players strong,.account-post-list a,.account-team a{color:var(--v-text)!important}.team-page-identity div>span,.team-page-stats span,.team-page-players small,.account-muted{color:var(--v-text-muted)!important}.team-page-stats{border-color:var(--v-line-soft)!important}.team-page-stats strong{color:var(--v-lime)!important}
+.team-news-row,.team-news-feature{border-color:var(--v-line-soft)!important;background:#141e21!important}.team-news-row-meta strong,.team-news-row-copy p{color:var(--v-text)!important}
+.account-card,.fcm-test-panel{background:#141e21!important}.account-team{border-color:var(--v-line-soft)!important}.account-post-list a{border-color:var(--v-line-soft)!important}.account-post-related{color:var(--v-lime-dim)!important}.account-post-related small{border-color:var(--v-line-soft)!important;color:var(--v-text-faint)!important}
+.global-search-panel{background:#151f22!important}.global-search-panel section+section{border-color:var(--v-line-soft)!important}.global-search-panel button{background:transparent!important;color:var(--v-text)!important}.global-search-panel button:hover{background:var(--v-surface-hover)!important}.global-search-panel h3,.global-search-panel small{color:var(--v-text-muted)!important}.global-search-icon{background:#203034!important;border-color:var(--v-line-soft)!important;color:var(--v-lime)!important}
+
+.app-footer{border-color:var(--v-line-soft)!important;color:var(--v-text-faint)!important}.app-footer b{color:var(--v-lime)!important}
+
+@media(max-width:760px){
+  .app-main{padding-top:26px!important}.app-nav{background:#0d1518!important;border-color:var(--v-line-soft)!important;box-shadow:0 -10px 28px rgba(0,0,0,.26)!important}
+  .app-nav-link{color:#778684!important}.app-nav-link.active{color:var(--v-lime)!important}.app-nav-link.active::after{background:var(--v-lime)!important}
+  .home-hero-copy{padding:34px 24px!important}.home-hero{min-height:0!important}
+}
+
+/* Detail pages: one continuous editorial composition, not separate bright widgets. */
+.team-detail-view{--team-accent:var(--v-lime);--team-dark:var(--v-text);--team-muted:var(--v-text-muted);--team-line:var(--v-line-soft)}
+.team-detail-back button{color:var(--v-text-muted)!important}.team-detail-back button:hover{color:var(--v-lime)!important}
+.team-detail-hero{
+  min-height:248px!important;
+  border:1px solid #2c3d3e!important;
+  border-radius:16px!important;
+  background:
+    radial-gradient(circle at 80% 25%,rgba(214,243,155,.17),transparent 25%),
+    linear-gradient(115deg,#121d20,#0c1518 58%,#162526)!important;
+  box-shadow:0 20px 46px rgba(0,0,0,.2)!important;
+}
+.team-detail-hero-pattern{opacity:.7!important;background:linear-gradient(110deg,transparent 0 46%,rgba(214,243,155,.09) 46% 47%,transparent 47% 100%),repeating-linear-gradient(90deg,transparent 0 88px,rgba(214,243,155,.045) 88px 89px)!important}
+.team-detail-logo{border-color:rgba(214,243,155,.22)!important;background:#1a292b!important;color:var(--v-lime)!important;box-shadow:none!important}
+.team-detail-kicker,.team-detail-meta,.team-detail-hero-stat span{color:#afbbb7!important}.team-detail-brand h1{color:var(--v-text)!important}
+.team-detail-hero-stat{border-color:rgba(214,243,155,.15)!important;background:rgba(214,243,155,.06)!important}.team-detail-hero-stat strong{color:var(--v-lime)!important}
+
+.team-transfer-section,.team-news-section,.team-roster-panel{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.12)!important;
+}
+.team-transfer-head h2,.team-detail-section-head h2,.team-roster-head h2{color:var(--v-text)!important}
+.team-transfer-head>div>p:last-child,.team-detail-section-head>div>p:last-child{color:var(--v-text-muted)!important}
+.team-transfer-head>a,.team-detail-more{border-color:#3b4b48!important;background:transparent!important;color:var(--v-lime)!important}
+.team-transfer-columns{border-color:var(--v-line-soft)!important}.team-transfer-column{background:#111b1e!important;border-color:var(--v-line-soft)!important}.team-transfer-column-head{border-color:var(--v-line-soft)!important;background:#182326!important}.team-transfer-column-head strong{color:var(--v-text)!important}.team-transfer-list>p{color:var(--v-text-muted)!important}
+.team-transfer-row{border-color:var(--v-line-soft)!important}.team-transfer-row:hover{background:var(--v-surface-hover)!important}.team-transfer-player,.team-transfer-copy strong{color:var(--v-text)!important}.team-transfer-copy small,.team-transfer-meta{color:var(--v-text-muted)!important}
+
+.team-news-feature{border:1px solid #304143!important;background:radial-gradient(circle at 78% 16%,rgba(214,243,155,.17),transparent 30%),linear-gradient(145deg,#1a282a,#0f181b 72%)!important}.team-news-feature.secondary{background:radial-gradient(circle at 20% 18%,rgba(102,132,140,.22),transparent 32%),linear-gradient(145deg,#1a2429,#10181b 72%)!important}.team-news-chip{background:rgba(214,243,155,.15)!important;color:var(--v-lime)!important}.team-news-feature-foot a{color:var(--v-lime)!important}
+.team-news-row{background:transparent!important}.team-news-row-source,.team-roster-avatar{background:#203034!important;color:var(--v-lime)!important}.team-news-row-meta strong,.team-news-row p,.team-roster-player strong{color:var(--v-text)!important}.team-news-row-meta time,.team-roster-player small,.team-roster-group-title small{color:var(--v-text-muted)!important}.team-news-row-meta span{background:rgba(214,243,155,.1)!important;color:var(--v-lime)!important}.team-news-row-link{border-color:#354644!important;color:var(--v-lime)!important}.team-news-row-link:hover{background:rgba(214,243,155,.08)!important}
+.team-roster-head,.team-roster-group{border-color:var(--v-line-soft)!important}.team-roster-group-title span,.team-roster-head>strong{color:var(--v-lime)!important}.team-roster-player:hover{background:var(--v-surface-hover)!important}.team-detail-empty{border-color:#354644!important;background:#121c1f!important;color:var(--v-text-muted)!important}
+
+/* Player detail and its latest-transfer detail use the same quiet night palette. */
+.player-detail-dialog{border-color:#2d3c3e!important;background:#0e171a!important;color:var(--v-text)!important;box-shadow:0 28px 90px rgba(0,0,0,.55)!important}
+.player-detail-dialog::backdrop{background:rgba(3,8,10,.78)!important;backdrop-filter:blur(6px)!important}
+.player-detail-close{border-color:rgba(214,243,155,.22)!important;background:rgba(7,14,16,.54)!important;color:var(--v-lime)!important}
+.player-detail-close:hover{background:rgba(214,243,155,.12)!important}
+.player-detail-hero{background:radial-gradient(circle at 79% 9%,rgba(214,243,155,.2),transparent 32%),linear-gradient(135deg,#172527,#0d1719 62%,#162a2b)!important}.player-detail-hero-bg{background:repeating-linear-gradient(90deg,transparent 0 86px,rgba(214,243,155,.04) 86px 87px),linear-gradient(120deg,transparent 0 55%,rgba(214,243,155,.07) 55% 56%,transparent 56% 100%)!important}.player-detail-profile>p,.player-detail-meta{color:#aab7b3!important}.player-detail-profile h2{color:var(--v-text)!important}.player-detail-latest{border-color:rgba(214,243,155,.18)!important;background:rgba(214,243,155,.06)!important}.player-detail-latest small{color:var(--v-text-muted)!important}.player-detail-latest span{color:var(--v-lime)!important}
+.player-detail-highlight,.player-detail-history{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important}.player-detail-highlight-head h3,.player-detail-section-head h3{color:var(--v-text)!important}.player-detail-highlight-head>span,.player-detail-section-head>span{color:var(--v-text-muted)!important}
+.player-detail-route{background:#101a1d!important;border:1px solid var(--v-line-soft)!important}.player-detail-club-logo,.player-detail-history-club>span{border-color:var(--v-line-soft)!important;background:#1c2a2d!important;color:var(--v-lime)!important}.player-detail-club small,.player-detail-summary span,.player-detail-history-row time{color:var(--v-text-muted)!important}.player-detail-club strong,.player-detail-summary strong,.player-detail-history-club strong,.player-detail-history-fee{color:var(--v-text)!important}.player-detail-route-arrow,.player-detail-history-arrow{color:var(--v-lime)!important}
+.player-detail-summary{border-color:var(--v-line-soft)!important}.player-detail-summary>div+div,.player-detail-history-row{border-color:var(--v-line-soft)!important}.player-detail-history-type{background:rgba(214,243,155,.11)!important;color:var(--v-lime)!important}.player-detail-empty{background:#121c1f!important}
+
+/* Empty/loading states and deliberately small motion give the app a finished feel. */
+.empty,.home-empty,.team-detail-empty,.player-detail-empty{
+  position:relative;
+  display:grid;
+  place-items:center;
+  gap:9px;
+  min-height:132px;
+  border-color:var(--v-line-soft)!important;
+  background:linear-gradient(145deg,rgba(25,37,40,.74),rgba(13,21,23,.74))!important;
+  color:var(--v-text-muted)!important;
+}
+.empty::before,.home-empty::before,.team-detail-empty::before,.player-detail-empty::before{
+  content:'V';
+  display:grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  border:1px solid rgba(214,243,155,.24);
+  border-radius:9px;
+  color:var(--v-lime);
+  font-size:14px;
+  font-weight:900;
+  box-shadow:inset 0 0 0 5px rgba(214,243,155,.045);
+}
+.home-empty{min-height:104px}.team-detail-empty{min-height:140px}
+
+@keyframes veyro-enter{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.home-hero,.home-panel,.home-clubs,.transfer-market-board,.journal-page,.players-cards,.team-detail-view,.account-page{
+  animation:veyro-enter .42s ease both;
+}
+.home-panel:nth-of-type(2),.home-clubs{animation-delay:.05s}
+.home-panel-head>a,.home-primary-link,.home-secondary-link,.team-card,.players-card,.post-card,.transfer-market-row,.team-transfer-row,.team-roster-player{
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.team-card:hover,.players-card:hover,.post-card:hover,.team-transfer-row:hover{transform:translateY(-2px)}
+.home-panel-head>a:hover,.home-primary-link:hover,.home-secondary-link:hover{transform:translateY(-1px)}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}

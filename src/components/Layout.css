@@ -3,7 +3,8 @@
   top:0;
   z-index:50;
   border-bottom:1px solid rgba(255,255,255,.07);
-  background:#091522;
+  background:rgba(7,16,21,.86);
+  backdrop-filter:blur(18px);
   color:#fff;
 }
 
@@ -23,13 +24,42 @@
   align-items:center;
   color:#fff;
   text-decoration:none;
+  gap:9px;
   font-size:20px;
   font-weight:900;
   letter-spacing:-.055em;
 }
 
-.app-brand strong{
-  color:#ff3b4f;
+.app-brand-mark{
+  position:relative;
+  display:block;
+  width:27px;
+  height:24px;
+  overflow:hidden;
+  flex:none;
+}
+
+.app-brand-mark i{
+  position:absolute;
+  top:1px;
+  width:12px;
+  height:23px;
+  border-radius:2px;
+  background:#d6f39b;
+  transform:skewY(-32deg) rotate(12deg);
+  box-shadow:0 0 18px rgba(214,243,155,.32);
+}
+
+.app-brand-mark i:first-child{left:3px;transform:skewY(32deg) rotate(-12deg)}
+.app-brand-mark i:last-child{right:3px}
+.app-brand-word{letter-spacing:.22em}
+.app-brand small{color:#819095;font-size:7px;font-weight:800;letter-spacing:.11em;white-space:nowrap}
+
+.app-account-link{
+  color:#dce6e1;
+  text-decoration:none;
+  font-size:10px;
+  font-weight:800;
 }
 
 .app-nav{
@@ -61,7 +91,7 @@
   bottom:-1px;
   height:3px;
   border-radius:3px 3px 0 0;
-  background:#ff3b4f;
+  background:#d6f39b;
 }
 
 .app-header-actions{
@@ -86,7 +116,7 @@
   background:#e9b85b;
 }
 
-.app-connection.online i{background:#20c997}
+.app-connection.online i{background:#d6f39b}
 .app-connection.offline i{background:#ff6b6b}
 
 .app-mode-button{
@@ -100,8 +130,8 @@
 }
 
 .app-mode-button:hover{
-  border-color:#657483;
-  color:#fff;
+  border-color:#d6f39b;
+  color:#d6f39b;
 }
 
 .app-sample-banner{
@@ -141,6 +171,8 @@
   .app-brand{
     font-size:17px;
   }
+
+  .app-brand small{display:none}
 
   .app-nav{
     position:fixed;
