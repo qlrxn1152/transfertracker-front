@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   publishNotificationTestPost,
+  publishJournalistNotificationTest,
   registerFcmToken,
   removeNotificationTestPosts
 } from '../api/client';
@@ -46,6 +47,8 @@ export default function FcmTestPanel({ accessToken, memberId, isAdmin = false, f
   const [registering, setRegistering] = useState(false);
   const [testTeamId, setTestTeamId] = useState('');
   const [publishingTest, setPublishingTest] = useState(false);
+  const [journalistPostId, setJournalistPostId] = useState('');
+  const [publishingJournalistTest, setPublishingJournalistTest] = useState(false);
   const [removingTests, setRemovingTests] = useState(false);
 
   useEffect(() => {
@@ -186,6 +189,25 @@ useEffect(() => {
     }
   }
 
+  async function handlePublishJournalistTest() {
+    if (!accessToken || !journalistPostId) return;
+
+    if (!window.confirm('해당 기자를 팔로우한 모든 계정에 실제 푸시 알림을 보냅니다. 계속할까요?')) {
+      return;
+    }
+
+    setPublishingJournalistTest(true);
+    try {
+      await publishJournalistNotificationTest(accessToken, journalistPostId);
+      trackAnalyticsEvent('admin_journalist_push_test_published');
+      setStatus(`기자 게시물 #${journalistPostId}의 팔로워 푸시 발송을 요청했습니다.`);
+    } catch (error) {
+      setStatus(`기자 팔로워 푸시 발송 실패: ${error.message}`);
+    } finally {
+      setPublishingJournalistTest(false);
+    }
+  }
+
   return (
     <section className="fcm-test-panel" aria-label="FCM 테스트">
       <div>
@@ -233,6 +255,30 @@ useEffect(() => {
               </button>
             </div>
           ) : <p>먼저 관심 팀을 하나 이상 추가해 주세요.</p>}
+          <div className="fcm-admin-test">
+            <div>
+              <strong>기자 팔로워 발송 점검</strong>
+              <p>X API를 호출하지 않습니다. Railway DB에 직접 넣은 기자 게시물의 PK를 입력하면 해당 기자 팔로워에게만 실제 푸시를 보냅니다.</p>
+            </div>
+            <div className="fcm-admin-test-actions">
+              <input
+                type="number"
+                min="1"
+                inputMode="numeric"
+                placeholder="기자 게시물 PK"
+                value={journalistPostId}
+                onChange={event => setJournalistPostId(event.target.value)}
+              />
+              <button
+                type="button"
+                className="account-primary"
+                onClick={handlePublishJournalistTest}
+                disabled={!journalistPostId || publishingJournalistTest}
+              >
+                {publishingJournalistTest ? '발송 요청 중...' : '기자 팔로워에게 테스트 발송'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>

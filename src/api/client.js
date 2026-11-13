@@ -130,6 +130,12 @@ export const publishNotificationTestPost = (token, teamId) => request(
   { method: 'POST', token }
 );
 
+// 운영자가 DB에 이미 저장된 기자 게시물의 팔로워 푸시만 점검할 때 사용합니다.
+export const publishJournalistNotificationTest = (token, postId) => request(
+  `/external/api/posts/notification-test/journalist/${encodeURIComponent(postId)}`,
+  { method: 'POST', token }
+);
+
 export const removeNotificationTestPosts = token => request('/external/api/posts/notification-test', {
   method: 'DELETE',
   token

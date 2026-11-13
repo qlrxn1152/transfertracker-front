@@ -46,7 +46,7 @@
 .fcm-admin-test strong { color: #245c47; }
 .fcm-admin-test p { margin: 4px 0 0; font-size: .86rem; }
 .fcm-admin-test-actions { display: flex; gap: 10px; align-items: center; }
-.fcm-admin-test-actions select { min-width: 190px; flex: 1; border: 1px solid #bcd6c8; border-radius: 6px; padding: 11px 12px; background: #fff; color: #25483b; font: inherit; }
+.fcm-admin-test-actions select, .fcm-admin-test-actions input { min-width: 190px; flex: 1; border: 1px solid #bcd6c8; border-radius: 6px; padding: 11px 12px; background: #fff; color: #25483b; font: inherit; }
 .fcm-cleanup-button { border: 1px solid #cf8c8c; border-radius: 6px; padding: 11px 14px; background: transparent; color: #b34c4c; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .fcm-cleanup-button:disabled { opacity: .55; cursor: wait; }
 .fcm-token-copy { border: 1px solid #bcd6c8; border-radius: 6px; padding: 12px 15px; background: #fff; color: #287055; font: inherit; font-weight: 700; cursor: pointer; }
@@ -56,4 +56,4 @@
 .fcm-permission-state.denied span { background: #fbe9e9; color: #b64f4f; }
 .fcm-permission-state time { color: #7f9089; }
 .account-grade { display: inline-flex; align-items: center; margin-left: 6px; padding: 3px 7px; border: 1px solid #cde7d8; border-radius: 999px; background: #f2faf5; color: #168158; font-size: .72rem; font-weight: 800; letter-spacing: .04em; vertical-align: 1px; }
-@media (max-width: 640px) { .account-page { padding: 28px 16px 56px; } .account-card { padding: 18px; } .account-add-row, .fcm-admin-test-actions { flex-direction: column; align-items: stretch; } .fcm-admin-test-actions select { min-width: 0; } }
+@media (max-width: 640px) { .account-page { padding: 28px 16px 56px; } .account-card { padding: 18px; } .account-add-row, .fcm-admin-test-actions { flex-direction: column; align-items: stretch; } .fcm-admin-test-actions select, .fcm-admin-test-actions input { min-width: 0; } }
