@@ -21,7 +21,10 @@ export const FEE_BANDS = [
 export const POST_SOURCES = [
   { code: 'FABRIZIO_ROMANO', name: 'Fabrizio Romano', handle: 'FabrizioRomano', initials: 'FR' },
   { code: 'DAVID_ORNSTEIN', name: 'David Ornstein', handle: 'David_Ornstein', initials: 'DO' },
-  { code: 'MATTEO_MORETTO', name: 'Matteo Moretto', handle: 'MatteMoretto', initials: 'MM' }
+  { code: 'MATTEO_MORETTO', name: 'Matteo Moretto', handle: 'MatteMoretto', initials: 'MM' },
+  { code: 'FLORIAN_PLETTENBERG', name: 'Florian Plettenberg', handle: 'Plettigoal', initials: 'FP' },
+  { code: 'SANTI_AOUNA', name: 'Santi Aouna', handle: 'Santi_J_FM', initials: 'SA' },
+  { code: 'DI_MARZIO', name: 'Gianluca Di Marzio', handle: 'DiMarzio', initials: 'DM' }
 ];
 
 export const SUPPORTED_POST_LEAGUES = new Set(['EPL']);

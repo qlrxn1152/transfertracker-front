@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getPostSources, getPosts, getPostsBySource, getPostsByTeam } from '../api/client';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  followJournalist,
+  getFollowedJournalists,
+  getPostSources,
+  getPosts,
+  getPostsBySource,
+  getPostsByTeam,
+  unfollowJournalist
+} from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
 import Pagination from '../components/Pagination';
 import PostCard from '../components/PostCard';
 import { logoUrl, postTransferFlag, teamDisplayName, text } from '../utils';
+import { trackAnalyticsEvent } from '../firebase/analytics';
 import './PostsPage.css';
 
 const EMPTY_PAGE = {
@@ -68,7 +78,9 @@ function samplePage(posts, page) {
   };
 }
 
-export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTeamChange }) {
+export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTeamChange, session }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [pageData, setPageData] = useState(EMPTY_PAGE);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -77,6 +89,9 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const [sources, setSources] = useState(() => normalizeSources(POST_SOURCES));
+  const [followingCodes, setFollowingCodes] = useState([]);
+  const [followBusyCode, setFollowBusyCode] = useState('');
+  const [followStatus, setFollowStatus] = useState('');
   const teamMode = selectedTeamId !== 'all';
 
   useEffect(() => {
@@ -98,6 +113,26 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
 
     return () => controller.abort();
   }, [sample]);
+
+  useEffect(() => {
+    if (!session?.accessToken || sample) {
+      setFollowingCodes([]);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    getFollowedJournalists(session.accessToken, controller.signal)
+      .then(data => setFollowingCodes(
+        Array.isArray(data?.memberFollowJournalists)
+          ? data.memberFollowJournalists.map(item => item.journalist)
+          : []
+      ))
+      .catch(error => {
+        if (error.name !== 'AbortError') setFollowStatus('팔로우 상태를 불러오지 못했습니다.');
+      });
+
+    return () => controller.abort();
+  }, [sample, session?.accessToken]);
 
   useEffect(() => {
     setPage(0);
@@ -167,6 +202,42 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
     setTypeFilter('all');
   }
 
+  function requestLoginForFollow(source) {
+    navigate('/login', {
+      state: {
+        returnTo: `${location.pathname}${location.search}`,
+        followJournalist: source.code,
+        journalistName: source.name
+      }
+    });
+  }
+
+  async function toggleFollow(source) {
+    if (!session?.accessToken) {
+      requestLoginForFollow(source);
+      return;
+    }
+
+    const followed = followingCodes.includes(source.code);
+    setFollowBusyCode(source.code);
+    setFollowStatus('');
+    try {
+      if (followed) {
+        await unfollowJournalist(session.accessToken, source.code);
+        setFollowingCodes(current => current.filter(code => code !== source.code));
+        trackAnalyticsEvent('journalist_unfollowed', { journalist: source.code });
+      } else {
+        await followJournalist(session.accessToken, source.code);
+        setFollowingCodes(current => [...new Set([...current, source.code])]);
+        trackAnalyticsEvent('journalist_followed', { journalist: source.code });
+      }
+    } catch (error) {
+      setFollowStatus(error.message || '기자 팔로우 설정을 변경하지 못했습니다.');
+    } finally {
+      setFollowBusyCode('');
+    }
+  }
+
   return (
     <section className="journal-page">
       <header className="journal-head">
@@ -192,6 +263,40 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
             </button>
           ))}
         </div>
+
+        {!sample && (
+          <section className={`journal-follow-panel ${location.state?.followJournalist ? 'is-returned' : ''}`}>
+            <div className="journal-follow-copy">
+              <p className="eyebrow">REPORTER ALERT</p>
+              <h2>기자 팔로우</h2>
+              <p>{session
+                ? '팔로우한 기자가 새 게시물을 등록하면 이 브라우저로 알림을 보냅니다.'
+                : '로그인하면 신뢰하는 기자를 팔로우하고 새 소식 알림을 받을 수 있어요.'}</p>
+            </div>
+            <div className="journal-follow-list">
+              {sources.map(source => {
+                const followed = followingCodes.includes(source.code);
+                const busy = followBusyCode === source.code;
+                return (
+                  <article className="journal-follow-source" key={source.code}>
+                    <span>{source.initials}</span>
+                    <strong>{source.name}</strong>
+                    <button
+                      type="button"
+                      className={followed ? 'following' : ''}
+                      onClick={() => toggleFollow(source)}
+                      disabled={busy}
+                      autoFocus={location.state?.followJournalist === source.code}
+                    >
+                      {busy ? '처리 중...' : followed ? '팔로우 중' : '팔로우'}
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+            {followStatus && <p className="journal-follow-status" role="status">{followStatus}</p>}
+          </section>
+        )}
 
         <div className="journal-filter-row">
           <label className="journal-team-select">

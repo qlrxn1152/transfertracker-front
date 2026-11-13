@@ -101,6 +101,21 @@ export const deleteFavoriteTeam = (token, teamId) => request(`/api/members/favor
   token
 });
 
+export const getFollowedJournalists = (token, signal) =>
+  request('/api/members/me/journalists/following', { token, signal });
+export const followJournalist = (token, journalist) => request('/api/members/me/journalists/follow', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({ journalist })
+});
+export const unfollowJournalist = (token, journalist) => request('/api/members/me/journalists/follow', {
+  method: 'DELETE',
+  token,
+  body: JSON.stringify({ journalist })
+});
+export const getFollowedJournalistPosts = (token, signal, page = 0) =>
+  request(`/api/members/me/journalists/posts?page=${page}`, { token, signal });
+
 // FCM 토큰은 로그인한 회원에게 귀속된다. 백엔드는 관심 팀에 새 게시물이
 // 연결될 때 이 토큰으로 실제 알림을 보낸다.
 export const registerFcmToken = (token, fcmToken) => request('/api/members/me/fcm-tokens', {

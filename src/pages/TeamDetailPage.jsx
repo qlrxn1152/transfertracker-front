@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getTeamDetail, getTransfers } from '../api/client';
+import TeamNotificationCard from '../components/TeamNotificationCard';
 import { demo } from '../demo';
 import { POST_SOURCES, SUPPORTED_POST_LEAGUES } from '../constants';
 import {
@@ -174,7 +175,7 @@ function TeamTransferRow({ move, direction, teams, currentTeamName, onPlayerOpen
   );
 }
 
-export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPlayerOpen }) {
+export default function TeamDetailPage({ sample, teams, session, onSelectTeamPosts, onPlayerOpen }) {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const id = Number(teamId);
@@ -359,6 +360,8 @@ export default function TeamDetailPage({ sample, teams, onSelectTeamPosts, onPla
           <span>최근 관련 이적</span>
         </div>
       </header>
+
+      {!sample && <TeamNotificationCard team={team} session={session} />}
 
       <section className="team-transfer-section">
         <div className="team-transfer-head">

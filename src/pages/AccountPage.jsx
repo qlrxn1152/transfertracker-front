@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   addFavoriteTeams,
   deleteFavoriteTeam,
+  getFollowedJournalistPosts,
+  getFollowedJournalists,
   getFavoriteTeams,
   loginMember,
-  signUpMember
+  signUpMember,
+  unfollowJournalist
 } from '../api/client';
 import FcmTestPanel from '../components/FcmTestPanel';
 import { trackAnalyticsEvent } from '../firebase/analytics';
+import { POST_SOURCES } from '../constants';
 import { logoUrl, teamDisplayName } from '../utils';
 import './AccountPage.css';
 
 export default function AccountPage({ mode, teams, session, onSessionChange }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
@@ -21,6 +26,19 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
   const [favorites, setFavorites] = useState([]);
   const [posts, setPosts] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
+  const [journalists, setJournalists] = useState([]);
+  const [journalistPosts, setJournalistPosts] = useState([]);
+  const [journalistLoading, setJournalistLoading] = useState(false);
+  const returnTo = typeof location.state?.returnTo === 'string' && location.state.returnTo.startsWith('/')
+    ? location.state.returnTo
+    : '/account';
+  const authFlowState = location.state?.returnTo ? {
+    returnTo,
+    ...(location.state?.startFollow ? { startFollow: true, teamName: location.state.teamName } : {}),
+    ...(typeof location.state?.followJournalist === 'string'
+      ? { followJournalist: location.state.followJournalist, journalistName: location.state.journalistName }
+      : {})
+  } : undefined;
 
   useEffect(() => {
     if (mode !== 'account' || !session?.accessToken) return;
@@ -40,6 +58,37 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
 
     return () => controller.abort();
   }, [mode, onSessionChange, session?.accessToken]);
+
+  useEffect(() => {
+    if (mode !== 'account' || !session?.accessToken) return undefined;
+
+    const controller = new AbortController();
+    setJournalistLoading(true);
+
+    Promise.all([
+      getFollowedJournalists(session.accessToken, controller.signal),
+      getFollowedJournalistPosts(session.accessToken, controller.signal)
+    ])
+      .then(([following, postsResponse]) => {
+        const followed = Array.isArray(following?.memberFollowJournalists)
+          ? following.memberFollowJournalists
+          : [];
+        const posts = Array.isArray(postsResponse?.allJournalistsPosts)
+          ? postsResponse.allJournalistsPosts.flatMap(page => Array.isArray(page?.posts) ? page.posts : [])
+          : [];
+
+        setJournalists(followed);
+        setJournalistPosts(posts.sort((a, b) => (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0)));
+      })
+      .catch(error => {
+        if (error.name !== 'AbortError') setStatus(error.message || '팔로우한 기자 소식을 불러오지 못했습니다.');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setJournalistLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [mode, session?.accessToken]);
 
   const availableTeams = useMemo(() => teams
     .filter(team => !favorites.some(favorite => String(favorite.teamId) === String(team.teamId)))
@@ -65,7 +114,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
       const nextSession = await loginMember({ loginId, password });
       trackAnalyticsEvent('login_completed');
       onSessionChange(nextSession);
-      navigate('/account', { replace: true });
+      navigate(returnTo, { replace: true, state: authFlowState });
     } catch (error) {
       setStatus(error.message || '요청을 처리하지 못했습니다.');
     } finally {
@@ -105,6 +154,30 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function removeJournalist(journalist) {
+    if (!session?.accessToken) return;
+    setLoading(true);
+    setStatus('');
+    try {
+      await unfollowJournalist(session.accessToken, journalist);
+      trackAnalyticsEvent('journalist_unfollowed');
+      setJournalists(current => current.filter(item => item.journalist !== journalist));
+      setJournalistPosts(current => current.filter(post => post.source !== journalist));
+    } catch (error) {
+      setStatus(error.message || '기자 팔로우를 해제하지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function journalistProfile(code) {
+    return POST_SOURCES.find(source => source.code === code) || {
+      code,
+      name: String(code || '').replaceAll('_', ' '),
+      initials: String(code || 'X').split('_').map(part => part[0]).join('').slice(0, 2)
+    };
   }
 
   if (mode === 'account') {
@@ -180,6 +253,53 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
             {!posts.length && <p className="account-muted">표시할 새 소식이 없습니다.</p>}
           </div>
         </section>
+
+        <section className="account-card">
+          <div className="account-card-head">
+            <div>
+              <h2>팔로우한 기자</h2>
+              <p>팔로우한 기자가 새 게시물을 등록하면 이 브라우저로 알림을 보냅니다.</p>
+            </div>
+            <Link className="account-inline-link" to="/posts">기자 찾기 →</Link>
+          </div>
+          <div className="account-journalist-grid">
+            {journalists.map(item => {
+              const profile = journalistProfile(item.journalist);
+              return (
+                <article key={item.journalist} className="account-journalist">
+                  <span>{profile.initials}</span>
+                  <strong>{profile.name}</strong>
+                  <button type="button" disabled={loading} onClick={() => removeJournalist(item.journalist)}>해제</button>
+                </article>
+              );
+            })}
+            {!journalistLoading && !journalists.length && <p className="account-muted">아직 팔로우한 기자가 없습니다.</p>}
+          </div>
+        </section>
+
+        <section className="account-card">
+          <div className="account-card-head">
+            <div><h2>팔로우 기자 최신 소식</h2><p>구독 중인 기자들의 최근 게시물을 모아봅니다.</p></div>
+            <Link className="account-inline-link" to="/posts">전체 기자 소식 →</Link>
+          </div>
+          <div className="account-post-list">
+            {journalistPosts.slice(0, 12).map(post => {
+              const profile = journalistProfile(post.source);
+              return (
+                <Link key={`${post.source}-${post.postId}`} to="/posts">
+                  <strong>{post.translatedContent || post.content || '내용이 없습니다.'}</strong>
+                  <span className="account-post-related">
+                    <span className="account-post-team-logo" aria-hidden="true">{profile.initials}</span>
+                    <span>{profile.name}</span>
+                    <small>팔로우 중</small>
+                  </span>
+                </Link>
+              );
+            })}
+            {!journalistLoading && !journalistPosts.length && <p className="account-muted">팔로우한 기자의 새 소식이 없습니다.</p>}
+            {journalistLoading && <p className="account-muted">팔로우한 기자 소식을 불러오는 중입니다.</p>}
+          </div>
+        </section>
         <FcmTestPanel
           accessToken={session.accessToken}
           memberId={session.memberId}
@@ -203,7 +323,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
         <button className="account-primary" disabled={loading} type="submit">{loading ? '처리 중...' : isSignup ? '회원가입' : '로그인'}</button>
       </form>
       {status && <p className="account-status" role="status">{status}</p>}
-      <p className="account-switch">{isSignup ? '이미 계정이 있나요?' : '아직 계정이 없나요?'} <Link to={isSignup ? '/login' : '/signup'}>{isSignup ? '로그인' : '회원가입'}</Link></p>
+      <p className="account-switch">{isSignup ? '이미 계정이 있나요?' : '아직 계정이 없나요?'} <Link to={isSignup ? '/login' : '/signup'} state={authFlowState}>{isSignup ? '로그인' : '회원가입'}</Link></p>
     </section>
   );
 }
