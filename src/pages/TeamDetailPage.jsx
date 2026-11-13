@@ -38,6 +38,15 @@ function postOriginalUrl(post, sample) {
   return `https://x.com/${source.handle}/status/${externalId}`;
 }
 
+function postImageUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 function positionOf(player) {
   const raw = String(
     player.position
@@ -68,10 +77,19 @@ function FeaturedPost({ post, sample, index }) {
   const source = getPostSource(post);
   const original = postOriginalUrl(post, sample);
   const translated = Boolean(post.translatedContent?.trim());
+  const image = postImageUrl(post.photoUrl);
 
   return (
     <article className={`team-news-feature ${index === 1 ? 'secondary' : ''}`}>
       <div className="team-news-feature-bg" aria-hidden="true">
+        {image && (
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        )}
         <span>{source?.initials || 'TT'}</span>
       </div>
 
@@ -108,11 +126,21 @@ function FeaturedPost({ post, sample, index }) {
 function NewsRow({ post, sample }) {
   const source = getPostSource(post);
   const original = postOriginalUrl(post, sample);
+  const image = postImageUrl(post.photoUrl);
 
   return (
     <article className="team-news-row">
       <div className="team-news-row-source" aria-hidden="true">
-        {source?.initials || 'TT'}
+        {image ? (
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          source?.initials || 'TT'
+        )}
       </div>
 
       <div className="team-news-row-copy">
