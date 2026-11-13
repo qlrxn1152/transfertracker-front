@@ -117,10 +117,12 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   useEffect(() => {
     if (!session?.accessToken || sample) {
       setFollowingCodes([]);
+      setFollowStatus('');
       return undefined;
     }
 
     const controller = new AbortController();
+    setFollowStatus('');
     getFollowedJournalists(session.accessToken, controller.signal)
       .then(data => setFollowingCodes(
         Array.isArray(data?.memberFollowJournalists)
