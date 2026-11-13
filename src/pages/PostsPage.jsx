@@ -40,7 +40,7 @@ function normalizeSources(values) {
   return values.map(item => {
     const code = item.source || item.code;
     const fallback = POST_SOURCES.find(source => source.code === code);
-    const name = fallback?.name || item.xUsername || String(code || '').replaceAll('_', ' ');
+    const name = item.displayName || fallback?.name || item.xUsername || String(code || '').replaceAll('_', ' ');
 
     return {
       code,

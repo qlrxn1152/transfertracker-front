@@ -19,7 +19,7 @@ function normalizeSources(values) {
     const fallback = POST_SOURCES.find(source => source.code === code);
     return {
       code,
-      name: fallback?.name || item.xUsername || String(code || '').replaceAll('_', ' '),
+      name: item.displayName || fallback?.name || item.xUsername || String(code || '').replaceAll('_', ' '),
       handle: item.xUsername || fallback?.handle || '',
       initials: fallback?.initials || String(code || 'TT').split('_').map(value => value[0]).join('').slice(0, 2)
     };

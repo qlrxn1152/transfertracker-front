@@ -172,11 +172,17 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
     }
   }
 
-  function journalistProfile(code) {
-    return POST_SOURCES.find(source => source.code === code) || {
+  function journalistProfile(value) {
+    const code = typeof value === 'object' ? value?.journalist : value;
+    const fallback = POST_SOURCES.find(source => source.code === code);
+
+    return {
+      ...(fallback || {
       code,
       name: String(code || '').replaceAll('_', ' '),
       initials: String(code || 'X').split('_').map(part => part[0]).join('').slice(0, 2)
+      }),
+      name: typeof value === 'object' && value?.displayName ? value.displayName : fallback?.name || String(code || '').replaceAll('_', ' ')
     };
   }
 
@@ -264,7 +270,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
           </div>
           <div className="account-journalist-grid">
             {journalists.map(item => {
-              const profile = journalistProfile(item.journalist);
+              const profile = journalistProfile(item);
               return (
                 <article key={item.journalist} className="account-journalist">
                   <span>{profile.initials}</span>
