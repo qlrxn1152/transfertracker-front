@@ -39,12 +39,56 @@ function postOriginalUrl(post, sample) {
 }
 
 function postImageUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+
   try {
     const url = new URL(value);
     return url.protocol === 'https:' ? url.toString() : null;
   } catch {
     return null;
   }
+}
+
+function postPhotoUrl(post) {
+  const value = post?.photoUrl
+    ?? post?.mediaUrl
+    ?? post?.imageUrl
+    ?? post?.image?.url
+    ?? post?.media?.url;
+
+  return postImageUrl(value);
+}
+
+function postTimestamp(post) {
+  const value = post?.postCreatedAt
+    ?? post?.contentCreatedAt
+    ?? post?.createdAt
+    ?? post?.publishedAt;
+
+  const timestamp = Date.parse(value);
+  if (Number.isFinite(timestamp)) return timestamp;
+
+  // 날짜가 누락된 오래된 데이터끼리는 신규 PK를 우선 보여준다.
+  const postId = Number(post?.postId);
+  return Number.isFinite(postId) ? postId : 0;
+}
+
+function TeamPostImage({ post, alt, className, fallback }) {
+  const [failed, setFailed] = useState(false);
+  const image = postPhotoUrl(post);
+
+  if (!image || failed) return fallback;
+
+  return (
+    <img
+      className={className}
+      src={image}
+      alt={alt}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 function positionOf(player) {
@@ -77,20 +121,16 @@ function FeaturedPost({ post, sample, index }) {
   const source = getPostSource(post);
   const original = postOriginalUrl(post, sample);
   const translated = Boolean(post.translatedContent?.trim());
-  const image = postImageUrl(post.photoUrl);
 
   return (
     <article className={`team-news-feature ${index === 1 ? 'secondary' : ''}`}>
       <div className="team-news-feature-bg" aria-hidden="true">
-        {image && (
-          <img
-            src={image}
-            alt=""
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
-        )}
-        <span>{source?.initials || 'TT'}</span>
+        <TeamPostImage
+          post={post}
+          alt=""
+          className="team-news-feature-image"
+          fallback={<span>{source?.initials || 'TT'}</span>}
+        />
       </div>
 
       <div className="team-news-feature-overlay">
@@ -126,21 +166,16 @@ function FeaturedPost({ post, sample, index }) {
 function NewsRow({ post, sample }) {
   const source = getPostSource(post);
   const original = postOriginalUrl(post, sample);
-  const image = postImageUrl(post.photoUrl);
 
   return (
     <article className="team-news-row">
       <div className="team-news-row-source" aria-hidden="true">
-        {image ? (
-          <img
-            src={image}
-            alt=""
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          source?.initials || 'TT'
-        )}
+        <TeamPostImage
+          post={post}
+          alt=""
+          className="team-news-row-image"
+          fallback={source?.initials || 'TT'}
+        />
       </div>
 
       <div className="team-news-row-copy">
@@ -293,7 +328,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
       .sort((a, b) => String(a.playerName || '').localeCompare(String(b.playerName || ''), 'ko'));
 
     const news = [...state.data.posts.posts]
-      .sort((a, b) => (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0));
+      .sort((a, b) => postTimestamp(b) - postTimestamp(a));
 
     const transfers = [...(state.data.transfers || [])]
       .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
