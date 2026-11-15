@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getTeamDetail, getTransfers } from '../api/client';
 import TeamNotificationCard from '../components/TeamNotificationCard';
+import ContentActions from '../components/ContentActions';
 import { demo } from '../demo';
 import { POST_SOURCES, SUPPORTED_POST_LEAGUES } from '../constants';
 import {
@@ -448,6 +449,19 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
       </header>
 
       {!sample && <TeamNotificationCard team={team} session={session} />}
+
+      <div className="team-detail-quick-actions">
+        <ContentActions
+          compact
+          item={{
+            key: `team:${team.teamId}`,
+            type: 'team',
+            title: `${teamDisplayName(team)} 팀 상세`,
+            summary: `${league === 'unclassified' ? '리그 미분류' : leagueName(league)} · 선수 ${roster.length}명 · 관련 이적 ${transfers.length}건`,
+            path: `/teams/${team.teamId}`
+          }}
+        />
+      </div>
 
       <nav className="team-detail-tabs" aria-label="팀 상세 바로가기">
         <button className={activeTab === 'overview' ? 'active' : ''} type="button" onClick={() => selectTab('overview', 'team-overview')}>개요</button>

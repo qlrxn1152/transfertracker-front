@@ -13,6 +13,7 @@ import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
 import Pagination from '../components/Pagination';
 import PostCard from '../components/PostCard';
+import SavedSearches from '../components/SavedSearches';
 import { logoUrl, postTransferFlag, teamDisplayName, text } from '../utils';
 import { trackAnalyticsEvent } from '../firebase/analytics';
 import './PostsPage.css';
@@ -84,15 +85,22 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   const [pageData, setPageData] = useState(EMPTY_PAGE);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [sourceFilter, setSourceFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState(() => new URLSearchParams(location.search).get('source') || 'all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => new URLSearchParams(location.search).get('q') || '');
   const [page, setPage] = useState(0);
   const [sources, setSources] = useState(() => normalizeSources(POST_SOURCES));
   const [followingCodes, setFollowingCodes] = useState([]);
   const [followBusyCode, setFollowBusyCode] = useState('');
   const [followStatus, setFollowStatus] = useState('');
   const teamMode = selectedTeamId !== 'all';
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setSourceFilter(params.get('source') || 'all');
+    setQuery(params.get('q') || '');
+    setTypeFilter(params.get('type') === 'transfer' ? 'transfer' : 'all');
+  }, [location.search]);
 
   useEffect(() => {
     if (sample) {
@@ -198,6 +206,17 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
     : null;
   const currentSource = sources.find(source => source.code === sourceFilter);
   const hasPagination = pageData.hasNext || pageData.hasPrevious || pageData.totalPageCount > 1;
+  const savedPostParams = new URLSearchParams();
+  if (sourceFilter !== 'all') savedPostParams.set('source', sourceFilter);
+  if (query.trim()) savedPostParams.set('q', query.trim());
+  if (typeFilter === 'transfer') savedPostParams.set('type', 'transfer');
+  if (teamMode) savedPostParams.set('teamId', selectedTeamId);
+  const savedPostPath = `/posts${savedPostParams.size ? `?${savedPostParams}` : ''}`;
+  const savedPostLabel = [
+    currentSource?.name,
+    selectedTeam ? teamDisplayName(selectedTeam) : '',
+    query.trim()
+  ].filter(Boolean).join(' · ') || '전체 기자 소식';
 
   function changeSource(nextSource) {
     setSourceFilter(nextSource);
@@ -324,6 +343,8 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
             <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="소식 검색" />
           </label>
         </div>
+
+        <SavedSearches scope="posts" label={savedPostLabel} path={savedPostPath} />
       </div>
 
       {selectedTeam && (

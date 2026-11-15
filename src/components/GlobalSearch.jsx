@@ -8,6 +8,7 @@ import './GlobalSearch.css';
 export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
   const navigate = useNavigate();
   const rootRef = useRef(null);
+  const inputRef = useRef(null);
   const [query, setQuery] = useState('');
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,27 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
     return () => document.removeEventListener('pointerdown', close);
   }, []);
 
+  useEffect(() => {
+    const handleShortcut = event => {
+      const target = event.target;
+      const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
+
+      if (event.key === '/' && !typing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault();
+        setOpen(true);
+        inputRef.current?.focus();
+      }
+
+      if (event.key === 'Escape') {
+        setOpen(false);
+        inputRef.current?.blur();
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, []);
+
   function selectTeam(teamId) {
     setOpen(false);
     setQuery('');
@@ -84,6 +106,7 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
       <label className="global-search-box">
         <span aria-hidden="true">⌕</span>
         <input
+          ref={inputRef}
           type="search"
           value={query}
           onFocus={() => setOpen(true)}
@@ -93,7 +116,14 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
           }}
           placeholder="선수 또는 팀 검색"
           aria-label="선수 또는 팀 전체 검색"
+          onKeyDown={event => {
+            if (event.key === 'Escape') {
+              setOpen(false);
+              event.currentTarget.blur();
+            }
+          }}
         />
+        {!query && <kbd aria-label="검색 단축키">/</kbd>}
         {loading && <i aria-hidden="true" />}
       </label>
 

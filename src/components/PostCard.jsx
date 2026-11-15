@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { formatPostDate, postTransferFlag } from '../utils';
+import ContentActions from './ContentActions';
+import { isPostRead, markPostRead } from '../utils/clientStore';
 
 function fallbackSource(post) {
   const name = String(post.source || 'Unknown').replaceAll('_', ' ');
@@ -18,6 +21,8 @@ function imageUrl(value) {
 
 export default function PostCard({ post, sourceProfile, sample }) {
   const source = sourceProfile || fallbackSource(post);
+  const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
+  const [read, setRead] = useState(() => isPostRead(readKey));
 
   const translated = typeof post.translatedContent === 'string' && post.translatedContent.trim()
     ? post.translatedContent
@@ -30,8 +35,13 @@ export default function PostCard({ post, sourceProfile, sample }) {
   const flag = postTransferFlag(post);
   const photo = imageUrl(post.photoUrl);
 
+  function markRead() {
+    markPostRead(readKey);
+    setRead(true);
+  }
+
   return (
-    <article className="post-card">
+    <article className={`post-card ${read ? 'is-read' : ''}`} onClick={markRead}>
       <div className="post-card-head">
         <span className="post-avatar">{source.initials}</span>
         <div className="post-author">
@@ -69,6 +79,16 @@ export default function PostCard({ post, sourceProfile, sample }) {
 
       <div className="post-card-foot">
         <span>{sample ? '샘플 데이터' : translated ? '번역된 X 게시물' : 'X 게시물'}</span>
+        <ContentActions
+          compact
+          item={{
+            key: readKey,
+            type: 'post',
+            title: `${source.name} · ${translated ?? post.content ?? '기자 소식'}`,
+            summary: translated ?? post.content ?? '',
+            path: '/posts'
+          }}
+        />
         {original && (
           <a href={original} target="_blank" rel="noopener noreferrer">
             X에서 원문 보기 <span aria-hidden="true">↗</span>

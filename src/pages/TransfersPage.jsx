@@ -12,6 +12,7 @@ import {
 } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
+import SavedSearches from '../components/SavedSearches';
 import './TransfersPage.css';
 
 const initial = {
@@ -288,6 +289,12 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
           />
         </label>
       </div>
+
+      <SavedSearches
+        scope="transfers"
+        label={state.keyWord || selectedTeam ? `${state.keyWord || teamDisplayName(selectedTeam) || '전체'} 이적` : '전체 이적'}
+        path={`/transfers${paramsKey ? `?${paramsKey}` : ''}`}
+      />
 
       <section className="transfer-market-summary" aria-label="이적 현황 요약">
         <div><span>현재 페이지</span><strong>{transferSummary.players}</strong><small>선수 이동</small></div>

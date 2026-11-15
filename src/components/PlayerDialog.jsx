@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getPlayer, getPlayerTransfers } from '../api/client';
 import { demo } from '../demo';
 import { displayDate, logoUrl, photoUrl, teamDisplayName, typeLabel } from '../utils';
+import ContentActions from './ContentActions';
 import './PlayerDialog.css';
 
 function feeText(move) {
@@ -163,6 +164,16 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
                 )}
                 <span>이적 기록 {state.moves.length}건</span>
               </div>
+              <ContentActions
+                compact
+                item={{
+                  key: `player:${state.player.playerId}`,
+                  type: 'player',
+                  title: `${state.player.playerName} 선수 정보`,
+                  summary: currentTeam?.name ? `${currentTeam.name} 소속 · 이적 기록 ${state.moves.length}건` : '선수 이적 정보',
+                  path: `/players?player=${state.player.playerId}`
+                }}
+              />
             </div>
 
             {latest && (

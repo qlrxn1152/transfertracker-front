@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getFavoriteTeams, getPostSources, getPostsBySource, getTransfers } from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
+import { dismiss, hasDismissed, readBookmarks } from '../utils/clientStore';
 import {
   displayDate,
   formatPostDate,
@@ -46,6 +47,8 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
     error: ''
   });
   const [desk, setDesk] = useState({ loading: Boolean(session), favorites: [], posts: [], recent: readRecentTeams() });
+  const [bookmarks, setBookmarks] = useState(() => readBookmarks());
+  const [showStarter, setShowStarter] = useState(() => !hasDismissed('starter-guide'));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -137,6 +140,12 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
 
     return () => controller.abort();
   }, [sample, session?.accessToken]);
+
+  useEffect(() => {
+    const refresh = () => setBookmarks(readBookmarks());
+    window.addEventListener('veyro-client-store', refresh);
+    return () => window.removeEventListener('veyro-client-store', refresh);
+  }, []);
 
   const transferGroups = useMemo(() => {
     const seen = new Set();
@@ -243,6 +252,22 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
         </div>
       </section>
 
+      {showStarter && (
+        <section className="home-starter" aria-label="VEYRO 시작 안내">
+          <div>
+            <p className="eyebrow">START HERE</p>
+            <h2>처음이신가요? 1분이면 준비돼요.</h2>
+            <p>관심 있는 팀과 기자를 먼저 등록하면 필요한 소식만 빠르게 확인할 수 있습니다.</p>
+          </div>
+          <ol>
+            <li><span>01</span><Link to="/teams">팀을 찾아 상세 보기</Link></li>
+            <li><span>02</span>{session ? <Link to="/account">관심 팀 추가하기</Link> : <Link to="/signup">무료 계정 만들기</Link>}</li>
+            <li><span>03</span><Link to="/posts">기자 팔로우와 알림 준비</Link></li>
+          </ol>
+          <button type="button" onClick={() => { dismiss('starter-guide'); setShowStarter(false); }}>안내 닫기</button>
+        </section>
+      )}
+
       {state.error && <div className="posts-notice">{state.error}</div>}
 
       {session && (
@@ -304,6 +329,27 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
                 <p className="home-desk-muted">팀 상세를 둘러보면 최근 본 팀이 여기에 표시됩니다.</p>
               )}
             </div>
+          </div>
+        </section>
+      )}
+
+      {!!bookmarks.length && (
+        <section className="home-saved" aria-label="나중에 보기">
+          <div className="home-panel-head">
+            <div>
+              <p className="eyebrow">READ LATER</p>
+              <h2>나중에 보기</h2>
+            </div>
+            <span>{bookmarks.length}개 저장됨</span>
+          </div>
+          <div className="home-saved-list">
+            {bookmarks.slice(0, 4).map(item => (
+              <Link to={item.path || '/posts'} key={item.key}>
+                <small>{item.type === 'post' ? '기자 소식' : '저장한 콘텐츠'}</small>
+                <strong>{item.title}</strong>
+                <span>다시 보기 →</span>
+              </Link>
+            ))}
           </div>
         </section>
       )}
