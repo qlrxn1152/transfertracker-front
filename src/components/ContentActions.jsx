@@ -23,6 +23,11 @@ export default function ContentActions({ item, compact = false }) {
     setStatus(next ? '저장됨' : '저장 해제');
   }
 
+  function undo(event) {
+    save(event);
+    setStatus('변경 취소됨');
+  }
+
   async function share(event) {
     event.stopPropagation();
     const url = absoluteUrl(item.path);
@@ -47,7 +52,7 @@ export default function ContentActions({ item, compact = false }) {
         {bookmarked ? '저장됨' : '저장'}
       </button>
       <button type="button" onClick={share} aria-label="공유 또는 링크 복사">공유</button>
-      {status && <span role="status">{status}</span>}
+      {status && <><span role="status">{status}</span>{status === '저장됨' && <button className="content-actions-undo" type="button" onClick={undo}>실행 취소</button>}</>}
     </div>
   );
 }

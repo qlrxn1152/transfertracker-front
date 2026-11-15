@@ -3,6 +3,7 @@ import { getPlayer, getPlayerTransfers } from '../api/client';
 import { demo } from '../demo';
 import { displayDate, logoUrl, photoUrl, teamDisplayName, typeLabel } from '../utils';
 import ContentActions from './ContentActions';
+import { rememberRecent } from '../utils/clientStore';
 import './PlayerDialog.css';
 
 function feeText(move) {
@@ -80,6 +81,16 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
     run();
     return () => controller.abort();
   }, [playerId, sample]);
+
+  useEffect(() => {
+    if (!state.player?.playerId) return;
+    rememberRecent({
+      key: `player:${state.player.playerId}`,
+      type: 'player',
+      title: state.player.playerName || '선수 상세',
+      path: `/players?player=${state.player.playerId}`
+    });
+  }, [state.player]);
 
   useEffect(() => {
     const dialog = ref.current;

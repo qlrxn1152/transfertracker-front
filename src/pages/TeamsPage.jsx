@@ -2,8 +2,19 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LEAGUES } from '../constants';
 import { logoUrl, teamDisplayName, teamLeague, text } from '../utils';
+import TeamCompare from '../components/TeamCompare';
 
-export default function TeamsPage({ teams, error }) {
+const INITIALS = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const matchesClubSearch = (name, query) => {
+  const value = String(name || '');
+  const initials = value.split('').map(character => {
+    const code = character.charCodeAt(0) - 0xac00;
+    return code >= 0 && code < 11172 ? INITIALS[Math.floor(code / 588)] : character;
+  }).join('');
+  return text(value).includes(text(query)) || initials.includes(text(query));
+};
+
+export default function TeamsPage({ teams, error, sample }) {
   const navigate = useNavigate();
   const [leagueFilter, setLeagueFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -23,9 +34,7 @@ export default function TeamsPage({ teams, error }) {
 
   const filtered = teams.filter(item =>
     (leagueFilter === 'all' || teamLeague(item) === leagueFilter)
-    && [item.teamName, item.teamNameKo].some(
-      name => text(name).includes(text(search))
-    )
+    && [item.teamName, item.teamNameKo].some(name => matchesClubSearch(name, search))
   );
 
   const order = leagueFilter === 'all'
@@ -115,6 +124,8 @@ export default function TeamsPage({ teams, error }) {
           aria-label="클럽 검색"
         />
       </label>
+
+      <TeamCompare teams={teams} sample={sample} />
 
       <div className="league-groups">
         {order.map(([code, name, country]) => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatPostDate, postTransferFlag } from '../utils';
 import ContentActions from './ContentActions';
 import { isPostRead, markPostRead } from '../utils/clientStore';
@@ -23,6 +23,12 @@ export default function PostCard({ post, sourceProfile, sample }) {
   const source = sourceProfile || fallbackSource(post);
   const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
   const [read, setRead] = useState(() => isPostRead(readKey));
+
+  useEffect(() => {
+    const refresh = () => setRead(isPostRead(readKey));
+    window.addEventListener('veyro-client-store', refresh);
+    return () => window.removeEventListener('veyro-client-store', refresh);
+  }, [readKey]);
 
   const translated = typeof post.translatedContent === 'string' && post.translatedContent.trim()
     ? post.translatedContent

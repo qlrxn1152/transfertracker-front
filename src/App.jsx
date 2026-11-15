@@ -237,7 +237,7 @@ function AppRoutes() {
               />
             }
           />
-          <Route path="/teams" element={<TeamsPage teams={teams} error={teamError} />} />
+          <Route path="/teams" element={<TeamsPage teams={teams} error={teamError} sample={sample} />} />
           <Route
             path="/teams/:teamId"
             element={

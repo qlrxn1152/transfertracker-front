@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { getFavoriteTeams, getPostSources, getPostsBySource, getTransfers } from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
-import { dismiss, hasDismissed, readBookmarks } from '../utils/clientStore';
+import { clearBookmarks, dismiss, hasDismissed, readBookmarks, readRecentItems, removeBookmark } from '../utils/clientStore';
+import PwaInstallPrompt from '../components/PwaInstallPrompt';
 import {
   displayDate,
   formatPostDate,
@@ -48,6 +49,7 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
   });
   const [desk, setDesk] = useState({ loading: Boolean(session), favorites: [], posts: [], recent: readRecentTeams() });
   const [bookmarks, setBookmarks] = useState(() => readBookmarks());
+  const [recentItems, setRecentItems] = useState(() => readRecentItems());
   const [showStarter, setShowStarter] = useState(() => !hasDismissed('starter-guide'));
 
   useEffect(() => {
@@ -142,7 +144,10 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
   }, [sample, session?.accessToken]);
 
   useEffect(() => {
-    const refresh = () => setBookmarks(readBookmarks());
+    const refresh = () => {
+      setBookmarks(readBookmarks());
+      setRecentItems(readRecentItems());
+    };
     window.addEventListener('veyro-client-store', refresh);
     return () => window.removeEventListener('veyro-client-store', refresh);
   }, []);
@@ -268,6 +273,8 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
         </section>
       )}
 
+      <PwaInstallPrompt />
+
       {state.error && <div className="posts-notice">{state.error}</div>}
 
       {session && (
@@ -341,16 +348,27 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
               <h2>나중에 보기</h2>
             </div>
             <span>{bookmarks.length}개 저장됨</span>
+            <button className="home-saved-clear" type="button" onClick={() => clearBookmarks()}>모두 비우기</button>
           </div>
           <div className="home-saved-list">
             {bookmarks.slice(0, 4).map(item => (
-              <Link to={item.path || '/posts'} key={item.key}>
-                <small>{item.type === 'post' ? '기자 소식' : '저장한 콘텐츠'}</small>
-                <strong>{item.title}</strong>
-                <span>다시 보기 →</span>
-              </Link>
+              <article key={item.key}>
+                <Link to={item.path || '/posts'}>
+                  <small>{item.type === 'post' ? '기자 소식' : '저장한 콘텐츠'}</small>
+                  <strong>{item.title}</strong>
+                  <span>다시 보기 →</span>
+                </Link>
+                <button type="button" onClick={() => removeBookmark(item.key)}>삭제</button>
+              </article>
             ))}
           </div>
+        </section>
+      )}
+
+      {!!recentItems.length && (
+        <section className="home-recent-items" aria-label="최근 본 콘텐츠">
+          <div className="home-panel-head"><div><p className="eyebrow">CONTINUE EXPLORING</p><h2>최근 본 콘텐츠</h2></div><span>{recentItems.length}개</span></div>
+          <div>{recentItems.slice(0, 6).map(item => <Link to={item.path || '/'} key={item.key}><small>{item.type === 'team' ? '팀' : item.type === 'player' ? '선수' : '콘텐츠'}</small><strong>{item.title}</strong><span>이어 보기 →</span></Link>)}</div>
         </section>
       )}
 

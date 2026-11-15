@@ -39,6 +39,14 @@ export function toggleBookmark(item) {
   return !exists;
 }
 
+export function removeBookmark(key) {
+  write('bookmarks', readBookmarks().filter(item => item.key !== key));
+}
+
+export function clearBookmarks() {
+  write('bookmarks', []);
+}
+
 export function readPosts() {
   const value = read('read-posts', []);
   return Array.isArray(value) ? value : [];
@@ -52,6 +60,45 @@ export function markPostRead(key) {
   const current = readPosts();
   if (current.includes(key)) return;
   write('read-posts', [key, ...current].slice(0, 500));
+}
+
+export function markPostsRead(keys) {
+  const current = readPosts();
+  const next = [...new Set([...keys, ...current])].slice(0, 500);
+  write('read-posts', next);
+}
+
+export function clearReadPosts() {
+  write('read-posts', []);
+}
+
+export function readRecentItems() {
+  const value = read('recent-items', []);
+  return Array.isArray(value) ? value : [];
+}
+
+export function rememberRecent(item) {
+  const current = readRecentItems().filter(value => value.key !== item.key);
+  write('recent-items', [{ ...item, viewedAt: new Date().toISOString() }, ...current].slice(0, 12));
+}
+
+export function readSearchHistory() {
+  const value = read('search-history', []);
+  return Array.isArray(value) ? value : [];
+}
+
+export function rememberSearch(item) {
+  const current = readSearchHistory().filter(value => value.key !== item.key);
+  write('search-history', [{ ...item, searchedAt: new Date().toISOString() }, ...current].slice(0, 8));
+}
+
+export function readPreferences() {
+  const value = read('preferences', {});
+  return value && typeof value === 'object' ? value : {};
+}
+
+export function savePreferences(value) {
+  write('preferences', value);
 }
 
 export function readSavedSearches(scope) {

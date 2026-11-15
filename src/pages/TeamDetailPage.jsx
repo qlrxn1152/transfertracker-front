@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getTeamDetail, getTransfers } from '../api/client';
 import TeamNotificationCard from '../components/TeamNotificationCard';
 import ContentActions from '../components/ContentActions';
+import { rememberRecent } from '../utils/clientStore';
 import { demo } from '../demo';
 import { POST_SOURCES, SUPPORTED_POST_LEAGUES } from '../constants';
 import {
@@ -331,6 +332,12 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
         ...(Array.isArray(previous) ? previous : []).filter(item => String(item.teamId) !== String(team.teamId))
       ].slice(0, 4);
       localStorage.setItem(RECENT_TEAMS_KEY, JSON.stringify(next));
+      rememberRecent({
+        key: `team:${team.teamId}`,
+        type: 'team',
+        title: teamDisplayName(team),
+        path: `/teams/${team.teamId}`
+      });
     } catch {
       // 최근 본 팀은 편의 기능이므로 저장소를 사용할 수 없어도 페이지는 그대로 표시한다.
     }

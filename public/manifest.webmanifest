@@ -1,0 +1,13 @@
+{
+  "name": "VEYRO · TransferTracker",
+  "short_name": "VEYRO",
+  "description": "축구 이적 현황과 기자 소식을 한곳에서 확인합니다.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1112",
+  "theme_color": "#0a1112",
+  "icons": [
+    { "src": "/icons/transfertracker-icon.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/icons/transfertracker-icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

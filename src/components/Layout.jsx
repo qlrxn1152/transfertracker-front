@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import './Layout.css';
 import GlobalSearch from './GlobalSearch';
+import ClientPreferences from './ClientPreferences';
 
 const navClass = ({ isActive }) => `app-nav-link ${isActive ? 'active' : ''}`;
 
@@ -27,6 +28,7 @@ export default function Layout({ sample, teams, onPlayerOpen, session, onLogout 
           </nav>
 
           <div className="app-header-actions">
+            <ClientPreferences />
             {session ? (
               <>
                 <NavLink className="app-account-link" to="/account">

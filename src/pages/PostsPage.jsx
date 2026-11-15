@@ -16,6 +16,7 @@ import PostCard from '../components/PostCard';
 import SavedSearches from '../components/SavedSearches';
 import { logoUrl, postTransferFlag, teamDisplayName, text } from '../utils';
 import { trackAnalyticsEvent } from '../firebase/analytics';
+import { clearReadPosts, isPostRead, markPostsRead } from '../utils/clientStore';
 import './PostsPage.css';
 
 const EMPTY_PAGE = {
@@ -93,6 +94,8 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   const [followingCodes, setFollowingCodes] = useState([]);
   const [followBusyCode, setFollowBusyCode] = useState('');
   const [followStatus, setFollowStatus] = useState('');
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [readRefresh, setReadRefresh] = useState(0);
   const teamMode = selectedTeamId !== 'all';
 
   useEffect(() => {
@@ -194,10 +197,11 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   const filtered = useMemo(() => pageData.posts
     .filter(post => typeFilter === 'all' || postTransferFlag(post) === true)
     .filter(post => text(post.translatedContent).includes(text(query)) || text(post.content).includes(text(query)))
+    .filter(post => !unreadOnly || !isPostRead(`post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`))
     .sort((a, b) =>
       (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0)
       || String(b.externalPostId || b.postId || '').localeCompare(String(a.externalPostId || a.postId || ''))
-    ), [pageData.posts, typeFilter, query]);
+    ), [pageData.posts, typeFilter, query, unreadOnly, readRefresh]);
 
   const availableTeams = [...teams]
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko'));
@@ -342,9 +346,22 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
             <span aria-hidden="true">⌕</span>
             <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="소식 검색" />
           </label>
+
+          <button type="button" className={`journal-transfer-only ${unreadOnly ? 'active' : ''}`} onClick={() => setUnreadOnly(current => !current)}>
+            읽지 않은 소식만
+          </button>
         </div>
 
         <SavedSearches scope="posts" label={savedPostLabel} path={savedPostPath} />
+        {!!pageData.posts.length && (
+          <div className="journal-reading-tools">
+            <button type="button" onClick={() => {
+              markPostsRead(pageData.posts.map(post => `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`));
+              setReadRefresh(value => value + 1);
+            }}>현재 페이지 모두 읽음</button>
+            <button type="button" onClick={() => { clearReadPosts(); setReadRefresh(value => value + 1); }}>읽음 기록 초기화</button>
+          </div>
+        )}
       </div>
 
       {selectedTeam && (

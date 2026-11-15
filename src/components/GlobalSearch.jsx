@@ -3,7 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { getPlayers } from '../api/client';
 import { demo } from '../demo';
 import { logoUrl, photoUrl, teamDisplayName, text } from '../utils';
+import { readSearchHistory, rememberSearch } from '../utils/clientStore';
 import './GlobalSearch.css';
+
+const INITIALS = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+
+function koreanInitials(value) {
+  return String(value || '').split('').map(character => {
+    const code = character.charCodeAt(0) - 0xac00;
+    return code >= 0 && code < 11172 ? INITIALS[Math.floor(code / 588)] : character;
+  }).join('');
+}
+
+function matchesQuery(value, query) {
+  const candidate = text(value);
+  return candidate.includes(query) || koreanInitials(value).includes(query);
+}
 
 export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
   const navigate = useNavigate();
@@ -13,12 +28,15 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [history, setHistory] = useState(() => readSearchHistory());
+
+  const quickTeams = useMemo(() => teams.slice(0, 5), [teams]);
 
   const teamResults = useMemo(() => {
     const q = text(query.trim());
     if (!q) return [];
     return teams
-      .filter(team => text(team.teamName).includes(q) || text(team.teamNameKo).includes(q))
+      .filter(team => matchesQuery(team.teamName, q) || matchesQuery(team.teamNameKo, q))
       .slice(0, 5);
   }, [query, teams]);
 
@@ -90,12 +108,22 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
   }, []);
 
   function selectTeam(teamId) {
+    const team = teams.find(value => String(value.teamId) === String(teamId));
+    if (team) {
+      rememberSearch({ key: `team:${team.teamId}`, type: 'team', title: teamDisplayName(team), path: `/teams/${team.teamId}` });
+      setHistory(readSearchHistory());
+    }
     setOpen(false);
     setQuery('');
     navigate(`/teams/${teamId}`);
   }
 
   function selectPlayer(playerId) {
+    const player = players.find(value => String(value.playerId) === String(playerId));
+    if (player) {
+      rememberSearch({ key: `player:${player.playerId}`, type: 'player', title: player.playerName, path: `/players?player=${player.playerId}` });
+      setHistory(readSearchHistory());
+    }
     setOpen(false);
     setQuery('');
     onPlayerOpen(Number(playerId));
@@ -127,8 +155,21 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
         {loading && <i aria-hidden="true" />}
       </label>
 
-      {open && query.trim() && (
+      {open && (
         <div className="global-search-panel">
+          {!query.trim() && (
+            <section className="global-search-start">
+              <h3>최근 검색</h3>
+              {history.length ? history.slice(0, 4).map(item => (
+                <button type="button" key={item.key} onClick={() => {
+                  setOpen(false);
+                  navigate(item.path);
+                }}><span className="global-search-icon">{item.type === 'team' ? 'T' : 'P'}</span><span><strong>{item.title}</strong><small>{item.type === 'team' ? '팀 상세 보기' : '선수 상세 보기'}</small></span><em>→</em></button>
+              )) : <p>아직 검색 기록이 없습니다.</p>}
+              <h3>빠른 팀 이동</h3>
+              {quickTeams.map(team => <button type="button" key={team.teamId} onClick={() => selectTeam(team.teamId)}><span className="global-search-icon">{teamDisplayName(team).slice(0, 1)}</span><span><strong>{teamDisplayName(team)}</strong><small>팀 상세 보기</small></span><em>→</em></button>)}
+            </section>
+          )}
           {!!teamResults.length && (
             <section>
               <h3>팀</h3>
@@ -171,7 +212,7 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
             </section>
           )}
 
-          {!loading && !teamResults.length && !players.length && (
+          {!!query.trim() && !loading && !teamResults.length && !players.length && (
             <div className="global-search-empty">“{query.trim()}” 검색 결과가 없습니다.</div>
           )}
         </div>
