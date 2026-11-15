@@ -340,6 +340,27 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
         </div>
       )}
 
+      {currentSource && sourceFilter !== 'all' && (
+        <section className="journal-source-profile">
+          <span>{currentSource.initials}</span>
+          <div>
+            <p className="eyebrow">REPORTER PROFILE</p>
+            <h2>{currentSource.name}</h2>
+            <p>{currentSource.handle ? `@${currentSource.handle}` : '기자 소식'} · 최신 게시물을 시간순으로 확인합니다.</p>
+          </div>
+          <button
+            type="button"
+            className={followingCodes.includes(currentSource.code) ? 'following' : ''}
+            disabled={followBusyCode === currentSource.code}
+            onClick={() => toggleFollow(currentSource)}
+          >
+            {followBusyCode === currentSource.code
+              ? '처리 중...'
+              : followingCodes.includes(currentSource.code) ? '팔로우 중' : '팔로우'}
+          </button>
+        </section>
+      )}
+
       <div className="journal-feed-head">
         <div>
           <strong>{selectedTeam ? teamDisplayName(selectedTeam) : currentSource?.name || '전체 소식'}</strong>
@@ -360,7 +381,21 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
         </div>
       ) : (
         <div className={`empty ${error ? 'error' : ''}`}>
-          {loading ? '게시물을 불러오는 중...' : error || '선택한 조건에 맞는 게시물이 없습니다.'}
+          <p>{loading ? '게시물을 불러오는 중...' : error || '선택한 조건에 맞는 게시물이 없습니다.'}</p>
+          {!loading && !error && (
+            <button
+              type="button"
+              className="empty-action"
+              onClick={() => {
+                setQuery('');
+                setTypeFilter('all');
+                onSelectedTeamChange('all');
+                changeSource('all');
+              }}
+            >
+              모든 기자 소식 보기 →
+            </button>
+          )}
         </div>
       )}
 

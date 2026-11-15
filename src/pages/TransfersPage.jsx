@@ -189,6 +189,19 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
     return dates.length ? displayDate([...dates].sort().at(-1)) : '—';
   }, [transfers]);
 
+  const transferSummary = useMemo(() => {
+    const newest = groups[0]?.[0];
+    const loans = groups.filter(history => String(history[0]?.type || '').toUpperCase() === 'LOAN').length;
+    const freeAgents = groups.filter(history => String(history[0]?.type || '').toUpperCase() === 'FREE').length;
+
+    return {
+      players: groups.length,
+      loans,
+      freeAgents,
+      newest: newest?.date ? displayDate(newest.date) : '—'
+    };
+  }, [groups]);
+
   const findTeam = name => {
     const matches = teams.filter(team => team.teamName === name);
     return matches.length === 1 ? matches[0] : null;
@@ -275,6 +288,13 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
           />
         </label>
       </div>
+
+      <section className="transfer-market-summary" aria-label="이적 현황 요약">
+        <div><span>현재 페이지</span><strong>{transferSummary.players}</strong><small>선수 이동</small></div>
+        <div><span>최근 기록</span><strong>{transferSummary.newest}</strong><small>표시 중인 최신 날짜</small></div>
+        <div><span>임대</span><strong>{transferSummary.loans}</strong><small>현재 페이지 기준</small></div>
+        <div><span>자유계약</span><strong>{transferSummary.freeAgents}</strong><small>현재 페이지 기준</small></div>
+      </section>
 
       <LeagueTeamFilters
         prefix="transfers"

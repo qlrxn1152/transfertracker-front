@@ -209,6 +209,7 @@ function AppRoutes() {
                 sample={sample}
                 teams={teams}
                 refreshKey={refreshKey}
+                session={session}
                 onPlayerOpen={openPlayer}
               />
             }

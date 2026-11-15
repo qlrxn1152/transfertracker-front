@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getPostSources, getPostsBySource, getTransfers } from '../api/client';
+import { getFavoriteTeams, getPostSources, getPostsBySource, getTransfers } from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
 import {
@@ -26,7 +26,18 @@ function normalizeSources(values) {
   }).filter(source => source.code);
 }
 
-export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
+const RECENT_TEAMS_KEY = 'veyro.recent-teams';
+
+function readRecentTeams() {
+  try {
+    const value = JSON.parse(localStorage.getItem(RECENT_TEAMS_KEY) || '[]');
+    return Array.isArray(value) ? value.slice(0, 4) : [];
+  } catch {
+    return [];
+  }
+}
+
+export default function HomePage({ sample, teams, refreshKey, session, onPlayerOpen }) {
   const [state, setState] = useState({
     loading: true,
     transfers: [],
@@ -34,6 +45,7 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
     sources: POST_SOURCES,
     error: ''
   });
+  const [desk, setDesk] = useState({ loading: Boolean(session), favorites: [], posts: [], recent: readRecentTeams() });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,6 +109,34 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
     load();
     return () => controller.abort();
   }, [sample, refreshKey]);
+
+  useEffect(() => {
+    if (!session?.accessToken || sample) {
+      setDesk(current => ({ ...current, loading: false, favorites: [], posts: [], recent: readRecentTeams() }));
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setDesk(current => ({ ...current, loading: true, recent: readRecentTeams() }));
+
+    getFavoriteTeams(session.accessToken, controller.signal)
+      .then(data => {
+        if (controller.signal.aborted) return;
+        setDesk({
+          loading: false,
+          favorites: Array.isArray(data?.teamDetails) ? data.teamDetails : [],
+          posts: Array.isArray(data?.postDetails) ? data.postDetails : [],
+          recent: readRecentTeams()
+        });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setDesk(current => ({ ...current, loading: false, recent: readRecentTeams() }));
+        }
+      });
+
+    return () => controller.abort();
+  }, [sample, session?.accessToken]);
 
   const transferGroups = useMemo(() => {
     const seen = new Set();
@@ -204,6 +244,69 @@ export default function HomePage({ sample, teams, refreshKey, onPlayerOpen }) {
       </section>
 
       {state.error && <div className="posts-notice">{state.error}</div>}
+
+      {session && (
+        <section className="home-desk" aria-label="내 이적 데스크">
+          <div className="home-desk-head">
+            <div>
+              <p className="eyebrow">MY TRANSFER DESK</p>
+              <h2>{session.loginId}님, 오늘 확인할 소식</h2>
+              <p>관심 팀과 최근 본 클럽의 업데이트를 빠르게 이어서 확인하세요.</p>
+            </div>
+            <Link to="/account">내 데스크 열기 →</Link>
+          </div>
+
+          <div className="home-desk-grid">
+            <div className="home-desk-block">
+              <div className="home-desk-block-head"><strong>관심 팀</strong><span>{desk.favorites.length}</span></div>
+              {desk.loading ? (
+                <p className="home-desk-muted">내 팀을 불러오는 중입니다.</p>
+              ) : desk.favorites.length ? (
+                <div className="home-desk-teams">
+                  {desk.favorites.slice(0, 4).map(team => (
+                    <Link to={`/teams/${team.teamId}`} key={team.teamId}>
+                      <span>
+                        {(team.teamName || '?').slice(0, 1)}
+                        {logoUrl(team.logoUrl) && <img src={team.logoUrl} alt="" referrerPolicy="no-referrer" />}
+                      </span>
+                      <strong>{team.teamName}</strong>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="home-desk-muted">관심 팀을 추가하면 관련 소식이 이곳에 모입니다. <Link to="/teams">팀 찾기 →</Link></p>
+              )}
+            </div>
+
+            <div className="home-desk-block">
+              <div className="home-desk-block-head"><strong>새 팀 소식</strong><span>{desk.posts.length}</span></div>
+              {desk.posts.length ? (
+                <div className="home-desk-posts">
+                  {desk.posts.slice(0, 3).map(post => (
+                    <Link to={`/posts?teamId=${post.teamId}`} key={`${post.teamId}-${post.postId}`}>
+                      <strong>{post.postContent}</strong>
+                      <small>{post.teamName || '관련 팀 소식'} · 상세 보기 →</small>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="home-desk-muted">새 소식이 도착하면 여기에서 바로 이어볼 수 있어요.</p>
+              )}
+            </div>
+
+            <div className="home-desk-block">
+              <div className="home-desk-block-head"><strong>최근 본 팀</strong><span>{desk.recent.length}</span></div>
+              {desk.recent.length ? (
+                <div className="home-desk-recent">
+                  {desk.recent.map(team => <Link to={`/teams/${team.teamId}`} key={team.teamId}>{team.teamName}</Link>)}
+                </div>
+              ) : (
+                <p className="home-desk-muted">팀 상세를 둘러보면 최근 본 팀이 여기에 표시됩니다.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="home-grid">
         <section className="home-panel">

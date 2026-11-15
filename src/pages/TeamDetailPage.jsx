@@ -19,6 +19,7 @@ import './TeamDetailPage.css';
 import './TeamTransfers.css';
 
 const POSITION_ORDER = ['GK', 'DF', 'MF', 'FW'];
+const RECENT_TEAMS_KEY = 'veyro.recent-teams';
 
 function getPostSource(post) {
   return POST_SOURCES.find(source => source.code === post.source);
@@ -243,6 +244,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
   const navigate = useNavigate();
   const id = Number(teamId);
   const [state, setState] = useState({ loading: true, error: '', data: null });
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     if (!Number.isSafeInteger(id) || id < 1) {
@@ -316,6 +318,27 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
     load();
     return () => controller.abort();
   }, [id, sample, teams]);
+
+  useEffect(() => {
+    const team = state.data?.teams;
+    if (!team?.teamId || !teamDisplayName(team)) return;
+
+    try {
+      const previous = JSON.parse(localStorage.getItem(RECENT_TEAMS_KEY) || '[]');
+      const next = [
+        { teamId: team.teamId, teamName: teamDisplayName(team) },
+        ...(Array.isArray(previous) ? previous : []).filter(item => String(item.teamId) !== String(team.teamId))
+      ].slice(0, 4);
+      localStorage.setItem(RECENT_TEAMS_KEY, JSON.stringify(next));
+    } catch {
+      // 최근 본 팀은 편의 기능이므로 저장소를 사용할 수 없어도 페이지는 그대로 표시한다.
+    }
+  }, [state.data]);
+
+  function selectTab(tab, targetId) {
+    setActiveTab(tab);
+    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   const content = useMemo(() => {
     if (!state.data) return null;
@@ -392,7 +415,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
         <button type="button" onClick={() => navigate('/teams')}>← 클럽 목록</button>
       </div>
 
-      <header className="team-detail-hero">
+      <header className="team-detail-hero" id="team-overview">
         <div className="team-detail-hero-pattern" aria-hidden="true" />
 
         <div className="team-detail-brand">
@@ -426,7 +449,14 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
 
       {!sample && <TeamNotificationCard team={team} session={session} />}
 
-      <section className="team-transfer-section">
+      <nav className="team-detail-tabs" aria-label="팀 상세 바로가기">
+        <button className={activeTab === 'overview' ? 'active' : ''} type="button" onClick={() => selectTab('overview', 'team-overview')}>개요</button>
+        <button className={activeTab === 'transfers' ? 'active' : ''} type="button" onClick={() => selectTab('transfers', 'team-transfers')}>이적 <span>{transfers.length}</span></button>
+        <button className={activeTab === 'news' ? 'active' : ''} type="button" onClick={() => selectTab('news', 'team-news')}>소식 <span>{news.length}</span></button>
+        <button className={activeTab === 'squad' ? 'active' : ''} type="button" onClick={() => selectTab('squad', 'team-squad')}>선수단 <span>{roster.length}</span></button>
+      </nav>
+
+      <section className="team-transfer-section" id="team-transfers">
         <div className="team-transfer-head">
           <div>
             <p className="eyebrow">RECENT TRANSFERS</p>
@@ -492,7 +522,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
 
       <div className="team-detail-layout">
         <main className="team-detail-main">
-          <section className="team-news-section">
+          <section className="team-news-section" id="team-news">
             <div className="team-detail-section-head">
               <div>
                 <p className="eyebrow">TRANSFER JOURNAL</p>
@@ -550,7 +580,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
         </main>
 
         <aside className="team-detail-sidebar">
-          <section className="team-roster-panel">
+          <section className="team-roster-panel" id="team-squad">
             <div className="team-roster-head">
               <div>
                 <p className="eyebrow">THE SQUAD</p>
