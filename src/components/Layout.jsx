@@ -4,7 +4,7 @@ import GlobalSearch from './GlobalSearch';
 
 const navClass = ({ isActive }) => `app-nav-link ${isActive ? 'active' : ''}`;
 
-export default function Layout({ sample, teams, onPlayerOpen, onToggleSample, connection, session, onLogout }) {
+export default function Layout({ sample, teams, onPlayerOpen, session, onLogout }) {
   return (
     <>
       <header className="app-header">
@@ -27,23 +27,20 @@ export default function Layout({ sample, teams, onPlayerOpen, onToggleSample, co
           </nav>
 
           <div className="app-header-actions">
-            <span className={`app-connection ${connection.state || ''}`} role="status">
-              <i /> {connection.message}
-            </span>
             {session ? (
               <>
-                <NavLink className="app-account-link" to="/account">{session.loginId}</NavLink>
-                <button className="app-mode-button" type="button" onClick={onLogout}>로그아웃</button>
+                <NavLink className="app-account-link" to="/account">
+                  <span className="app-account-label">내 이적 데스크</span>
+                  <strong>{session.loginId}</strong>
+                </NavLink>
+                <button className="app-logout-button" type="button" onClick={onLogout}>로그아웃</button>
               </>
             ) : (
               <>
                 <NavLink className="app-account-link" to="/login">로그인</NavLink>
-                <NavLink className="app-mode-button" to="/signup">회원가입</NavLink>
+                <NavLink className="app-join-button" to="/signup">회원가입</NavLink>
               </>
             )}
-            <button className="app-mode-button" type="button" onClick={onToggleSample}>
-              {sample ? '실제 데이터' : '샘플'}
-            </button>
           </div>
         </div>
       </header>

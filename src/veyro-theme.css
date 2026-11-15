@@ -206,3 +206,116 @@ body{
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* --------------------------------------------------------------------------
+   Readability-first product refresh
+   One quiet dark canvas, clear typography, and lime only where it conveys a
+   state or a next action. This layer intentionally comes last so every page
+   reads like one product instead of a collection of separately styled cards.
+   -------------------------------------------------------------------------- */
+:root{
+  --v-bg:#0a1112;
+  --v-bg-soft:#0f191a;
+  --v-surface:#131f20;
+  --v-surface-raised:#182627;
+  --v-surface-hover:#1d2e2f;
+  --v-line:rgba(220,236,228,.13);
+  --v-line-strong:rgba(220,236,228,.21);
+  --v-text:#f2f6f2;
+  --v-text-muted:#b0bcb6;
+  --v-text-faint:#84938c;
+  --v-lime:#d8f59d;
+  --v-lime-dim:#b4d87e;
+}
+
+html{background:var(--v-bg)}
+body{
+  min-width:320px;
+  background:
+    radial-gradient(900px 460px at 50% -180px,rgba(119,157,108,.15),transparent 72%),
+    linear-gradient(145deg,#0c1516 0%,#091012 56%,#0d1717 100%)!important;
+  color:var(--v-text)!important;
+  font-feature-settings:'ss01' 1,'ss02' 1;
+  letter-spacing:-.012em;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
+  outline:2px solid var(--v-lime)!important;
+  outline-offset:3px;
+}
+
+.container{max-width:1240px!important}
+.app-main{padding-top:34px!important}
+.view{animation:veyro-enter .36s ease both}
+
+/* Navigation is deliberately calm: identity on the left, wayfinding in the
+   centre, account action on the right. Technical connection controls are not
+   user-facing navigation. */
+.app-header{border-bottom-color:var(--v-line)!important;background:rgba(9,16,18,.84)!important;box-shadow:0 10px 34px rgba(0,0,0,.18)!important}
+.app-header-inner{max-width:1240px!important;min-height:72px!important;grid-template-columns:auto minmax(190px,280px) 1fr auto!important;gap:24px!important}
+.app-brand{gap:10px!important}.app-brand-word{font-size:18px!important;letter-spacing:.2em!important}.app-brand small{color:var(--v-text-faint)!important;font-size:7px!important;letter-spacing:.14em!important}
+.app-nav{justify-content:center;gap:23px!important}.app-nav-link{padding:27px 0 25px!important;color:var(--v-text-faint)!important;font-size:12px!important;letter-spacing:-.025em}.app-nav-link:hover{color:var(--v-text-muted)!important}.app-nav-link.active{color:var(--v-text)!important}.app-nav-link.active::after{bottom:0!important;height:2px!important;background:var(--v-lime)!important}
+.app-header-actions{gap:9px!important}.app-account-link,.app-join-button,.app-logout-button{border-radius:9px;font-size:11px;font-weight:800;text-decoration:none;white-space:nowrap}
+.app-account-link{display:grid;gap:2px;color:var(--v-text)!important;line-height:1.1}.app-account-label{color:var(--v-text-faint);font-size:8px;font-weight:750;letter-spacing:.08em}.app-account-link strong{font-size:11px;font-weight:800}
+.app-join-button{border:1px solid rgba(216,245,157,.58);background:var(--v-lime);padding:10px 12px;color:#142016}.app-join-button:hover{background:#e4ffb2;color:#101914}
+.app-logout-button{border:1px solid var(--v-line);background:transparent;padding:9px 10px;color:var(--v-text-muted)}.app-logout-button:hover{border-color:var(--v-line-strong);background:rgba(255,255,255,.04);color:var(--v-text)}
+
+/* Shared hierarchy: every page title uses the same visual ladder. */
+.eyebrow,.league-kicker{color:var(--v-lime-dim)!important;font-size:10px!important;font-weight:850!important;letter-spacing:.16em!important}
+.section-head h2,.players-head h1,.journal-head h1,.transfer-market-head h2,.account-page h1,.team-detail-brand h1{color:var(--v-text)!important;text-wrap:balance}
+.section-head>div>p:last-child,.players-head>div>p:last-child,.journal-head>div>p:last-child,.account-hero p,.account-card-head p,.transfer-market-head>div>p:last-child{color:var(--v-text-muted)!important;line-height:1.65!important}
+.section-head h2,.transfer-market-head h2{font-size:clamp(24px,2.7vw,32px)!important;letter-spacing:-.06em!important}
+
+/* Surfaces use close tonal steps rather than bright cards on a black canvas. */
+.home-panel,.home-clubs,.transfer-market-board,.players-card,.team-card,.league-filter,.journal-filter-row,.journal-team-banner,.post-card,.account-card,.fcm-test-panel,.team-page-panel,.detail-card,.lookup-form,.empty,.global-search-panel,dialog{
+  border-color:var(--v-line)!important;
+  background:linear-gradient(145deg,rgba(25,38,39,.94),rgba(17,29,30,.96))!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.15)!important;
+}
+.home-panel,.home-clubs,.transfer-market-board,.team-page-panel,.account-card{border-radius:16px!important}
+.home-panel,.home-clubs{padding:26px!important}.home-panel-head{padding-bottom:15px;margin-bottom:4px!important;border-bottom:1px solid var(--v-line)}
+.home-panel-head h2{font-size:20px!important}.home-panel-head>a{color:var(--v-lime-dim)!important;font-size:11px!important}.home-panel-head>a:hover{color:var(--v-lime)!important}
+
+/* The landing screen now has one clear first action and less ornamental noise. */
+.home-page{gap:24px!important}.home-hero{min-height:396px!important;border-color:var(--v-line-strong)!important;border-radius:20px!important;box-shadow:0 22px 54px rgba(0,0,0,.26)!important}
+.home-hero-copy{padding:58px!important}.home-live{margin-bottom:20px!important;background:rgba(216,245,157,.1)!important;border:1px solid rgba(216,245,157,.24)!important;color:var(--v-lime)!important}
+.home-hero h1{max-width:610px!important;font-size:clamp(38px,5vw,60px)!important;line-height:1.08!important}.home-hero-copy>p{max-width:500px!important;color:#b5c2bd!important;font-size:14px!important;line-height:1.75!important}
+.home-hero-actions{gap:10px!important;margin-top:30px!important}.home-primary-link,.home-secondary-link{min-height:42px;display:inline-flex;align-items:center}.home-primary-link{padding-inline:17px!important}.home-secondary-link{padding-inline:16px!important}
+.home-grid{gap:20px!important}.home-transfer-list>button,.home-news-list article{min-height:72px;border-top-color:var(--v-line)!important}.home-transfer-list>button:hover,.home-news-list article:hover{background:rgba(255,255,255,.025)!important}.home-transfer-name strong,.home-news-meta strong{font-size:13px!important}.home-transfer-name small,.home-news-list p,.home-news-meta time{color:var(--v-text-muted)!important}
+.home-club-list{gap:9px!important}.home-club-list a{min-height:98px;border-color:var(--v-line)!important;background:rgba(255,255,255,.018)!important}.home-club-list a:hover{border-color:var(--v-line-strong)!important;background:rgba(216,245,157,.055)!important}.home-club-list strong{font-size:10px!important}
+
+/* Directory and result pages: make filtering a single calm zone, then let the
+   rows do the talking. */
+.transfer-market-head,.players-head,.journal-head{margin-bottom:24px!important}.transfer-market-head>div>p:last-child,.players-head>div>p:last-child,.journal-head>div>p:last-child{font-size:13px!important}
+.transfer-market-count{min-width:112px;border-color:var(--v-line)!important;background:rgba(216,245,157,.07)!important}.transfer-market-count strong{color:var(--v-lime)!important}.transfer-market-count span{color:var(--v-text-muted)!important}
+.transfer-market-toolbar,.players-search,.journal-filters{padding:13px!important;border:1px solid var(--v-line);border-radius:14px;background:rgba(18,30,31,.74)}
+.search,.journal-source-tabs button,.journal-team-select select,.journal-transfer-only,.compact-filter,.team-select-filter select,.pagination button,.account-add-row select,.account-form input{min-height:42px;border-color:var(--v-line-strong)!important;background:#101a1b!important;color:var(--v-text)!important}
+.search:focus-within{border-color:rgba(216,245,157,.68)!important;box-shadow:0 0 0 3px rgba(216,245,157,.08)}
+.transfer-market-columns{padding-block:13px!important;background:rgba(255,255,255,.025)!important;color:var(--v-text-faint)!important}.transfer-market-row{min-height:88px;border-bottom-color:var(--v-line)!important}.transfer-market-row:hover{background:rgba(216,245,157,.045)!important}.transfer-market-date{color:var(--v-text-faint)!important}.transfer-market-player-copy strong,.transfer-market-team strong{font-size:13px!important}.transfer-market-player-copy small,.transfer-market-team small{color:var(--v-text-muted)!important}
+.players-cards{gap:14px!important}.players-card{min-height:146px!important;border-radius:14px!important}.players-card:hover{border-color:var(--v-line-strong)!important;background:linear-gradient(145deg,#1b2a2b,#142224)!important}.players-card h3{font-size:18px!important}.players-open{color:var(--v-lime-dim)!important}
+
+/* Journalist posts should read like an editorial feed: content first, source
+   and time second, with images given enough space to be useful. */
+.journal-page{max-width:960px!important}.journal-filter-row{gap:12px!important;border-radius:14px!important}.journal-source-tabs{padding-bottom:4px!important}.journal-source-tabs button{min-height:38px!important;color:var(--v-text-muted)!important}.journal-source-tabs button.active{border-color:rgba(216,245,157,.38)!important;background:rgba(216,245,157,.12)!important;color:var(--v-lime)!important}
+.journal-team-banner{border-radius:14px!important}.journal-feed{gap:12px!important}.journal-feed .post-card{padding:24px!important;border-radius:15px!important}.post-card-head{gap:11px!important}.post-author strong{font-size:13px!important}.post-card-head time{color:var(--v-text-faint)!important}.post-content,.journal-feed .post-content{color:#e7eee9!important;font-size:15px!important;line-height:1.78!important}.post-media{border-color:var(--v-line)!important;border-radius:12px!important}.post-card-foot{padding-top:15px!important}
+
+/* Accounts and details remain information-rich without becoming noisy. */
+.account-page{max-width:1040px!important;padding-top:10px!important}.account-hero{padding:28px 0!important;border-color:var(--v-line)!important}.account-card{padding:25px!important}.account-team,.account-journalist{border-color:var(--v-line)!important;border-radius:11px!important;background:rgba(255,255,255,.018)}
+.team-detail-layout{gap:20px!important}.team-transfer-section,.team-news-section,.team-roster-panel{border-color:var(--v-line)!important;background:linear-gradient(145deg,rgba(24,37,38,.94),rgba(16,27,28,.98))!important;border-radius:16px!important;box-shadow:0 14px 34px rgba(0,0,0,.15)!important}.team-detail-hero{border-color:var(--v-line-strong)!important;border-radius:20px!important}.team-detail-brand h1{font-size:clamp(34px,4.5vw,54px)!important}.team-detail-meta,.team-detail-hero-stat span{color:var(--v-text-muted)!important}.team-transfer-column{border-color:var(--v-line)!important;background:rgba(5,12,13,.22)!important}.team-transfer-column-head{background:rgba(255,255,255,.035)!important;border-color:var(--v-line)!important}.team-transfer-row{min-height:74px;border-color:var(--v-line)!important}.team-transfer-row:hover{background:rgba(216,245,157,.045)!important}.team-news-row{min-height:86px;border-color:var(--v-line)!important}.team-news-row p{font-size:13px!important;line-height:1.55!important}.team-news-feature{border-color:var(--v-line-strong)!important}
+
+/* Small screens preserve the hierarchy: a short header, a clear bottom bar,
+   comfortable tap targets, and no tiny secondary text. */
+@media(max-width:980px){
+  .app-header-inner{grid-template-columns:auto minmax(160px,1fr) auto!important;gap:16px!important}
+  .app-nav{gap:16px!important}.app-nav-link{font-size:11px!important}
+  .app-account-label,.app-account-link strong{display:none}
+}
+@media(max-width:760px){
+  .container{padding-inline:16px!important}.app-main{padding-top:22px!important}.app-header-inner{min-height:58px!important;grid-template-columns:auto 1fr auto!important;padding-bottom:0!important}.app-brand-word{font-size:16px!important}.app-header-actions{gap:7px!important}.app-account-link{font-size:11px!important}.app-join-button,.app-logout-button{min-height:35px;padding:8px 9px!important;font-size:10px!important}
+  .app-nav{background:rgba(12,20,21,.97)!important;border-top-color:var(--v-line)!important}.app-nav-link{min-height:61px;padding:21px 2px 17px!important;color:var(--v-text-faint)!important;font-size:10px!important}.app-nav-link.active{color:var(--v-lime)!important}.app-nav-link.active::after{background:var(--v-lime)!important}
+  .home-page{gap:16px!important}.home-hero{min-height:0!important;border-radius:16px!important}.home-hero-copy{padding:34px 23px!important}.home-hero h1{font-size:35px!important}.home-hero-copy>p{font-size:13px!important}.home-hero-actions{margin-top:24px!important}.home-panel,.home-clubs{padding:20px 16px!important;border-radius:14px!important}
+  .transfer-market-toolbar,.players-search,.journal-filters{padding:10px!important;border-radius:12px!important}.transfer-market-row{min-height:0}.journal-feed .post-card{padding:19px!important;border-radius:13px!important}.post-content,.journal-feed .post-content{font-size:14px!important}.team-detail-layout{gap:16px!important}.team-transfer-section,.team-news-section,.team-roster-panel{border-radius:14px!important}
+}
