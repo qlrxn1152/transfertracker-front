@@ -170,18 +170,17 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
     return () => controller.abort();
   }, [sample, state.page, state.keyWord, state.leagueCode, state.teamId, refreshKey]);
 
-  const groups = useMemo(() => {
-    const map = new Map();
+  // 한 선수의 여러 이적도 별개의 사건으로 모두 보여 준다. 카드 하나가 이적 한 건이다.
+  const transferCards = useMemo(() => [...transfers]
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))), [transfers]);
 
-    for (const item of transfers) {
+  const playerTransferCounts = useMemo(() => {
+    const counts = new Map();
+    transfers.forEach(item => {
       const key = item.playerId != null ? `id:${item.playerId}` : `name:${item.playerName}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(item);
-    }
-
-    return [...map.values()]
-      .map(history => [...history].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))))
-      .sort((a, b) => String(b[0]?.date || '').localeCompare(String(a[0]?.date || '')));
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
   }, [transfers]);
 
   const latest = useMemo(() => {
@@ -193,17 +192,18 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
   }, [transfers]);
 
   const transferSummary = useMemo(() => {
-    const newest = groups[0]?.[0];
-    const loans = groups.filter(history => String(history[0]?.type || '').toUpperCase() === 'LOAN').length;
-    const freeAgents = groups.filter(history => String(history[0]?.type || '').toUpperCase() === 'FREE').length;
+    const newest = transferCards[0];
+    const loans = transferCards.filter(item => String(item?.type || '').toUpperCase() === 'LOAN').length;
+    const freeAgents = transferCards.filter(item => String(item?.type || '').toUpperCase() === 'FREE').length;
 
     return {
-      players: groups.length,
+      players: new Set(transfers.map(item => item.playerId ?? item.playerName)).size,
+      transfers: transferCards.length,
       loans,
       freeAgents,
       newest: newest?.date ? displayDate(newest.date) : '—'
     };
-  }, [groups]);
+  }, [transferCards, transfers]);
 
   const findTeam = name => {
     const matches = teams.filter(team => team.teamName === name);
@@ -275,8 +275,8 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         </div>
 
         <div className="transfer-market-count">
-          <strong>{groups.length.toLocaleString()}</strong>
-          <span>현재 페이지 선수</span>
+          <strong>{transferCards.length.toLocaleString()}</strong>
+          <span>현재 페이지 이적</span>
         </div>
       </div>
 
@@ -299,7 +299,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
       />
 
       <section className="transfer-market-summary" aria-label="이적 현황 요약">
-        <div><span>현재 페이지</span><strong>{transferSummary.players}</strong><small>선수 이동</small></div>
+        <div><span>현재 페이지</span><strong>{transferSummary.transfers}</strong><small>이적 기록</small></div>
         <div><span>최근 기록</span><strong>{transferSummary.newest}</strong><small>표시 중인 최신 날짜</small></div>
         <div><span>임대</span><strong>{transferSummary.loans}</strong><small>현재 페이지 기준</small></div>
         <div><span>자유계약</span><strong>{transferSummary.freeAgents}</strong><small>현재 페이지 기준</small></div>
@@ -316,100 +316,84 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
       {state.loading ? (
         <LoadingPlaceholder label="이적 기록을 불러오는 중입니다." />
-      ) : groups.length ? (
-        <div className="transfer-market-board" aria-live="polite">
-          <div className="transfer-market-columns" aria-hidden="true">
-            <span>날짜</span>
-            <span>선수</span>
-            <span>이전 팀</span>
-            <span />
-            <span>새 팀</span>
-            <span>유형</span>
-            <span />
-          </div>
-
-          <div className="transfer-market-list">
-            {groups.map((history, index) => {
-              const item = history[0];
+      ) : transferCards.length ? (
+        <div className="transfer-story-feed" aria-live="polite">
+          {transferCards.map((item, index) => {
               const picture = photoUrl(item.photoUrl);
               const fromLogo = teamLogo(item.outTeamName);
               const toLogo = teamLogo(item.inTeamName);
               const status = transferStatus(item);
+              const playerKey = item.playerId != null ? `id:${item.playerId}` : `name:${item.playerName}`;
+              const historyCount = playerTransferCounts.get(playerKey) || 1;
+              const fromTeam = findTeam(item.outTeamName);
+              const toTeam = findTeam(item.inTeamName);
 
               return (
                 <article
-                  className="transfer-market-row"
-                  key={`${item.playerId ?? item.playerName}-${index}`}
+                  className="transfer-story-card"
+                  key={`${item.playerId ?? item.playerName}-${item.date}-${item.inTeamId ?? item.inTeamName}-${index}`}
                 >
-                  <time className="transfer-market-date">{displayDate(item.date)}</time>
+                  <div className="transfer-story-meta">
+                    <span className={`transfer-market-status ${status.tone}`}>{status.label}</span>
+                    <time>{displayDate(item.date)}</time>
+                  </div>
 
                   <button
-                    className="transfer-market-player transfer-market-player-button"
+                    className="transfer-story-player"
                     type="button"
                     onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
                   >
-                    <span className="transfer-market-avatar">
+                    <span className="transfer-story-avatar">
                       {(item.playerName || '?').slice(0, 1)}
                       {picture && (
                         <img src={picture} alt="" loading="lazy" referrerPolicy="no-referrer" />
                       )}
                     </span>
 
-                    <span className="transfer-market-player-copy">
+                    <span className="transfer-story-player-copy">
                       <strong>{item.playerName}</strong>
                       <small>
-                        {history.length > 1 ? `이적 기록 ${history.length}건` : `PLAYER #${item.playerId ?? '—'}`}
+                        {historyCount > 1 ? `현재 페이지 이적 기록 ${historyCount}건` : `PLAYER #${item.playerId ?? '—'}`}
                       </small>
                     </span>
                   </button>
 
-                  {findTeam(item.outTeamName) ? (
-                    <Link className="transfer-market-team transfer-market-team-link" to={`/teams/${findTeam(item.outTeamName).teamId}`}>
-                      <span className="transfer-market-team-logo">
+                  <div className="transfer-story-route" aria-label={`${transferName(item.outTeamName, item.outTeamNameKo)}에서 ${transferName(item.inTeamName, item.inTeamNameKo)}으로 이적`}>
+                    {fromTeam ? (
+                      <Link className="transfer-story-club" to={`/teams/${fromTeam.teamId}`}>
+                        <span className="transfer-story-club-logo">
                         {(item.outTeamName || '?').slice(0, 1)}
                         {fromLogo && <img src={fromLogo} alt="" referrerPolicy="no-referrer" />}
+                        </span>
+                        <span><small>이전 팀</small><strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong></span>
+                      </Link>
+                    ) : (
+                      <span className="transfer-story-club">
+                        <span className="transfer-story-club-logo">{(item.outTeamName || '?').slice(0, 1)}</span>
+                        <span><small>이전 팀</small><strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong></span>
                       </span>
-                      <span>
-                        <strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong>
-                        <small>FROM</small>
-                      </span>
-                    </Link>
-                  ) : (
-                    <span className="transfer-market-team">
-                      <span className="transfer-market-team-logo">{(item.outTeamName || '?').slice(0, 1)}</span>
-                      <span>
-                        <strong>{transferName(item.outTeamName, item.outTeamNameKo)}</strong>
-                        <small>FROM</small>
-                      </span>
-                    </span>
-                  )}
-
-                  <span className="transfer-market-arrow" aria-hidden="true">→</span>
-
-                  {findTeam(item.inTeamName) ? (
-                    <Link className="transfer-market-team transfer-market-team-link" to={`/teams/${findTeam(item.inTeamName).teamId}`}>
-                      <span className="transfer-market-team-logo">
+                    )}
+                    <span className="transfer-story-arrow" aria-hidden="true">→</span>
+                    {toTeam ? (
+                      <Link className="transfer-story-club" to={`/teams/${toTeam.teamId}`}>
+                        <span className="transfer-story-club-logo">
                         {(item.inTeamName || '?').slice(0, 1)}
                         {toLogo && <img src={toLogo} alt="" referrerPolicy="no-referrer" />}
+                        </span>
+                        <span><small>새 팀</small><strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong></span>
+                      </Link>
+                    ) : (
+                      <span className="transfer-story-club">
+                        <span className="transfer-story-club-logo">{(item.inTeamName || '?').slice(0, 1)}</span>
+                        <span><small>새 팀</small><strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong></span>
                       </span>
-                      <span>
-                        <strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong>
-                        <small>TO</small>
-                      </span>
-                    </Link>
-                  ) : (
-                    <span className="transfer-market-team">
-                      <span className="transfer-market-team-logo">{(item.inTeamName || '?').slice(0, 1)}</span>
-                      <span>
-                        <strong>{transferName(item.inTeamName, item.inTeamNameKo)}</strong>
-                        <small>TO</small>
-                      </span>
-                    </span>
-                  )}
+                    )}
+                  </div>
 
-                  <span className={`transfer-market-status ${status.tone}`}>{status.label}</span>
-
-                  <div className="transfer-market-actions">
+                  <div className="transfer-story-actions">
+                    <button type="button" onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}>
+                      선수 상세 보기 →
+                    </button>
                     <ContentActions
                       compact
                       card
@@ -421,26 +405,17 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
                         path: `/transfers${paramsKey ? `?${paramsKey}` : ''}`
                       }}
                     />
-                    <button
-                      className="transfer-market-open"
-                      type="button"
-                      onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
-                      aria-label={`${item.playerName} 상세 보기`}
-                    >
-                      ↗
-                    </button>
                   </div>
                 </article>
               );
             })}
-          </div>
         </div>
       ) : (
         <div className={`empty ${state.error ? 'error' : ''}`}>{emptyText}</div>
       )}
 
       <p className="showing transfer-market-showing">
-        {state.page + 1} 페이지 · {groups.length}명 표시 / 이적 {transfers.length}건 ·
+        {state.page + 1} 페이지 · 이적 {transferCards.length}건 · 선수 {transferSummary.players}명 ·
         {' '}{state.leagueCode ? leagueName(state.leagueCode) : '전체 리그'}
         {selectedTeam ? ` · ${teamDisplayName(selectedTeam)}` : ''}
         {state.keyWord ? ` · 검색어 “${state.keyWord}”` : ''}
