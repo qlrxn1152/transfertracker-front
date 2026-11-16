@@ -2,12 +2,14 @@ import { NavLink, Outlet } from 'react-router-dom';
 import './Layout.css';
 import GlobalSearch from './GlobalSearch';
 import ClientPreferences from './ClientPreferences';
+import KeyboardShortcuts from './KeyboardShortcuts';
 
 const navClass = ({ isActive }) => `app-nav-link ${isActive ? 'active' : ''}`;
 
 export default function Layout({ sample, teams, onPlayerOpen, session, onLogout }) {
   return (
     <>
+      <a className="skip-link" href="#main-content">본문으로 건너뛰기</a>
       <header className="app-header">
         <div className="app-header-inner">
           <NavLink className="app-brand" to="/" aria-label="VEYRO 홈">
@@ -54,13 +56,14 @@ export default function Layout({ sample, teams, onPlayerOpen, session, onLogout 
         </div>
       )}
 
-      <main className="container app-main">
+      <main id="main-content" className="container app-main" tabIndex="-1">
         <Outlet />
         <footer className="app-footer">
           <span><b>VEYRO</b> · TransferTracker</span>
           <span>Football. Beyond the Game.</span>
         </footer>
       </main>
+      <KeyboardShortcuts />
     </>
   );
 }

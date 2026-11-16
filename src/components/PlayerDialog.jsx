@@ -177,6 +177,7 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
               </div>
               <ContentActions
                 compact
+                card
                 item={{
                   key: `player:${state.player.playerId}`,
                   type: 'player',

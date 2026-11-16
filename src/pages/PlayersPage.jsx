@@ -4,6 +4,7 @@ import { demo } from '../demo';
 import { leagueName, logoUrl, photoUrl, teamDisplayName } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
+import PlayerCompare from '../components/PlayerCompare';
 import './PlayersPage.css';
 
 export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen }) {
@@ -111,6 +112,8 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
         onLeagueChange={leagueCode => setState(current => ({ ...current, page: 0, leagueCode, teamId: '' }))}
         onTeamChange={teamId => setState(current => ({ ...current, page: 0, teamId }))}
       />
+
+      {!state.loading && <PlayerCompare players={players} sample={sample} onPlayerOpen={onPlayerOpen} />}
 
       {state.loading ? (
         <div className="empty list-loading">목록을 불러오는 중…</div>

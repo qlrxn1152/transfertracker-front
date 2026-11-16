@@ -178,6 +178,22 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
   const top = transferGroups[0];
   const topFrom = top ? findTeam(top.outTeamName) : null;
   const topTo = top ? findTeam(top.inTeamName) : null;
+  const briefing = useMemo(() => {
+    const newestTransfer = state.transfers
+      .map(item => item.date)
+      .filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || ''))
+      .sort()
+      .at(-1);
+    const newestPosts = state.posts
+      .map(item => item.postCreatedAt)
+      .filter(Boolean)
+      .sort((a, b) => String(b).localeCompare(String(a)));
+    const recentMoves = newestTransfer
+      ? state.transfers.filter(item => item.date === newestTransfer).length
+      : 0;
+    const linkedTeams = new Set(state.transfers.flatMap(item => [item.inTeamName, item.outTeamName]).filter(Boolean));
+    return { newestTransfer, newestPost: newestPosts[0], recentMoves, linkedTeams: linkedTeams.size, posts: state.posts.length };
+  }, [state.posts, state.transfers]);
 
   return (
     <section className="home-page">
@@ -254,6 +270,15 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
           ) : (
             <div className="home-feature-empty">최신 이적 데이터를 불러오는 중입니다.</div>
           )}
+        </div>
+      </section>
+
+      <section className="home-briefing" aria-label="현재 이적 브리핑">
+        <div className="home-briefing-copy"><p className="eyebrow">TRANSFER BRIEFING</p><h2>지금 확인할 이적 흐름</h2><p>현재 불러온 최신 기록을 기준으로 빠르게 훑어보세요.</p></div>
+        <div className="home-briefing-stats">
+          <Link to="/transfers"><strong>{briefing.recentMoves}</strong><span>최근 날짜 이적</span><small>{briefing.newestTransfer ? displayDate(briefing.newestTransfer) : '기록 확인 중'}</small></Link>
+          <Link to="/posts"><strong>{briefing.posts}</strong><span>최신 기자 소식</span><small>{briefing.newestPost ? formatPostDate(briefing.newestPost) : '소식 확인 중'}</small></Link>
+          <Link to="/teams"><strong>{briefing.linkedTeams}</strong><span>이적 관련 클럽</span><small>현재 목록 기준</small></Link>
         </div>
       </section>
 
