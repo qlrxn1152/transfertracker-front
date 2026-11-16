@@ -413,3 +413,56 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
 /* Keep the navigation at the thumb-friendly edge on phone and portrait-tablet
    viewports even when the embedded browser reports more than 760 CSS pixels. */
 @media(max-width:900px){.app-nav{position:fixed!important;top:auto!important;right:0!important;bottom:0!important;left:0!important;z-index:100!important}.app-main{padding-bottom:calc(82px + env(safe-area-inset-bottom))!important}.app-footer{display:none!important}}
+
+/* Daylight editorial theme: keep the dark VEYRO masthead and feature heroes,
+   but make reading surfaces calm enough for long browsing sessions. */
+:root{
+  --v-bg:#f3f6f3;
+  --v-bg-soft:#edf2ee;
+  --v-surface:#ffffff;
+  --v-surface-raised:#ffffff;
+  --v-surface-hover:#f6faf6;
+  --v-line:#d5dfd8;
+  --v-line-soft:#e2e9e4;
+  --v-line-strong:#b9c9be;
+  --v-text:#17231d;
+  --v-text-muted:#64736a;
+  --v-text-faint:#819087;
+  --v-lime:#7d9d43;
+  --v-lime-dim:#668536;
+  --v-danger:#c6555e;
+  --veyro-night:#f3f6f3;
+  --veyro-surface:#ffffff;
+  --veyro-surface-raised:#ffffff;
+  --veyro-line:#e0e8e2;
+  --veyro-text:#17231d;
+  --veyro-muted:#64736a;
+  --veyro-lime:#7d9d43;
+  --veyro-lime-strong:#6d9037;
+}
+
+html,body,#root{background:#f3f6f3!important;color:var(--v-text)!important}
+body{background:radial-gradient(ellipse 70% 28% at 50% -8%,rgba(125,157,67,.12),transparent 74%),#f3f6f3!important}
+.app-header{background:rgba(10,19,22,.96)!important;border-bottom-color:rgba(255,255,255,.08)!important;box-shadow:0 5px 20px rgba(13,24,20,.12)!important}
+.app-brand-word,.app-nav-link:hover,.app-nav-link.active{color:#f7faf7!important}.app-brand small,.app-nav-link{color:#a7b3ad!important}.app-nav-link.active::after{background:#d6f39b!important}.app-account-link{color:#d9e2de!important}
+
+.home-panel,.home-clubs,.home-saved,.home-recent-items,.transfer-market-board,.transfer-story-card,.players-card,.team-card,.league-filter,.journal-filter-row,.journal-team-banner,.post-card,.account-card,.fcm-test-panel,.team-page-panel,.team-transfer-section,.team-news-section,.team-roster-panel,.detail-card,.lookup-form,.empty,.loading-placeholder,.global-search-panel,dialog{
+  background:var(--v-surface)!important;
+  border-color:var(--v-line-soft)!important;
+  box-shadow:0 10px 26px rgba(30,49,38,.07)!important;
+  color:var(--v-text)!important;
+}
+.transfer-market-toolbar,.players-search,.journal-filters{background:rgba(255,255,255,.82)!important;border-color:var(--v-line-soft)!important}
+.search,.journal-source-tabs button,.journal-team-select select,.journal-transfer-only,.compact-filter,.team-select-filter select,.pagination button,.account-add-row select,.account-form input,.player-compare select,.team-compare select{background:#fff!important;border-color:var(--v-line)!important;color:var(--v-text)!important}
+.search input,.account-form input{color:var(--v-text)!important}.search input::placeholder{color:#89968f!important}
+.section-head h2,.players-head h1,.journal-head h1,.transfer-market-head h2,.account-page h1,.account-page h2,.home-panel-head h2,.players-card h3,.team-card,.post-author strong,.post-content,.account-post-list a,.account-team a,.team-page-panel h3,.team-transfer-head h2,.team-detail-section-head h2,.team-roster-head h2{color:var(--v-text)!important}
+.section-head>div>p:last-child,.players-head>div>p:last-child,.journal-head>div>p:last-child,.transfer-market-head>div>p:last-child,.account-hero p,.account-card-head p,.post-author span,.post-card-head time,.post-card-foot,.account-muted,.team-page-identity div>span,.team-page-stats span,.team-page-players small{color:var(--v-text-muted)!important}
+.eyebrow,.league-kicker,.home-panel-head>a,.account-inline-link,.account-post-related{color:var(--v-lime-dim)!important}
+.home-transfer-list>button,.home-club-list a,.team-news-row,.team-news-feature,.team-transfer-row,.team-roster-player,.post-original p,.post-media{background:transparent!important;border-color:var(--v-line-soft)!important;color:var(--v-text)!important}
+.post-card.is-read .post-content{color:#6f7e75!important}.post-original{border-color:var(--v-line-soft)!important}.post-original p{background:#f4f8f4!important}.post-media{background:#f4f7f4!important}
+.home-transfer-player,.home-news-avatar,.post-avatar,.player-avatar,.club-logo,.team-page-emblem,.account-team a>span,.players-photo,.players-team>span,.transfer-story-avatar,.transfer-story-club-logo{background:#edf4ed!important;border-color:#d8e5da!important;color:var(--v-lime-dim)!important}
+.transfer-story-route,.transfer-story-card,.transfer-story-club-logo{border-color:var(--v-line-soft)!important}.transfer-story-player-copy strong,.transfer-story-club strong{color:var(--v-text)!important}.transfer-story-player-copy small,.transfer-story-club small,.transfer-story-meta time{color:var(--v-text-muted)!important}.transfer-market-status{background:#e9f3df!important;color:#587a2a!important}.transfer-market-status.loan,.transfer-market-status.free,.transfer-market-status.out{background:#f0f3f1!important;color:#617067!important}
+.home-desk,.home-briefing,.home-starter,.pwa-install-prompt{background:linear-gradient(110deg,#eaf1e7,#f8faf7)!important;border-color:#d6e2cf!important;box-shadow:0 10px 28px rgba(52,78,48,.07)!important}.home-desk-head h2,.home-briefing h2,.home-starter h2,.pwa-install-prompt h2{color:var(--v-text)!important}.home-desk-head p:last-child,.home-briefing p:last-child,.home-starter>div>p:last-child,.pwa-install-prompt p:last-child{color:var(--v-text-muted)!important}.home-desk-block,.home-briefing-stats a,.home-starter li span{background:rgba(255,255,255,.68)!important;border-color:#dbe6d8!important;color:var(--v-text)!important}.home-desk-muted,.home-desk-recent a,.home-desk-posts small,.home-briefing-stats small{color:var(--v-text-muted)!important}
+.home-hero,.team-detail-hero,.player-detail-hero{box-shadow:0 18px 42px rgba(22,34,27,.17)!important}
+.app-footer{border-color:var(--v-line-soft)!important;color:var(--v-text-faint)!important}.app-footer b{color:var(--v-lime-dim)!important}
+@media(max-width:900px){.app-nav{background:rgba(10,19,22,.98)!important;border-top-color:rgba(255,255,255,.08)!important;box-shadow:0 -7px 22px rgba(12,20,16,.18)!important}.app-nav-link,.app-nav-icon{color:#a8b4ad!important}.app-nav-link.active,.app-nav-link.active .app-nav-icon{color:#d6f39b!important}}
