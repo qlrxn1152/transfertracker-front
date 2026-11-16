@@ -10,6 +10,7 @@ import TeamsPage from './pages/TeamsPage';
 import TeamDetailPage from './pages/TeamDetailPage';
 import PlayersPage from './pages/PlayersPage';
 import AccountPage from './pages/AccountPage';
+import KakaoAuthCallbackPage from './pages/KakaoAuthCallbackPage';
 import { getTeams, getTeamsByLeague } from './api/client';
 import { LEAGUES } from './constants';
 import { demo } from './demo';
@@ -28,6 +29,7 @@ function analyticsPageName(pathname) {
   if (pathname === '/login') return 'login';
   if (pathname === '/signup') return 'signup';
   if (pathname === '/account') return 'account';
+  if (pathname === '/auth/kakao/callback') return 'kakao_login_callback';
   return 'other';
 }
 
@@ -268,6 +270,10 @@ function AppRoutes() {
           <Route
             path="/signup"
             element={<AccountPage mode="signup" teams={teams} session={session} onSessionChange={updateSession} />}
+          />
+          <Route
+            path="/auth/kakao/callback"
+            element={<KakaoAuthCallbackPage onSessionChange={updateSession} />}
           />
           <Route
             path="/account"

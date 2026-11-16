@@ -88,6 +88,10 @@ export const loginMember = ({ loginId, password }) => request('/api/members/logi
   body: JSON.stringify({ loginId, password })
 });
 
+// 카카오 인증은 서버가 client secret으로 인가 코드를 교환해야 하므로,
+// 브라우저는 이 시작 URL로만 이동한다.
+export const getKakaoLoginUrl = () => apiUrl('/api/auth/kakao/authorize');
+
 export const getMyMemberId = (token, signal) => request('/api/members/me', { token, signal });
 export const getFavoriteTeams = (token, signal) =>
   request('/api/members/favorite-teams?page=0', { token, signal });

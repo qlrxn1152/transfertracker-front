@@ -6,6 +6,7 @@ import {
   getFollowedJournalistPosts,
   getFollowedJournalists,
   getFavoriteTeams,
+  getKakaoLoginUrl,
   loginMember,
   signUpMember,
   unfollowJournalist
@@ -42,6 +43,12 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
       ? { followJournalist: location.state.followJournalist, journalistName: location.state.journalistName }
       : {})
   } : undefined;
+
+  useEffect(() => {
+    if (mode === 'account') return;
+    const kakaoError = new URLSearchParams(location.search).get('kakaoError');
+    if (kakaoError) setStatus(kakaoError);
+  }, [location.search, mode]);
 
   useEffect(() => {
     if (mode !== 'account' || !session?.accessToken) return;
@@ -135,6 +142,20 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
       setStatus(error.message || '요청을 처리하지 못했습니다.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  function startKakaoLogin() {
+    setStatus('');
+    try {
+      sessionStorage.setItem('transfertracker.kakao.return-state', JSON.stringify({
+        returnTo,
+        state: authFlowState
+      }));
+      trackAnalyticsEvent('kakao_login_started');
+      window.location.assign(getKakaoLoginUrl());
+    } catch {
+      setStatus('카카오 로그인 페이지를 열지 못했습니다. 잠시 후 다시 시도해 주세요.');
     }
   }
 
@@ -361,6 +382,12 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
         <label>비밀번호<input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete={isSignup ? 'new-password' : 'current-password'} required /></label>
         <button className="account-primary" disabled={loading} type="submit">{loading ? '처리 중...' : isSignup ? '회원가입' : '로그인'}</button>
       </form>
+      <div className="account-social-divider"><span>또는</span></div>
+      <button type="button" className="account-kakao-button" disabled={loading} onClick={startKakaoLogin}>
+        <span aria-hidden="true">K</span>
+        카카오로 {isSignup ? '가입하고 시작하기' : '계속하기'}
+      </button>
+      <p className="account-social-note">카카오 계정으로 처음 로그인하면 VEYRO 계정이 자동으로 만들어집니다.</p>
       {status && <p className="account-status" role="status">{status}</p>}
       <p className="account-switch">{isSignup ? '이미 계정이 있나요?' : '아직 계정이 없나요?'} <Link to={isSignup ? '/login' : '/signup'} state={authFlowState}>{isSignup ? '로그인' : '회원가입'}</Link></p>
     </section>
