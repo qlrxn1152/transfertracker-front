@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { readSavedSearches, removeSavedSearch, saveSearch } from '../utils/clientStore';
+import { clearSavedSearches, readSavedSearches, removeSavedSearch, saveSearch } from '../utils/clientStore';
 
 export default function SavedSearches({ scope, label, path, disabled = false }) {
   const navigate = useNavigate();
@@ -22,14 +22,14 @@ export default function SavedSearches({ scope, label, path, disabled = false }) 
     <div className="saved-searches">
       <button className="saved-search-add" type="button" onClick={add} disabled={disabled}>현재 검색 저장</button>
       {!!saved.length && (
-        <div className="saved-search-list" aria-label="저장한 검색">
+        <><div className="saved-search-list" aria-label="저장한 검색">
           {saved.map(item => (
             <span key={item.path}>
               <button type="button" onClick={() => navigate(item.path)}>{item.label}</button>
               <button type="button" onClick={() => removeSavedSearch(scope, item.path)} aria-label={`${item.label} 삭제`}>×</button>
             </span>
           ))}
-        </div>
+        </div><button className="saved-search-clear" type="button" onClick={() => clearSavedSearches(scope)}>비우기</button></>
       )}
     </div>
   );

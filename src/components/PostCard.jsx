@@ -19,7 +19,7 @@ function imageUrl(value) {
   }
 }
 
-export default function PostCard({ post, sourceProfile, sample }) {
+export default function PostCard({ post, sourceProfile, sample, readingMode = 'translated' }) {
   const source = sourceProfile || fallbackSource(post);
   const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
   const [read, setRead] = useState(() => isPostRead(readKey));
@@ -40,6 +40,9 @@ export default function PostCard({ post, sourceProfile, sample }) {
 
   const flag = postTransferFlag(post);
   const photo = imageUrl(post.photoUrl);
+  const displayContent = readingMode === 'original'
+    ? post.content || translated || ''
+    : translated ?? post.content ?? '';
 
   function markRead() {
     markPostRead(readKey);
@@ -47,7 +50,7 @@ export default function PostCard({ post, sourceProfile, sample }) {
   }
 
   return (
-    <article className={`post-card ${read ? 'is-read' : ''}`} onClick={markRead}>
+    <article className={`post-card ${read ? 'is-read' : ''} ${readingMode === 'original' ? 'original-mode' : ''}`} onClick={markRead}>
       <div className="post-card-head">
         <span className="post-avatar">{source.initials}</span>
         <div className="post-author">
@@ -65,10 +68,10 @@ export default function PostCard({ post, sourceProfile, sample }) {
         ) : (
           <span className="post-tag">분류 정보 없음</span>
         )}
-        {translated && <span className="post-tag translated">한국어 번역</span>}
+        {translated && <span className="post-tag translated">{readingMode === 'original' ? '원문 보기' : '한국어 번역'}</span>}
       </div>
 
-      <p className="post-content">{translated ?? post.content ?? ''}</p>
+      <p className="post-content">{displayContent}</p>
 
       {photo && (
         <figure className="post-media">
@@ -76,7 +79,7 @@ export default function PostCard({ post, sourceProfile, sample }) {
         </figure>
       )}
 
-      {translated && post.content && (
+      {readingMode !== 'original' && translated && post.content && (
         <details className="post-original">
           <summary>원문 보기</summary>
           <p>{post.content}</p>
@@ -94,6 +97,7 @@ export default function PostCard({ post, sourceProfile, sample }) {
             summary: translated ?? post.content ?? '',
             path: '/posts'
           }}
+          card
         />
         {original && (
           <a href={original} target="_blank" rel="noopener noreferrer">

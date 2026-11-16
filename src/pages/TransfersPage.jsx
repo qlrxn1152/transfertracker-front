@@ -13,6 +13,7 @@ import {
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import SavedSearches from '../components/SavedSearches';
+import ContentActions from '../components/ContentActions';
 import './TransfersPage.css';
 
 const initial = {
@@ -407,14 +408,27 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
                   <span className={`transfer-market-status ${status.tone}`}>{status.label}</span>
 
-                  <button
-                    className="transfer-market-open"
-                    type="button"
-                    onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
-                    aria-label={`${item.playerName} 상세 보기`}
-                  >
-                    ↗
-                  </button>
+                  <div className="transfer-market-actions">
+                    <ContentActions
+                      compact
+                      card
+                      item={{
+                        key: `transfer:${item.playerId ?? item.playerName}:${item.date}:${item.inTeamId ?? item.inTeamName}`,
+                        type: 'transfer',
+                        title: `${item.playerName} · ${transferName(item.outTeamName, item.outTeamNameKo)} → ${transferName(item.inTeamName, item.inTeamNameKo)}`,
+                        summary: `${displayDate(item.date)} · ${status.label}`,
+                        path: `/transfers${paramsKey ? `?${paramsKey}` : ''}`
+                      }}
+                    />
+                    <button
+                      className="transfer-market-open"
+                      type="button"
+                      onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
+                      aria-label={`${item.playerName} 상세 보기`}
+                    >
+                      ↗
+                    </button>
+                  </div>
                 </article>
               );
             })}

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getFavoriteTeams, getPostSources, getPostsBySource, getTransfers } from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
-import { clearBookmarks, dismiss, hasDismissed, readBookmarks, readRecentItems, removeBookmark } from '../utils/clientStore';
+import { clearBookmarks, clearRecentItems, dismiss, hasDismissed, readBookmarks, readRecentItems, removeBookmark } from '../utils/clientStore';
 import PwaInstallPrompt from '../components/PwaInstallPrompt';
 import {
   displayDate,
@@ -367,7 +367,7 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
 
       {!!recentItems.length && (
         <section className="home-recent-items" aria-label="최근 본 콘텐츠">
-          <div className="home-panel-head"><div><p className="eyebrow">CONTINUE EXPLORING</p><h2>최근 본 콘텐츠</h2></div><span>{recentItems.length}개</span></div>
+          <div className="home-panel-head"><div><p className="eyebrow">CONTINUE EXPLORING</p><h2>최근 본 콘텐츠</h2></div><span>{recentItems.length}개</span><button className="home-saved-clear" type="button" onClick={() => clearRecentItems()}>비우기</button></div>
           <div>{recentItems.slice(0, 6).map(item => <Link to={item.path || '/'} key={item.key}><small>{item.type === 'team' ? '팀' : item.type === 'player' ? '선수' : '콘텐츠'}</small><strong>{item.title}</strong><span>이어 보기 →</span></Link>)}</div>
         </section>
       )}

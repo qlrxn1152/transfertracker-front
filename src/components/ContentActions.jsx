@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { isBookmarked, toggleBookmark } from '../utils/clientStore';
+import ShareCardButton from './ShareCardButton';
 
 function absoluteUrl(path) {
   if (typeof window === 'undefined') return path;
   return new URL(path || `${window.location.pathname}${window.location.search}`, window.location.origin).toString();
 }
 
-export default function ContentActions({ item, compact = false }) {
+export default function ContentActions({ item, compact = false, card = false, hideSave = false }) {
   const [bookmarked, setBookmarked] = useState(() => isBookmarked(item.key));
   const [status, setStatus] = useState('');
 
@@ -48,10 +49,11 @@ export default function ContentActions({ item, compact = false }) {
 
   return (
     <div className={`content-actions ${compact ? 'compact' : ''}`} onClick={event => event.stopPropagation()}>
-      <button type="button" onClick={save} aria-pressed={bookmarked} aria-label={bookmarked ? '저장 해제' : '나중에 보기 저장'}>
+      {!hideSave && <button type="button" onClick={save} aria-pressed={bookmarked} aria-label={bookmarked ? '저장 해제' : '나중에 보기 저장'}>
         {bookmarked ? '저장됨' : '저장'}
-      </button>
+      </button>}
       <button type="button" onClick={share} aria-label="공유 또는 링크 복사">공유</button>
+      {card && <ShareCardButton item={item} compact={compact} onStatus={setStatus} />}
       {status && <><span role="status">{status}</span>{status === '저장됨' && <button className="content-actions-undo" type="button" onClick={undo}>실행 취소</button>}</>}
     </div>
   );

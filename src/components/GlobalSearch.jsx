@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPlayers } from '../api/client';
 import { demo } from '../demo';
 import { logoUrl, photoUrl, teamDisplayName, text } from '../utils';
-import { readSearchHistory, rememberSearch } from '../utils/clientStore';
+import { clearSearchHistory, readSearchHistory, rememberSearch } from '../utils/clientStore';
 import './GlobalSearch.css';
 
 const INITIALS = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
@@ -87,6 +87,12 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
   }, []);
 
   useEffect(() => {
+    const refresh = () => setHistory(readSearchHistory());
+    window.addEventListener('veyro-client-store', refresh);
+    return () => window.removeEventListener('veyro-client-store', refresh);
+  }, []);
+
+  useEffect(() => {
     const handleShortcut = event => {
       const target = event.target;
       const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
@@ -159,7 +165,7 @@ export default function GlobalSearch({ sample, teams, onPlayerOpen }) {
         <div className="global-search-panel">
           {!query.trim() && (
             <section className="global-search-start">
-              <h3>최근 검색</h3>
+              <div className="global-search-history-head"><h3>최근 검색</h3>{history.length ? <button type="button" onClick={() => clearSearchHistory()}>비우기</button> : null}</div>
               {history.length ? history.slice(0, 4).map(item => (
                 <button type="button" key={item.key} onClick={() => {
                   setOpen(false);

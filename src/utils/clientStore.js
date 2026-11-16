@@ -77,6 +77,10 @@ export function readRecentItems() {
   return Array.isArray(value) ? value : [];
 }
 
+export function clearRecentItems() {
+  write('recent-items', []);
+}
+
 export function rememberRecent(item) {
   const current = readRecentItems().filter(value => value.key !== item.key);
   write('recent-items', [{ ...item, viewedAt: new Date().toISOString() }, ...current].slice(0, 12));
@@ -85,6 +89,10 @@ export function rememberRecent(item) {
 export function readSearchHistory() {
   const value = read('search-history', []);
   return Array.isArray(value) ? value : [];
+}
+
+export function clearSearchHistory() {
+  write('search-history', []);
 }
 
 export function rememberSearch(item) {
@@ -114,6 +122,10 @@ export function saveSearch(scope, item) {
 
 export function removeSavedSearch(scope, path) {
   write(`searches.${scope}`, readSavedSearches(scope).filter(item => item.path !== path));
+}
+
+export function clearSavedSearches(scope) {
+  write(`searches.${scope}`, []);
 }
 
 export function hasDismissed(key) {
