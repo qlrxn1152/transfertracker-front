@@ -14,6 +14,7 @@ import { POST_SOURCES } from '../constants';
 import Pagination from '../components/Pagination';
 import PostCard from '../components/PostCard';
 import SavedSearches from '../components/SavedSearches';
+import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import { logoUrl, postTransferFlag, teamDisplayName, text } from '../utils';
 import { trackAnalyticsEvent } from '../firebase/analytics';
 import { clearReadPosts, isPostRead, markPostsRead } from '../utils/clientStore';
@@ -418,7 +419,9 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
         </div>
       </div>
 
-      {filtered.length ? (
+      {loading ? (
+        <LoadingPlaceholder label="기자 소식을 불러오는 중입니다." />
+      ) : filtered.length ? (
         <div className="journal-feed" aria-live="polite">
           {filtered.map(post => (
             <PostCard
@@ -432,8 +435,8 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
         </div>
       ) : (
         <div className={`empty ${error ? 'error' : ''}`}>
-          <p>{loading ? '게시물을 불러오는 중...' : error || '선택한 조건에 맞는 게시물이 없습니다.'}</p>
-          {!loading && !error && (
+          <p>{error || '선택한 조건에 맞는 게시물이 없습니다.'}</p>
+          {!error && (
             <button
               type="button"
               className="empty-action"

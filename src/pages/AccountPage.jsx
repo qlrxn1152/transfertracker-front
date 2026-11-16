@@ -14,6 +14,7 @@ import FcmTestPanel from '../components/FcmTestPanel';
 import { trackAnalyticsEvent } from '../firebase/analytics';
 import { POST_SOURCES } from '../constants';
 import { logoUrl, teamDisplayName } from '../utils';
+import { isPostRead, markPostRead } from '../utils/clientStore';
 import './AccountPage.css';
 
 export default function AccountPage({ mode, teams, session, onSessionChange }) {
@@ -29,6 +30,8 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
   const [journalists, setJournalists] = useState([]);
   const [journalistPosts, setJournalistPosts] = useState([]);
   const [journalistLoading, setJournalistLoading] = useState(false);
+  const [newOnly, setNewOnly] = useState(false);
+  const [readRevision, setReadRevision] = useState(0);
   const returnTo = typeof location.state?.returnTo === 'string' && location.state.returnTo.startsWith('/')
     ? location.state.returnTo
     : '/account';
@@ -94,6 +97,19 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
     .filter(team => !favorites.some(favorite => String(favorite.teamId) === String(team.teamId)))
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko')),
   [favorites, teams]);
+
+  useEffect(() => {
+    const refreshReadState = () => setReadRevision(value => value + 1);
+    window.addEventListener('veyro-client-store', refreshReadState);
+    return () => window.removeEventListener('veyro-client-store', refreshReadState);
+  }, []);
+
+  const postReadKey = post => `post:${post.postId ?? post.externalPostId ?? `${post.sourcer || post.source}-${post.postCreatedAt}`}`;
+  const visibleTeamPosts = useMemo(() => {
+    const sorted = [...posts].sort((a, b) => (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0));
+    return newOnly ? sorted.filter(post => !isPostRead(postReadKey(post))) : sorted;
+  }, [newOnly, posts, readRevision]);
+  const unreadTeamPostCount = useMemo(() => posts.filter(post => !isPostRead(postReadKey(post))).length, [posts, readRevision]);
 
   async function submit(event) {
     event.preventDefault();
@@ -235,15 +251,32 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
         </section>
 
         <section className="account-card">
-          <div className="account-card-head"><div><h2>내 팀 최신 소식</h2><p>관심 팀과 연결된 최신 기자 게시물입니다.</p></div></div>
+          <div className="account-card-head">
+            <div><h2>내 팀 최신 소식</h2><p>관심 팀과 연결된 최신 기자 게시물입니다.</p></div>
+            <button
+              type="button"
+              className={`account-feed-toggle ${newOnly ? 'active' : ''}`}
+              onClick={() => setNewOnly(current => !current)}
+              aria-pressed={newOnly}
+            >
+              새 소식만 {unreadTeamPostCount}
+            </button>
+          </div>
           <div className="account-post-list">
-            {posts.map(post => {
+            {visibleTeamPosts.map(post => {
               const relatedTeam = favorites.find(team => String(team.teamId) === String(post.teamId))
                 || teams.find(team => String(team.teamId) === String(post.teamId));
               const relatedTeamName = relatedTeam?.teamName || post.teamName || '관련 팀';
 
               return (
-                <Link key={`${post.teamId}-${post.postId}`} to={`/posts?teamId=${post.teamId}`}>
+                <Link
+                  key={`${post.teamId}-${post.postId}`}
+                  to={`/posts?teamId=${post.teamId}`}
+                  onClick={() => {
+                    markPostRead(postReadKey(post));
+                    setReadRevision(value => value + 1);
+                  }}
+                >
                   <strong>{post.postContent}</strong>
                   <span className="account-post-related">
                     <span className="account-post-team-logo" aria-hidden="true">
@@ -256,7 +289,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
                 </Link>
               );
             })}
-            {!posts.length && <p className="account-muted">표시할 새 소식이 없습니다.</p>}
+            {!visibleTeamPosts.length && <p className="account-muted">{newOnly ? '읽지 않은 새 소식이 없습니다.' : '표시할 새 소식이 없습니다.'}</p>}
           </div>
         </section>
 

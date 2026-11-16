@@ -13,6 +13,7 @@ import {
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import SavedSearches from '../components/SavedSearches';
+import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import ContentActions from '../components/ContentActions';
 import './TransfersPage.css';
 
@@ -314,7 +315,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
       />
 
       {state.loading ? (
-        <div className="empty list-loading">목록을 불러오는 중…</div>
+        <LoadingPlaceholder label="이적 기록을 불러오는 중입니다." />
       ) : groups.length ? (
         <div className="transfer-market-board" aria-live="polite">
           <div className="transfer-market-columns" aria-hidden="true">

@@ -5,6 +5,7 @@ import { leagueName, logoUrl, photoUrl, teamDisplayName } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import PlayerCompare from '../components/PlayerCompare';
+import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import './PlayersPage.css';
 
 export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen }) {
@@ -116,7 +117,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
       {!state.loading && <PlayerCompare players={players} sample={sample} onPlayerOpen={onPlayerOpen} />}
 
       {state.loading ? (
-        <div className="empty list-loading">목록을 불러오는 중…</div>
+        <LoadingPlaceholder label="선수 목록을 불러오는 중입니다." />
       ) : players.length ? (
         <div className="players-cards" aria-live="polite">
           {players.map(item => {

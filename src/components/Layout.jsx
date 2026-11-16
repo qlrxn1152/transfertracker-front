@@ -6,6 +6,15 @@ import KeyboardShortcuts from './KeyboardShortcuts';
 
 const navClass = ({ isActive }) => `app-nav-link ${isActive ? 'active' : ''}`;
 
+function NavItem({ to, children, icon, end = false }) {
+  return (
+    <NavLink end={end} className={navClass} to={to}>
+      <span className="app-nav-icon" aria-hidden="true">{icon}</span>
+      <span>{children}</span>
+    </NavLink>
+  );
+}
+
 export default function Layout({ sample, teams, onPlayerOpen, session, onLogout }) {
   return (
     <>
@@ -21,12 +30,12 @@ export default function Layout({ sample, teams, onPlayerOpen, session, onLogout 
           <GlobalSearch sample={sample} teams={teams} onPlayerOpen={onPlayerOpen} />
 
           <nav className="app-nav" aria-label="주요 메뉴">
-            <NavLink end className={navClass} to="/">홈</NavLink>
-            <NavLink className={navClass} to="/transfers">이적 현황</NavLink>
-            <NavLink className={navClass} to="/posts">기자 소식</NavLink>
-            <NavLink className={navClass} to="/teams">팀</NavLink>
-            <NavLink className={navClass} to="/players">선수</NavLink>
-            {session && <NavLink className={navClass} to="/account">내 팀</NavLink>}
+            <NavItem end to="/" icon="⌂">홈</NavItem>
+            <NavItem to="/transfers" icon="↗">이적 현황</NavItem>
+            <NavItem to="/posts" icon="▤">기자 소식</NavItem>
+            <NavItem to="/teams" icon="◐">팀</NavItem>
+            <NavItem to="/players" icon="♙">선수</NavItem>
+            {session && <NavItem to="/account" icon="♥">내 팀</NavItem>}
           </nav>
 
           <div className="app-header-actions">
