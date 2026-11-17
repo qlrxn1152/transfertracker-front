@@ -19,7 +19,7 @@ function imageUrl(value) {
   }
 }
 
-export default function PostCard({ post, sourceProfile, sample, readingMode = 'translated' }) {
+export default function PostCard({ post, sourceProfile, sample, readingMode = 'translated', onRead }) {
   const source = sourceProfile || fallbackSource(post);
   const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
   const [read, setRead] = useState(() => isPostRead(readKey));
@@ -45,19 +45,26 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
     : translated ?? post.content ?? '';
 
   function markRead() {
+    if (read) return;
     markPostRead(readKey);
     setRead(true);
+    onRead?.();
   }
 
   return (
-    <article className={`post-card ${read ? 'is-read' : ''} ${readingMode === 'original' ? 'original-mode' : ''}`} onClick={markRead}>
+    <article className={`post-card ${read ? 'is-read' : 'is-unread'} ${readingMode === 'original' ? 'original-mode' : ''}`} onClick={markRead}>
       <div className="post-card-head">
         <span className="post-avatar">{source.initials}</span>
         <div className="post-author">
           <strong>{source.name}</strong>
           <span>@{source.handle}</span>
         </div>
-        <time>{formatPostDate(post.postCreatedAt)}</time>
+        <div className="post-card-timing">
+          <span className="post-read-state" aria-label={read ? '읽은 게시물' : '읽지 않은 새 게시물'}>
+            <i aria-hidden="true" />{read ? '읽음' : '새 글'}
+          </span>
+          <time>{formatPostDate(post.postCreatedAt)}</time>
+        </div>
       </div>
 
       <div className="post-meta">

@@ -430,6 +430,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
               sourceProfile={sources.find(source => source.code === post.source)}
               sample={sample}
               readingMode={readingMode}
+              onRead={() => setReadRefresh(value => value + 1)}
             />
           ))}
         </div>

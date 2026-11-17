@@ -501,3 +501,16 @@ body{background:radial-gradient(ellipse 70% 28% at 50% -8%,rgba(125,157,67,.12),
 .player-detail-club small{color:#718078!important}
 .player-detail-club strong{color:#17231d!important}
 .player-detail-route-arrow{color:#668536!important}
+
+/* Read state must be recognizable without relying on a faint content color. */
+.journal-feed .post-card{position:relative!important;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.journal-feed .post-card.is-unread{border-color:#b9d59a!important;box-shadow:inset 4px 0 #7d9d43,0 8px 20px rgba(65,94,49,.08)!important}
+.journal-feed .post-card.is-read{opacity:1!important;background:#fbfcfa!important;box-shadow:none!important}
+.journal-feed .post-card.is-read .post-content{color:#7b877f!important}
+.post-card-timing{display:grid;justify-items:end;gap:5px;margin-left:auto;text-align:right}
+.post-read-state{display:inline-flex;align-items:center;gap:5px;border:1px solid #d2ddd3;border-radius:999px;background:#f7f9f6;padding:4px 7px;color:#7a887e;font-size:9px;font-weight:850;line-height:1;white-space:nowrap}
+.post-read-state i{width:5px;height:5px;border-radius:50%;background:#a0aaa3}
+.post-card.is-unread .post-read-state{border-color:#c8dda8;background:#edf7df;color:#56762a}
+.post-card.is-unread .post-read-state i{background:#709b39;box-shadow:0 0 0 3px rgba(112,155,57,.12)}
+.post-card-timing time{margin:0!important;width:auto!important;color:var(--v-text-muted)!important}
+@media(max-width:650px){.post-card-timing{width:100%;grid-template-columns:auto 1fr;align-items:center;margin:2px 0 0 54px;justify-items:start}.post-card-timing time{justify-self:end!important;font-size:10px!important}}
