@@ -1,7 +1,12 @@
-const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const CURRENT_PRODUCTION_API_URL = 'https://transfertracker-api-production.up.railway.app';
+const configuredApiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+// 초기 Railway 서비스 주소가 로컬 환경 파일에 남아 있어도 현재 운영 API를 사용한다.
+const API_BASE_URL = configuredApiBaseUrl.includes('transfertracker-back-v1-production.up.railway.app')
+  ? CURRENT_PRODUCTION_API_URL
+  : configuredApiBaseUrl;
 
-function apiUrl(path) {
-  return `${API_BASE_URL}${path}`;
+function apiUrl(path, baseUrl = API_BASE_URL) {
+  return `${baseUrl}${path}`;
 }
 
 async function readErrorMessage(response, fallback) {
@@ -17,7 +22,7 @@ async function readErrorMessage(response, fallback) {
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(apiUrl(path), {
+  const response = await fetch(apiUrl(path, options.baseUrl), {
     cache: 'no-store',
     ...options,
     headers: {
@@ -144,3 +149,12 @@ export const removeNotificationTestPosts = token => request('/external/api/posts
   method: 'DELETE',
   token
 });
+
+// 개발 환경 관리자용: 이미 저장된 게시물에서 비어 있는 사진 URL을 다시 수집해 보정한다.
+export const syncTransferPosts = (token, source) => request(
+  `/external/api/posts/${encodeURIComponent(source)}`,
+  {
+    method: 'POST',
+    token
+  }
+);
