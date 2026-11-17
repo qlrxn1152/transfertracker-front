@@ -59,15 +59,13 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
           <strong>{source.name}</strong>
           <span>@{source.handle}</span>
         </div>
-        <div className="post-card-timing">
-          <span className="post-read-state" aria-label={read ? '읽은 게시물' : '읽지 않은 새 게시물'}>
-            <i aria-hidden="true" />{read ? '읽음' : '새 글'}
-          </span>
-          <time>{formatPostDate(post.postCreatedAt)}</time>
-        </div>
+        <time>{formatPostDate(post.postCreatedAt)}</time>
       </div>
 
       <div className="post-meta">
+        <span className={`post-read-badge ${read ? 'read' : 'unread'}`}>
+          <i aria-hidden="true" />{read ? '읽음' : '새 글'}
+        </span>
         {flag === true ? (
           <span className="post-tag transfer">↗ 이적 관련</span>
         ) : flag === false ? (
