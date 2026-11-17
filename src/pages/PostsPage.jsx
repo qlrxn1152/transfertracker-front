@@ -49,7 +49,8 @@ function normalizeSources(values) {
       code,
       name,
       handle: fallback?.handle || item.xUsername || '',
-      initials: fallback?.initials || sourceInitials(name, code)
+      initials: fallback?.initials || sourceInitials(name, code),
+      profileImageUrl: item.profileImageUrl ?? item.profilePhotoUrl ?? item.avatarUrl ?? item.imageUrl ?? item.photoUrl
     };
   }).filter(source => source.code);
 }
@@ -201,7 +202,15 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
     .filter(post => typeFilter === 'all' || postTransferFlag(post) === true)
     .filter(post => text(post.translatedContent).includes(text(query)) || text(post.content).includes(text(query)))
     .filter(post => !unreadOnly || !isPostRead(`post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`))
-    .filter(post => !mediaOnly || Boolean(post.photoUrl))
+    .filter(post => !mediaOnly || Boolean(
+      post.photoUrl
+      ?? post.mediaUrl
+      ?? post.imageUrl
+      ?? post.image?.url
+      ?? post.media?.url
+      ?? post.photoUrls?.[0]
+      ?? post.mediaUrls?.[0]
+    ))
     .sort((a, b) =>
       (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0)
       || String(b.externalPostId || b.postId || '').localeCompare(String(a.externalPostId || a.postId || ''))

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatPostDate, postTransferFlag } from '../utils';
 import ContentActions from './ContentActions';
+import JournalistAvatar from './JournalistAvatar';
 import { isPostRead, markPostRead } from '../utils/clientStore';
 
 function fallbackSource(post) {
@@ -11,8 +12,17 @@ function fallbackSource(post) {
   return { name, handle: '', initials: initials || 'X' };
 }
 
-function imageUrl(value) {
+function imageUrl(post) {
   try {
+    const value = [
+      post?.photoUrl,
+      post?.mediaUrl,
+      post?.imageUrl,
+      post?.image?.url,
+      post?.media?.url,
+      ...(Array.isArray(post?.photoUrls) ? post.photoUrls : []),
+      ...(Array.isArray(post?.mediaUrls) ? post.mediaUrls : [])
+    ].find(candidate => typeof candidate === 'string' && candidate.trim());
     const url = new URL(value);
     return url.protocol === 'https:' ? url.toString() : null;
   } catch {
@@ -41,7 +51,7 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
     : null;
 
   const flag = postTransferFlag(post);
-  const photo = imageUrl(post.photoUrl);
+  const photo = imageUrl(post);
   const displayContent = readingMode === 'original'
     ? post.content || translated || ''
     : translated ?? post.content ?? '';
@@ -81,7 +91,7 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
       aria-label={`${source.name} 게시물 상세 보기`}
     >
       <div className="post-card-head">
-        <span className="post-avatar">{source.initials}</span>
+        <JournalistAvatar source={source} className="post-avatar" />
         <div className="post-author">
           <strong>{source.name}</strong>
           <span>@{source.handle}</span>

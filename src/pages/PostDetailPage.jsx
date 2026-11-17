@@ -6,6 +6,7 @@ import { POST_SOURCES } from '../constants';
 import { formatPostDate, logoUrl, postTransferFlag, teamDisplayName } from '../utils';
 import { markPostRead } from '../utils/clientStore';
 import ContentActions from '../components/ContentActions';
+import JournalistAvatar from '../components/JournalistAvatar';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import './PostDetailPage.css';
 
@@ -15,8 +16,17 @@ function fallbackSource(post) {
   return { name: raw, handle: '', initials: initials || 'X' };
 }
 
-function imageUrl(value) {
+function imageUrl(post) {
   try {
+    const value = [
+      post?.photoUrl,
+      post?.mediaUrl,
+      post?.imageUrl,
+      post?.image?.url,
+      post?.media?.url,
+      ...(Array.isArray(post?.photoUrls) ? post.photoUrls : []),
+      ...(Array.isArray(post?.mediaUrls) ? post.mediaUrls : [])
+    ].find(candidate => typeof candidate === 'string' && candidate.trim());
     const url = new URL(value);
     return url.protocol === 'https:' ? url.toString() : null;
   } catch {
@@ -73,7 +83,8 @@ export default function PostDetailPage({ sample, teams }) {
               code,
               name: item.displayName || fallback?.name || item.xUsername || String(code || '').replaceAll('_', ' '),
               handle: item.xUsername || fallback?.handle || '',
-              initials: fallback?.initials || String(code || 'X').split('_').map(value => value[0]).join('').slice(0, 2)
+              initials: fallback?.initials || String(code || 'X').split('_').map(value => value[0]).join('').slice(0, 2),
+              profileImageUrl: item.profileImageUrl ?? item.profilePhotoUrl ?? item.avatarUrl ?? item.imageUrl ?? item.photoUrl
             };
           })
           : POST_SOURCES;
@@ -99,7 +110,7 @@ export default function PostDetailPage({ sample, teams }) {
   const source = state.sources.find(item => item.code === post.source) || fallbackSource(post);
   const translated = typeof post.translatedContent === 'string' && post.translatedContent.trim() ? post.translatedContent.trim() : null;
   const original = typeof post.content === 'string' && post.content.trim() ? post.content.trim() : null;
-  const photo = imageUrl(post.photoUrl);
+  const photo = imageUrl(post);
   const externalId = String(post.externalPostId || '');
   const xUrl = !sample && source.handle && /^\d{1,30}$/.test(externalId)
     ? `https://x.com/${source.handle}/status/${externalId}`
@@ -112,7 +123,7 @@ export default function PostDetailPage({ sample, teams }) {
     <article className="post-detail-page">
       <Link className="post-detail-back" to="/posts">← 기자 소식 목록</Link>
       <header className="post-detail-head">
-        <div className="post-detail-source"><span>{source.initials}</span><div><b>{source.name}</b>{source.handle && <small>@{source.handle}</small>}</div></div>
+        <div className="post-detail-source"><JournalistAvatar source={source} className="post-detail-avatar" /><div><b>{source.name}</b>{source.handle && <small>@{source.handle}</small>}</div></div>
         <time>{formatPostDate(post.postCreatedAt)}</time>
       </header>
       <div className="post-detail-tags">
