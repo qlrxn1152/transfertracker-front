@@ -34,7 +34,7 @@ export default function TeamCompare({ teams, sample }) {
       <div className="team-compare-selects">
         {[first, second].map((value, index) => <select key={index} value={value} onChange={event => index === 0 ? setFirst(event.target.value) : setSecond(event.target.value)}><option value="">{index === 0 ? '첫 번째 팀 선택' : '비교할 팀 선택'}</option>{teams.filter(team => String(team.teamId) !== (index === 0 ? second : first)).map(team => <option key={team.teamId} value={team.teamId}>{teamDisplayName(team)}</option>)}</select>)}
       </div>
-      {chosen.length === 2 && <div className="team-compare-result">{chosen.map(team => <article key={team.teamId}><small>CLUB #{team.teamId}</small><strong>{compactTeam(team).name}</strong><span>선수단 {details[team.teamId]?.players ?? '—'}명</span><span>연결 소식 {details[team.teamId]?.posts ?? '—'}건</span></article>)}</div>}
+      {chosen.length === 2 && <div className="team-compare-result">{chosen.map(team => <article key={team.teamId}><small>CLUB COMPARISON</small><strong>{compactTeam(team).name}</strong><span>선수단 {details[team.teamId]?.players ?? '—'}명</span><span>연결 소식 {details[team.teamId]?.posts ?? '—'}건</span></article>)}</div>}
     </section>
   );
 }

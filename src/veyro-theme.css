@@ -515,3 +515,8 @@ body{background:radial-gradient(ellipse 70% 28% at 50% -8%,rgba(125,157,67,.12),
 /* X profile photos share a stable circular frame, with initials as the fallback. */
 .journalist-avatar{position:relative;display:grid!important;place-items:center;overflow:hidden;border-radius:50%;background:#edf4e9!important;color:#668536!important;font-weight:900}
 .journalist-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#edf4e9}
+.journal-source-tabs button{display:inline-flex!important;align-items:center;gap:6px}
+.journal-tab-avatar{width:18px!important;height:18px!important;flex:0 0 18px;font-size:6px!important}
+.journal-follow-avatar{width:24px!important;height:24px!important;font-size:8px!important}
+.journal-source-profile-avatar{width:48px!important;height:48px!important;font-size:13px!important}
+@media(max-width:640px){.journal-source-profile-avatar{width:42px!important;height:42px!important;font-size:11px!important}}

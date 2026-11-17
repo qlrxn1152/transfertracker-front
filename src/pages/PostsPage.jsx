@@ -13,6 +13,7 @@ import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
 import Pagination from '../components/Pagination';
 import PostCard from '../components/PostCard';
+import JournalistAvatar from '../components/JournalistAvatar';
 import SavedSearches from '../components/SavedSearches';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import { logoUrl, postTransferFlag, teamDisplayName, text } from '../utils';
@@ -297,6 +298,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
               type="button"
               onClick={() => changeSource(source.code)}
             >
+              <JournalistAvatar source={source} className="journal-tab-avatar" />
               {source.name}
             </button>
           ))}
@@ -317,7 +319,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
                 const busy = followBusyCode === source.code;
                 return (
                   <article className="journal-follow-source" key={source.code}>
-                    <span>{source.initials}</span>
+                    <JournalistAvatar source={source} className="journal-follow-avatar" />
                     <strong>{source.name}</strong>
                     <button
                       type="button"
@@ -402,7 +404,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
 
       {currentSource && sourceFilter !== 'all' && (
         <section className="journal-source-profile">
-          <span>{currentSource.initials}</span>
+          <JournalistAvatar source={currentSource} className="journal-source-profile-avatar" />
           <div>
             <p className="eyebrow">REPORTER PROFILE</p>
             <h2>{currentSource.name}</h2>

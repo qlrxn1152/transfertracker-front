@@ -250,7 +250,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
 
   useEffect(() => {
     if (!Number.isSafeInteger(id) || id < 1) {
-      setState({ loading: false, error: '올바르지 않은 클럽 ID입니다.', data: null });
+      setState({ loading: false, error: '팀 정보를 찾을 수 없습니다.', data: null });
       return;
     }
 
@@ -443,7 +443,6 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
             <h1>{teamDisplayName(team)}</h1>
             <div className="team-detail-meta">
               <span>{league === 'unclassified' ? '리그 미분류' : leagueName(league)}</span>
-              <span>클럽 ID #{team.teamId}</span>
               <span>선수 {count.toLocaleString()}명</span>
             </div>
           </div>

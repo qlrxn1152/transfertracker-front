@@ -192,7 +192,7 @@ export default function TeamsPage({ teams, error, sample }) {
                       </span>
 
                       <small>
-                        CLUB / #{item.teamId}
+                        {item.leagueName || item.leagueCode || '클럽 상세 보기'}
                       </small>
 
                       <strong>
