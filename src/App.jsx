@@ -6,6 +6,7 @@ import PlayerDialog from './components/PlayerDialog';
 import HomePage from './pages/HomePage';
 import TransfersPage from './pages/TransfersPage';
 import PostsPage from './pages/PostsPage';
+import PostDetailPage from './pages/PostDetailPage';
 import TeamsPage from './pages/TeamsPage';
 import TeamDetailPage from './pages/TeamDetailPage';
 import PlayersPage from './pages/PlayersPage';
@@ -23,6 +24,7 @@ function analyticsPageName(pathname) {
   if (pathname === '/') return 'home';
   if (pathname === '/transfers') return 'transfers';
   if (pathname === '/posts') return 'reporter_posts';
+  if (pathname.startsWith('/posts/')) return 'reporter_post_detail';
   if (pathname === '/teams') return 'teams';
   if (pathname.startsWith('/teams/')) return 'team_detail';
   if (pathname === '/players') return 'players';
@@ -239,6 +241,7 @@ function AppRoutes() {
               />
             }
           />
+          <Route path="/posts/:postId" element={<PostDetailPage sample={sample} teams={teams} />} />
           <Route path="/teams" element={<TeamsPage teams={teams} error={teamError} sample={sample} />} />
           <Route
             path="/teams/:teamId"

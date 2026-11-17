@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatPostDate, postTransferFlag } from '../utils';
 import ContentActions from './ContentActions';
 import { isPostRead, markPostRead } from '../utils/clientStore';
@@ -20,6 +21,7 @@ function imageUrl(value) {
 }
 
 export default function PostCard({ post, sourceProfile, sample, readingMode = 'translated', onRead }) {
+  const navigate = useNavigate();
   const source = sourceProfile || fallbackSource(post);
   const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
   const [read, setRead] = useState(() => isPostRead(readKey));
@@ -51,8 +53,33 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
     onRead?.();
   }
 
+  function openDetail(event) {
+    markRead();
+
+    // 원문·공유·북마크 같은 카드 내부 동작은 그대로 유지한다.
+    if (event.target.closest('a, button, summary, details')) return;
+
+    const postId = post.postId ?? post.id;
+    if (postId !== null && postId !== undefined && String(postId).trim()) {
+      navigate(`/posts/${postId}`);
+    }
+  }
+
+  function handleKeyDown(event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    openDetail(event);
+  }
+
   return (
-    <article className={`post-card ${read ? 'is-read' : 'is-unread'} ${readingMode === 'original' ? 'original-mode' : ''}`} onClick={markRead}>
+    <article
+      className={`post-card ${read ? 'is-read' : 'is-unread'} ${readingMode === 'original' ? 'original-mode' : ''}`}
+      onClick={openDetail}
+      onKeyDown={handleKeyDown}
+      role="link"
+      tabIndex={0}
+      aria-label={`${source.name} 게시물 상세 보기`}
+    >
       <div className="post-card-head">
         <span className="post-avatar">{source.initials}</span>
         <div className="post-author">
