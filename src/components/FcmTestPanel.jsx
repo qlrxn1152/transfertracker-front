@@ -4,7 +4,7 @@ import {
   publishJournalistNotificationTest,
   registerFcmToken,
   removeNotificationTestPosts,
-  syncTransferPosts
+  syncPosts
 } from '../api/client';
 import { listenForForegroundMessages, requestFcmToken } from '../firebase/messaging';
 import { trackAnalyticsEvent } from '../firebase/analytics';
@@ -215,7 +215,7 @@ useEffect(() => {
 
     setSyncingOrnstein(true);
     try {
-      const result = await syncTransferPosts(accessToken, 'DAVID_ORNSTEIN');
+      const result = await syncPosts(accessToken, 'DAVID_ORNSTEIN');
       const count = Array.isArray(result?.posts) ? result.posts.length : 0;
       setStatus(`온스테인 게시물 ${count}건을 다시 확인했습니다. 사진이 비어 있던 기존 글은 원문 미디어가 있으면 함께 보정됩니다.`);
     } catch (error) {

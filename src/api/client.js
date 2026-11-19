@@ -1,7 +1,10 @@
 const CURRENT_PRODUCTION_API_URL = 'https://transfertracker-api-production.up.railway.app';
 const configuredApiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const useProductionApiInLocalAdmin = import.meta.env.DEV
+  && new URLSearchParams(window.location.search).get('api') === 'production';
 // 초기 Railway 서비스 주소가 로컬 환경 파일에 남아 있어도 현재 운영 API를 사용한다.
-const API_BASE_URL = configuredApiBaseUrl.includes('transfertracker-back-v1-production.up.railway.app')
+const API_BASE_URL = useProductionApiInLocalAdmin
+  || configuredApiBaseUrl.includes('transfertracker-back-v1-production.up.railway.app')
   ? CURRENT_PRODUCTION_API_URL
   : configuredApiBaseUrl;
 
@@ -70,18 +73,18 @@ export const getPlayerTransfers = (playerId, signal) =>
 
 export const getTeamDetail = (teamId, signal) => getJson(`/api/teams/test/${teamId}`, signal);
 
-export const getPostSources = signal => getJson('/api/transfer-posts/post-sources', signal);
+export const getPostSources = signal => getJson('/api/posts/post-sources', signal);
 
 export const getPosts = (signal, page = 0) =>
-  getJson(`/api/transfer-posts?page=${page}`, signal);
+  getJson(`/api/posts?page=${page}`, signal);
 
 export const getPostsBySource = (source, signal, page = 0) =>
-  getJson(`/api/transfer-posts/source/${encodeURIComponent(source)}?page=${page}`, signal);
+  getJson(`/api/posts/source/${encodeURIComponent(source)}?page=${page}`, signal);
 
 export const getPostsByTeam = (teamId, signal, page = 0) =>
-  getJson(`/api/transfer-posts/team/${teamId}?page=${page}`, signal);
+  getJson(`/api/posts/team/${teamId}?page=${page}`, signal);
 
-export const getPost = (postId, signal) => getJson(`/api/transfer-posts/${postId}`, signal);
+export const getPost = (postId, signal) => getJson(`/api/posts/${postId}`, signal);
 
 export const signUpMember = ({ loginId, password }) => request('/api/members/signup', {
   method: 'POST',
@@ -151,7 +154,7 @@ export const removeNotificationTestPosts = token => request('/external/api/posts
 });
 
 // 개발 환경 관리자용: 이미 저장된 게시물에서 비어 있는 사진 URL을 다시 수집해 보정한다.
-export const syncTransferPosts = (token, source) => request(
+export const syncPosts = (token, source) => request(
   `/external/api/posts/${encodeURIComponent(source)}`,
   {
     method: 'POST',
