@@ -347,7 +347,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
               const profile = journalistProfile(post.source);
               return (
                 <Link key={`${post.source}-${post.postId}`} to="/posts">
-                  <strong>{post.translatedContent || post.content || '내용이 없습니다.'}</strong>
+                  <strong>{post.content || '내용이 없습니다.'}</strong>
                   <span className="account-post-related">
                     <span className="account-post-team-logo" aria-hidden="true">{profile.initials}</span>
                     <span>{profile.name}</span>

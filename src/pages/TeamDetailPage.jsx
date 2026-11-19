@@ -28,8 +28,7 @@ function getPostSource(post) {
 }
 
 function getPostText(post) {
-  return post.translatedContent?.trim()
-    || post.content?.trim()
+  return post.content?.trim()
     || '내용이 없습니다.';
 }
 
@@ -123,8 +122,6 @@ function resolveTeamName(name, ko, teams) {
 function FeaturedPost({ post, sample, index }) {
   const source = getPostSource(post);
   const original = postOriginalUrl(post, sample);
-  const translated = Boolean(post.translatedContent?.trim());
-
   return (
     <article className={`team-news-feature ${index === 1 ? 'secondary' : ''}`}>
       <div className="team-news-feature-bg" aria-hidden="true">
@@ -153,7 +150,6 @@ function FeaturedPost({ post, sample, index }) {
           <h3>{getPostText(post)}</h3>
 
           <div className="team-news-feature-foot">
-            {translated && <span>한국어 번역</span>}
             {original && (
               <a href={original} target="_blank" rel="noopener noreferrer">
                 원문 보기 ↗

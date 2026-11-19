@@ -30,7 +30,7 @@ function imageUrl(post) {
   }
 }
 
-export default function PostCard({ post, sourceProfile, sample, readingMode = 'translated', onRead }) {
+export default function PostCard({ post, sourceProfile, sample, onRead }) {
   const navigate = useNavigate();
   const source = sourceProfile || fallbackSource(post);
   const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
@@ -42,19 +42,13 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
     return () => window.removeEventListener('veyro-client-store', refresh);
   }, [readKey]);
 
-  const translated = typeof post.translatedContent === 'string' && post.translatedContent.trim()
-    ? post.translatedContent
-    : null;
-
   const original = !sample && /^\d{1,30}$/.test(String(post.externalPostId || ''))
     ? `https://x.com/${source.handle}/status/${post.externalPostId}`
     : null;
 
   const flag = postTransferFlag(post);
   const photo = imageUrl(post);
-  const displayContent = readingMode === 'original'
-    ? post.content || translated || ''
-    : translated ?? post.content ?? '';
+  const displayContent = post.content ?? '';
 
   function markRead() {
     if (read) return;
@@ -83,7 +77,7 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
 
   return (
     <article
-      className={`post-card ${read ? 'is-read' : 'is-unread'} ${readingMode === 'original' ? 'original-mode' : ''}`}
+      className={`post-card ${read ? 'is-read' : 'is-unread'}`}
       onClick={openDetail}
       onKeyDown={handleKeyDown}
       role="link"
@@ -110,7 +104,6 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
         ) : (
           <span className="post-tag">분류 정보 없음</span>
         )}
-        {translated && <span className="post-tag translated">{readingMode === 'original' ? '원문 보기' : '한국어 번역'}</span>}
       </div>
 
       <p className="post-content">{displayContent}</p>
@@ -121,22 +114,15 @@ export default function PostCard({ post, sourceProfile, sample, readingMode = 't
         </figure>
       )}
 
-      {readingMode !== 'original' && translated && post.content && (
-        <details className="post-original">
-          <summary>원문 보기</summary>
-          <p>{post.content}</p>
-        </details>
-      )}
-
       <div className="post-card-foot">
-        <span>{sample ? '샘플 데이터' : translated ? '번역된 X 게시물' : 'X 게시물'}</span>
+        <span>{sample ? '샘플 데이터' : 'X 게시물'}</span>
         <ContentActions
           compact
           item={{
             key: readKey,
             type: 'post',
-            title: `${source.name} · ${translated ?? post.content ?? '기자 소식'}`,
-            summary: translated ?? post.content ?? '',
+            title: `${source.name} · ${post.content ?? '기자 소식'}`,
+            summary: post.content ?? '',
             path: '/posts'
           }}
           card

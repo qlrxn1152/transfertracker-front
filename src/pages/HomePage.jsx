@@ -463,7 +463,7 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
                       <strong>{source?.name || 'TransferTracker'}</strong>
                       <time>{formatPostDate(post.postCreatedAt)}</time>
                     </div>
-                    <p>{post.translatedContent || post.content || ''}</p>
+                    <p>{post.content || ''}</p>
                   </div>
                 </article>
               );

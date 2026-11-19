@@ -108,8 +108,7 @@ export default function PostDetailPage({ sample, teams }) {
 
   const post = state.post;
   const source = state.sources.find(item => item.code === post.source) || fallbackSource(post);
-  const translated = typeof post.translatedContent === 'string' && post.translatedContent.trim() ? post.translatedContent.trim() : null;
-  const original = typeof post.content === 'string' && post.content.trim() ? post.content.trim() : null;
+  const content = typeof post.content === 'string' && post.content.trim() ? post.content.trim() : null;
   const photo = imageUrl(post);
   const externalId = String(post.externalPostId || '');
   const xUrl = !sample && source.handle && /^\d{1,30}$/.test(externalId)
@@ -128,20 +127,18 @@ export default function PostDetailPage({ sample, teams }) {
       </header>
       <div className="post-detail-tags">
         <span className={postTransferFlag(post) === true ? 'transfer' : ''}>{postTransferFlag(post) === true ? '↗ 이적 관련' : '일반 게시물'}</span>
-        {translated && <span>한국어 번역</span>}
         <span className="read">✓ 읽음</span>
       </div>
-      <h1>{translated || original || '내용이 없습니다.'}</h1>
+      <h1>{content || '내용이 없습니다.'}</h1>
       {photo && <figure className="post-detail-media"><img src={photo} alt={`${source.name} 게시물 첨부 이미지`} referrerPolicy="no-referrer" /></figure>}
-      {translated && original && <section className="post-detail-original"><p>원문</p><blockquote>{original}</blockquote></section>}
       <footer className="post-detail-foot">
-        <span>{translated ? '번역된 X 게시물' : 'X 게시물'}</span>
+        <span>X 게시물</span>
         {teamName && (
           <Link className="post-detail-team" to={team ? `/teams/${team.teamId}` : '/teams'}>
             <i>{teamName.slice(0, 1)}{team && logoUrl(team.logoUrl) && <img src={team.logoUrl} alt="" referrerPolicy="no-referrer" />}</i>{teamName} 관련 팀 보기 →
           </Link>
         )}
-        <ContentActions compact item={{ key: readKey, type: 'post', title: `${source.name} · ${translated || original || '기자 소식'}`, summary: translated || original || '', path: `/posts/${postId}` }} />
+        <ContentActions compact item={{ key: readKey, type: 'post', title: `${source.name} · ${content || '기자 소식'}`, summary: content || '', path: `/posts/${postId}` }} />
         {xUrl && <a href={xUrl} target="_blank" rel="noreferrer">X에서 원문 보기 ↗</a>}
       </footer>
     </article>

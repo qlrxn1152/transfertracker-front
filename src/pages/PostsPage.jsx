@@ -99,7 +99,6 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   const [followStatus, setFollowStatus] = useState('');
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [mediaOnly, setMediaOnly] = useState(false);
-  const [readingMode, setReadingMode] = useState('translated');
   const [readRefresh, setReadRefresh] = useState(0);
   const teamMode = selectedTeamId !== 'all';
 
@@ -201,7 +200,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
 
   const filtered = useMemo(() => pageData.posts
     .filter(post => typeFilter === 'all' || postTransferFlag(post) === true)
-    .filter(post => text(post.translatedContent).includes(text(query)) || text(post.content).includes(text(query)))
+    .filter(post => text(post.content).includes(text(query)))
     .filter(post => !unreadOnly || !isPostRead(`post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`))
     .filter(post => !mediaOnly || Boolean(
       post.photoUrl
@@ -370,12 +369,6 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
           </button>
         </div>
 
-        <div className="journal-reading-mode" aria-label="읽기 모드">
-          <span>읽기 방식</span>
-          <button type="button" className={readingMode === 'translated' ? 'active' : ''} onClick={() => setReadingMode('translated')}>번역 중심</button>
-          <button type="button" className={readingMode === 'original' ? 'active' : ''} onClick={() => setReadingMode('original')}>원문 중심</button>
-        </div>
-
         <SavedSearches scope="posts" label={savedPostLabel} path={savedPostPath} />
         {!!pageData.posts.length && (
           <div className="journal-reading-tools">
@@ -440,7 +433,6 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
               post={post}
               sourceProfile={sources.find(source => source.code === post.source)}
               sample={sample}
-              readingMode={readingMode}
               onRead={() => setReadRefresh(value => value + 1)}
             />
           ))}
