@@ -140,6 +140,9 @@ export const getPostsBySource = (source, signal, page = 0) =>
 export const getPostsByTeam = (teamId, signal, page = 0) =>
   getJson(`/api/posts/teams/${teamId}?page=${page}`, signal).then(normalizePostsResponse);
 
+export const getPostsByPlayer = (playerId, signal, page = 0) =>
+  getJson(`/api/posts/players/${playerId}?page=${page}`, signal).then(normalizePostsResponse);
+
 export const getPost = (postId, signal) => getJson(`/api/posts/${postId}`, signal)
   .then(response => {
     if (response?.post) return { ...response, post: normalizePost(response.post) };

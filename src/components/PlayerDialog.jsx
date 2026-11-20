@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { followPlayer, getFollowedPlayers, getPlayer, getPlayerTransfers, unfollowPlayer } from '../api/client';
+import { followPlayer, getFollowedPlayers, getPlayer, getPlayerTransfers, getPostsByPlayer, unfollowPlayer } from '../api/client';
 import { demo } from '../demo';
-import { displayDate, logoUrl, photoUrl, teamDisplayName, typeLabel } from '../utils';
+import { POST_SOURCES } from '../constants';
+import { displayDate, formatPostDate, logoUrl, photoUrl, teamDisplayName, typeLabel } from '../utils';
 import ContentActions from './ContentActions';
+import JournalistAvatar from './JournalistAvatar';
 import { rememberRecent } from '../utils/clientStore';
 import './PlayerDialog.css';
 
@@ -16,7 +18,7 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
   const ref = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const [state, setState] = useState({ loading: true, error: '', player: null, moves: [] });
+  const [state, setState] = useState({ loading: true, error: '', player: null, moves: [], relatedPosts: [] });
   const [favorite, setFavorite] = useState({ loading: false, following: false, busy: false, status: '' });
 
   const resolveTeam = name => {
@@ -46,25 +48,34 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
     if (!playerId) return;
 
     const controller = new AbortController();
-    setState({ loading: true, error: '', player: null, moves: [] });
+    setState({ loading: true, error: '', player: null, moves: [], relatedPosts: [] });
 
     async function run() {
       try {
         let player;
         let moves;
+        let relatedPosts;
 
         if (sample) {
           player = demo.players.find(item => item.playerId === playerId);
           moves = demo.transfers.filter(item => item.playerId === playerId);
+          relatedPosts = Object.values(demo.posts)
+            .flat()
+            .filter(item => String(item.playerId) === String(playerId));
         } else {
-          player = await getPlayer(playerId, controller.signal);
-          const history = await getPlayerTransfers(playerId, controller.signal);
+          const [playerResponse, history, postsResponse] = await Promise.all([
+            getPlayer(playerId, controller.signal),
+            getPlayerTransfers(playerId, controller.signal),
+            getPostsByPlayer(playerId, controller.signal)
+          ]);
+          player = playerResponse;
 
           if (!Array.isArray(history.playerTransfers)) {
             throw new Error('예상과 다른 이적 이력 응답 형식입니다.');
           }
 
           moves = history.playerTransfers;
+          relatedPosts = Array.isArray(postsResponse?.posts) ? postsResponse.posts : [];
         }
 
         if (!player) throw new Error('선수를 찾을 수 없습니다.');
@@ -73,11 +84,12 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
           loading: false,
           error: '',
           player,
-          moves: [...moves].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+          moves: [...moves].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))),
+          relatedPosts
         });
       } catch (error) {
         if (error.name !== 'AbortError') {
-          setState({ loading: false, error: error.message, player: null, moves: [] });
+          setState({ loading: false, error: error.message, player: null, moves: [], relatedPosts: [] });
         }
       }
     }
@@ -158,6 +170,16 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
         }
       : null;
   }, [latest, state.player, teams]);
+
+  const sourceProfile = post => {
+    const code = post?.source || post?.journalist || '';
+    const matched = POST_SOURCES.find(source => source.code === code);
+    return matched || {
+      name: String(code || '기자 소식').replaceAll('_', ' '),
+      handle: '',
+      initials: String(code || 'X').slice(0, 2)
+    };
+  };
 
   function requestLoginForFavorite() {
     navigate('/login', {
@@ -396,6 +418,50 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
               </div>
             ) : (
               <div className="empty player-detail-empty">아직 이적 이력이 없습니다.</div>
+            )}
+          </section>
+
+          <section className="player-detail-news">
+            <div className="player-detail-section-head">
+              <div>
+                <p className="eyebrow">PLAYER JOURNAL</p>
+                <h3>선수 관련 소식</h3>
+              </div>
+              <span>{state.relatedPosts.length}건</span>
+            </div>
+
+            {state.relatedPosts.length ? (
+              <div className="player-detail-news-list">
+                {state.relatedPosts.map(post => {
+                  const source = sourceProfile(post);
+                  return (
+                    <button
+                      type="button"
+                      className="player-detail-news-row"
+                      key={post.postId ?? post.externalPostId}
+                      onClick={() => post.postId && navigate(`/posts/${post.postId}`)}
+                    >
+                      <JournalistAvatar source={source} className="player-detail-news-avatar" />
+                      <span className="player-detail-news-copy">
+                        <span className="player-detail-news-meta">
+                          <strong>{source.name}</strong>
+                          <time>{formatPostDate(post.postCreatedAt)}</time>
+                        </span>
+                        <span className="player-detail-news-content">{post.content}</span>
+                        {(post.teamName || post.playerName) && (
+                          <span className="player-detail-news-related">
+                            {post.teamName && <em>팀 · {post.teamName}</em>}
+                            {post.playerName && <em>선수 · {post.playerName}</em>}
+                          </span>
+                        )}
+                      </span>
+                      <span className="player-detail-news-arrow" aria-hidden="true">→</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty player-detail-empty">등록된 관련 소식이 없습니다.</div>
             )}
           </section>
         </div>
