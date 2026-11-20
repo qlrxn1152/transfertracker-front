@@ -239,6 +239,7 @@ function AppRoutes() {
                 selectedTeamId={postTeamId}
                 onSelectedTeamChange={setPostTeamId}
                 session={session}
+                onPlayerOpen={openPlayer}
               />
             }
           />

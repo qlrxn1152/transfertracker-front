@@ -87,7 +87,7 @@ function samplePage(posts, page) {
   };
 }
 
-export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTeamChange, session }) {
+export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTeamChange, session, onPlayerOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [pageData, setPageData] = useState(EMPTY_PAGE);
@@ -425,6 +425,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
               sourceProfile={sources.find(source => source.code === post.source)}
               sample={sample}
               onRead={() => setReadRefresh(value => value + 1)}
+              onPlayerOpen={onPlayerOpen}
             />
           ))}
         </div>

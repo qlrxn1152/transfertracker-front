@@ -30,7 +30,7 @@ function imageUrl(post) {
   }
 }
 
-export default function PostCard({ post, sourceProfile, sample, onRead }) {
+export default function PostCard({ post, sourceProfile, sample, onRead, onPlayerOpen }) {
   const navigate = useNavigate();
   const source = sourceProfile || fallbackSource(post);
   const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
@@ -120,9 +120,13 @@ export default function PostCard({ post, sourceProfile, sample, onRead }) {
           )}
           {post.playerName && (
             post.playerId ? (
-              <Link to={`/players?player=${post.playerId}`} className="post-related-chip player">
+              <button
+                type="button"
+                className="post-related-chip player"
+                onClick={() => onPlayerOpen?.(Number(post.playerId))}
+              >
                 <i aria-hidden="true">P</i>{post.playerName}
-              </Link>
+              </button>
             ) : <span className="post-related-chip player"><i aria-hidden="true">P</i>{post.playerName}</span>
           )}
         </div>
