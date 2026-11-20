@@ -289,6 +289,7 @@ function AppRoutes() {
                 session={session}
                 onSessionChange={updateSession}
                 playerFollowRefresh={playerFollowRefresh}
+                onPlayerOpen={openPlayer}
               />
             }
           />

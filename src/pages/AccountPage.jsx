@@ -20,7 +20,7 @@ import { logoUrl, photoUrl, teamDisplayName } from '../utils';
 import { isPostRead, markPostRead } from '../utils/clientStore';
 import './AccountPage.css';
 
-export default function AccountPage({ mode, teams, session, onSessionChange, playerFollowRefresh = 0 }) {
+export default function AccountPage({ mode, teams, session, onSessionChange, playerFollowRefresh = 0, onPlayerOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [loginId, setLoginId] = useState('');
@@ -308,14 +308,19 @@ export default function AccountPage({ mode, teams, session, onSessionChange, pla
           <div className="account-player-grid">
             {favoritePlayers.map(player => (
               <article key={player.playerId} className="account-player">
-                <Link to={`/players?player=${player.playerId}`}>
+                <button
+                  type="button"
+                  className="account-player-open"
+                  onClick={() => onPlayerOpen?.(Number(player.playerId))}
+                  aria-label={`${player.playerDisplayName} 선수 상세 보기`}
+                >
                   <span>
                     {(player.playerDisplayName || '?').slice(0, 1)}
                     {photoUrl(player.playerPhotoUrl) && <img src={player.playerPhotoUrl} alt="" referrerPolicy="no-referrer" />}
                   </span>
                   <strong>{player.playerDisplayName}</strong>
-                </Link>
-                <button type="button" disabled={loading} onClick={() => removeFavoritePlayer(player.playerId)} aria-label={`${player.playerDisplayName} 관심 선수 해제`}>해제</button>
+                </button>
+                <button className="account-player-remove" type="button" disabled={loading} onClick={() => removeFavoritePlayer(player.playerId)} aria-label={`${player.playerDisplayName} 관심 선수 해제`}>해제</button>
               </article>
             ))}
             {!favoritePlayers.length && <p className="account-muted">아직 관심 선수가 없습니다. 선수 상세에서 별표를 눌러 등록해 보세요.</p>}
