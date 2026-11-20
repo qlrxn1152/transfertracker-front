@@ -166,7 +166,14 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
   }
 
   async function toggleFavoritePlayer() {
-    if (!state.player?.playerId || sample) return;
+    const favoritePlayerId = Number(state.player?.playerId ?? playerId);
+    if (!Number.isSafeInteger(favoritePlayerId) || favoritePlayerId <= 0 || sample) {
+      setFavorite(current => ({
+        ...current,
+        status: '선수 정보를 다시 불러온 뒤 관심 선수 등록을 시도해 주세요.'
+      }));
+      return;
+    }
     if (!session?.accessToken) {
       requestLoginForFavorite();
       return;
@@ -177,9 +184,9 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
 
     try {
       if (nextFollowing) {
-        await followPlayer(session.accessToken, state.player.playerId);
+        await followPlayer(session.accessToken, favoritePlayerId);
       } else {
-        await unfollowPlayer(session.accessToken, state.player.playerId);
+        await unfollowPlayer(session.accessToken, favoritePlayerId);
       }
 
       setFavorite(current => ({

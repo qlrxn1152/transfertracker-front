@@ -64,7 +64,8 @@ export const getTeams = signal => getJson('/api/teams', signal);
 export const getTeamsByLeague = (leagueCode, signal) =>
   getJson(`/api/teams/league?leagueCode=${encodeURIComponent(leagueCode)}`, signal);
 
-export const getPlayer = (playerId, signal) => getJson(`/api/players/${playerId}`, signal);
+export const getPlayer = (playerId, signal) => getJson(`/api/players/${playerId}`, signal)
+  .then(normalizePlayer);
 export const getPlayerTransfers = (playerId, signal) =>
   getJson(`/api/players/${playerId}/transfers`, signal);
 
@@ -77,6 +78,17 @@ function normalizePost(post, fallbackSource = '') {
     content: post.content ?? post.postContent ?? '',
     photoUrl: post.photoUrl ?? post.postPhotoUrl ?? null,
     postCreatedAt: post.postCreatedAt ?? post.contentCreatedAt ?? post.createdAt ?? post.publishedAt ?? null
+  };
+}
+
+function normalizePlayer(player) {
+  if (!player || typeof player !== 'object') return player;
+
+  return {
+    ...player,
+    // 이전 응답 형식(id)과 현재 응답 형식(playerId)을 모두 지원한다.
+    // 관심 선수 등록에는 DB PK가 필수라 하나의 값으로 정규화한다.
+    playerId: player.playerId ?? player.id ?? null
   };
 }
 
@@ -167,13 +179,13 @@ export const getFollowedPlayers = (token, signal) =>
 export const followPlayer = (token, playerId) => request('/api/members/me/players/follow', {
   method: 'POST',
   token,
-  body: JSON.stringify({ playerId })
+  body: JSON.stringify({ playerId: Number(playerId) })
 });
 
 export const unfollowPlayer = (token, playerId) => request('/api/members/me/players/unfollow', {
   method: 'DELETE',
   token,
-  body: JSON.stringify({ playerId })
+  body: JSON.stringify({ playerId: Number(playerId) })
 });
 
 export const getFollowedJournalists = (token, signal) =>
