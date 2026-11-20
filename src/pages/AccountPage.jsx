@@ -14,6 +14,7 @@ import {
   unfollowPlayer
 } from '../api/client';
 import FcmTestPanel from '../components/FcmTestPanel';
+import PostPushSettings from '../components/PostPushSettings';
 import { trackAnalyticsEvent } from '../firebase/analytics';
 import { POST_SOURCES } from '../constants';
 import { logoUrl, photoUrl, teamDisplayName } from '../utils';
@@ -416,12 +417,13 @@ export default function AccountPage({ mode, teams, session, onSessionChange, pla
             {journalistLoading && <p className="account-muted">팔로우한 기자 소식을 불러오는 중입니다.</p>}
           </div>
         </section>
-        <FcmTestPanel
+        <PostPushSettings session={session} />
+        {session.memberGrade === 'ADMIN' && <FcmTestPanel
           accessToken={session.accessToken}
           memberId={session.memberId}
-          isAdmin={session.memberGrade === 'ADMIN'}
+          isAdmin
           favoriteTeams={favorites}
-        />
+        />}
         {status && <p className="account-status" role="status">{status}</p>}
       </section>
     );

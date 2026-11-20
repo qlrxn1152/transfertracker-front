@@ -17,6 +17,7 @@ import { LEAGUES } from './constants';
 import { demo } from './demo';
 import { leagueName } from './utils';
 import { trackPageView } from './firebase/analytics';
+import PostPushManager from './components/PostPushManager';
 
 const SESSION_STORAGE_KEY = 'transfertracker.session';
 
@@ -193,6 +194,7 @@ function AppRoutes() {
 
   return (
     <>
+      <PostPushManager session={session} />
       <Routes>
         <Route
           element={

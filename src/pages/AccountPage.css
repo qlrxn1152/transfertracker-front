@@ -51,6 +51,11 @@
 .account-switch a { color: #009c6b; font-weight: 700; }
 .account-muted { color: #7e8e88; }
 .fcm-test-panel { display: grid; gap: 14px; padding: 24px; margin-top: 20px; border: 1px solid #cfe9dc; border-radius: 8px; background: #f4fbf7; }
+.post-push-settings { display:grid; gap:12px; padding:24px; margin-top:20px; border:1px solid #cfe9dc; border-radius:8px; background:linear-gradient(135deg, #f7fcf8, #eff9f3); }
+.post-push-settings h2, .post-push-settings p { margin:0; }
+.post-push-settings h2 { font-size:1.15rem; }
+.post-push-settings > .account-primary { justify-self:start; }
+.post-push-status { color:#587067 !important; font-size:.88rem; }
 .fcm-test-panel h2 { margin: 5px 0; font-size: 1.15rem; }
 .fcm-test-panel p { margin: 0; color: #587067; }
 .fcm-test-panel > .account-primary { justify-self: start; }

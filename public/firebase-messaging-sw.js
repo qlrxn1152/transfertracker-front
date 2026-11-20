@@ -15,6 +15,26 @@ firebase.initializeApp({
   appId: '1:352590126652:web:8431bc0a95e5e734ec6d39',
 });
 
-// notification(title/body) 메시지는 Firebase SDK에서 백그라운드 표시를 처리합니다.
-// 필요 시 추후 onBackgroundMessage()로 별도 처리할 수 있습니다.
-firebase.messaging();
+const messaging = firebase.messaging();
+
+// 백그라운드 알림에도 게시물 PK를 함께 보관해, 알림을 누르면 바로 해당 게시물로 이동한다.
+messaging.onBackgroundMessage((payload) => {
+  const postId = payload.data?.postId || payload.data?.post_id || '';
+  return self.registration.showNotification(payload.notification?.title || 'VEYRO', {
+    body: payload.notification?.body || '새 게시물이 등록됐습니다.',
+    data: { postId },
+    tag: postId ? `post-${postId}` : undefined,
+  });
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const postId = event.notification.data?.postId;
+  const url = new URL(postId ? `/posts/${postId}` : '/', self.location.origin).href;
+
+  event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+    const existing = windows.find((client) => client.url.startsWith(self.location.origin));
+    if (existing) return existing.focus().then(() => existing.navigate(url));
+    return clients.openWindow(url);
+  }));
+});

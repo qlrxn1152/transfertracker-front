@@ -6,7 +6,7 @@ import {
   removeNotificationTestPosts,
   syncPosts
 } from '../api/client';
-import { listenForForegroundMessages, requestFcmToken } from '../firebase/messaging';
+import { requestFcmToken } from '../firebase/messaging';
 import { trackAnalyticsEvent } from '../firebase/analytics';
 
 const FCM_GRANTED_AT_KEY = 'transfertracker.fcm-permission-granted-at';
@@ -58,36 +58,6 @@ export default function FcmTestPanel({ accessToken, memberId, isAdmin = false, f
       setTestTeamId(String(favoriteTeams[0].teamId));
     }
   }, [favoriteTeams, testTeamId]);
-
-useEffect(() => {
-  let cancelled = false;
-  let unsubscribe = () => {};
-
-  listenForForegroundMessages((payload) => {
-    if (!cancelled) {
-      console.log("FCM 수신 메시지:", payload);
-
-      const title = payload.notification?.title || "제목 없음";
-      const body = payload.notification?.body || "내용 없음";
-
-      setStatus(`포그라운드 메시지 수신: ${title} - ${body}`);
-    }
-  })
-    .then((stop) => {
-      if (cancelled) stop();
-      else unsubscribe = stop;
-    })
-    .catch((error) => {
-      if (!cancelled) {
-        setStatus(`메시지 리스너 오류: ${error.message}`);
-      }
-    });
-
-  return () => {
-    cancelled = true;
-    unsubscribe();
-  };
-}, []);
 
   async function saveToken(value) {
     if (!accessToken || !memberId || !value) return;
