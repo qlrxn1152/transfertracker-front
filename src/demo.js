@@ -26,13 +26,13 @@ export const demo = {
     ]
   },
   posts: {
-    FABRIZIO_ROMANO: [{ postId: 1, source: 'FABRIZIO_ROMANO', content: 'Sample transfer-related post. This is not an actual statement from the journalist.', translatedContent: '이적 관련 표시를 확인하는 샘플 게시물입니다. 실제 기자의 발언이 아닙니다.', postCreatedAt: '2026-09-27T05:00:00Z', isRelateTransfer: true }],
-    DAVID_ORNSTEIN: [{ postId: 2, source: 'DAVID_ORNSTEIN', content: 'Sample general post. This is not an actual X post.', translatedContent: '일반 게시물 분류를 확인하는 샘플입니다. 실제 X 게시물이 아닙니다.', postCreatedAt: '2026-09-26T12:00:00Z', isRelateTransfer: false }],
-    MATTEO_MORETTO: [{ postId: 3, source: 'MATTEO_MORETTO', content: 'Sample transfer-related post for a journalist. This is not an actual article or X post.', translatedContent: '새 기자의 이적 관련 샘플 게시물입니다. 실제 기사나 X 게시물이 아닙니다.', postCreatedAt: '2026-09-27T07:00:00Z', isRelateTransfer: true }]
+    FABRIZIO_ROMANO: [{ postId: 1, source: 'FABRIZIO_ROMANO', content: '이적 관련 표시를 확인하는 샘플 게시물입니다. 실제 기자의 발언이 아닙니다.', postCreatedAt: '2026-09-27T05:00:00Z', isRelateTransfer: true }],
+    DAVID_ORNSTEIN: [{ postId: 2, source: 'DAVID_ORNSTEIN', content: '일반 게시물 분류를 확인하는 샘플입니다. 실제 X 게시물이 아닙니다.', postCreatedAt: '2026-09-26T12:00:00Z', isRelateTransfer: false }],
+    MATTEO_MORETTO: [{ postId: 3, source: 'MATTEO_MORETTO', content: '새 기자의 이적 관련 샘플 게시물입니다. 실제 기사나 X 게시물이 아닙니다.', postCreatedAt: '2026-09-27T07:00:00Z', isRelateTransfer: true }]
   },
   teamPosts: {
-    '아스널': [{ postId: 4, source: 'DAVID_ORNSTEIN', content: 'Sample Arsenal club post. This is not an actual post.', translatedContent: '아스널 클럽별 목록을 확인하는 예시입니다. 실제 게시물이 아닙니다.', postCreatedAt: '2026-09-27T08:00:00Z', isRelateTransfer: true }],
-    '맨체스터 유나이티드': [{ postId: 5, source: 'FABRIZIO_ROMANO', content: 'Sample Manchester United club post. This is not an actual post.', translatedContent: '맨체스터 유나이티드 클럽별 목록 예시입니다. 실제 게시물이 아닙니다.', postCreatedAt: '2026-09-27T09:00:00Z', isRelateTransfer: true }]
+    '아스널': [{ postId: 4, source: 'DAVID_ORNSTEIN', content: '아스널 클럽별 목록을 확인하는 예시입니다. 실제 게시물이 아닙니다.', postCreatedAt: '2026-09-27T08:00:00Z', isRelateTransfer: true }],
+    '맨체스터 유나이티드': [{ postId: 5, source: 'FABRIZIO_ROMANO', content: '맨체스터 유나이티드 클럽별 목록 예시입니다. 실제 게시물이 아닙니다.', postCreatedAt: '2026-09-27T09:00:00Z', isRelateTransfer: true }]
   },
   players: [
     { playerId: 101, playerName: '김민재', teamNameKo: '바이에른 뮌헨' },

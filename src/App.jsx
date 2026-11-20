@@ -55,6 +55,7 @@ function AppRoutes() {
   const [playerId, setPlayerId] = useState(null);
   const [postTeamId, setPostTeamId] = useState('all');
   const [session, setSession] = useState(readStoredSession);
+  const [playerFollowRefresh, setPlayerFollowRefresh] = useState(0);
   const lastTrackedPath = useRef('');
 
   useEffect(() => {
@@ -280,7 +281,15 @@ function AppRoutes() {
           />
           <Route
             path="/account"
-            element={<AccountPage mode="account" teams={teams} session={session} onSessionChange={updateSession} />}
+            element={
+              <AccountPage
+                mode="account"
+                teams={teams}
+                session={session}
+                onSessionChange={updateSession}
+                playerFollowRefresh={playerFollowRefresh}
+              />
+            }
           />
         </Route>
       </Routes>
@@ -289,7 +298,9 @@ function AppRoutes() {
         playerId={playerId}
         sample={sample}
         teams={teams}
+        session={session}
         onClose={closePlayer}
+        onFavoriteChange={() => setPlayerFollowRefresh(value => value + 1)}
       />
 
       <Analytics />

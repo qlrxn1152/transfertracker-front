@@ -62,7 +62,11 @@ function normalizePage(response, source) {
   }
 
   return {
-    posts: response.posts.map(post => ({ ...post, source: post.source || source })),
+    posts: response.posts.map(post => ({
+      ...post,
+      source: post.source || post.journalist || source,
+      postCreatedAt: post.postCreatedAt || post.contentCreatedAt || null
+    })),
     totalPostCount: Number(response.totalPostCount) || response.posts.length,
     totalPageCount: Number(response.totalPageCount) || 0,
     hasNext: Boolean(response.hasNext),
@@ -98,7 +102,6 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   const [followBusyCode, setFollowBusyCode] = useState('');
   const [followStatus, setFollowStatus] = useState('');
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const [mediaOnly, setMediaOnly] = useState(false);
   const [readRefresh, setReadRefresh] = useState(0);
   const teamMode = selectedTeamId !== 'all';
 
@@ -202,19 +205,10 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
     .filter(post => typeFilter === 'all' || postTransferFlag(post) === true)
     .filter(post => text(post.content).includes(text(query)))
     .filter(post => !unreadOnly || !isPostRead(`post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`))
-    .filter(post => !mediaOnly || Boolean(
-      post.photoUrl
-      ?? post.mediaUrl
-      ?? post.imageUrl
-      ?? post.image?.url
-      ?? post.media?.url
-      ?? post.photoUrls?.[0]
-      ?? post.mediaUrls?.[0]
-    ))
     .sort((a, b) =>
       (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0)
       || String(b.externalPostId || b.postId || '').localeCompare(String(a.externalPostId || a.postId || ''))
-    ), [pageData.posts, typeFilter, query, unreadOnly, mediaOnly, readRefresh]);
+    ), [pageData.posts, typeFilter, query, unreadOnly, readRefresh]);
 
   const availableTeams = [...teams]
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko'));
@@ -282,7 +276,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
         <div>
           <p className="eyebrow">TRANSFER JOURNAL</p>
           <h1>기자 소식</h1>
-          <p>기자별 이적 소식을 한국어 번역과 함께 빠르게 훑어보세요.</p>
+          <p>기자별 축구 소식을 최신순으로 빠르게 확인해 보세요.</p>
         </div>
         <strong>{loading ? '—' : pageData.totalPostCount.toLocaleString()}<span>게시물</span></strong>
       </header>
@@ -363,9 +357,6 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
 
           <button type="button" className={`journal-transfer-only ${unreadOnly ? 'active' : ''}`} onClick={() => setUnreadOnly(current => !current)}>
             읽지 않은 소식만
-          </button>
-          <button type="button" className={`journal-transfer-only ${mediaOnly ? 'active' : ''}`} onClick={() => setMediaOnly(current => !current)}>
-            사진 있는 소식만
           </button>
         </div>
 

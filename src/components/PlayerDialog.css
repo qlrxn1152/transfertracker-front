@@ -145,6 +145,43 @@
   object-fit:contain;
 }
 
+.player-detail-actions{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:9px;
+  margin-top:15px;
+}
+
+.player-follow-button{
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid rgba(223,255,138,.58);
+  border-radius:8px;
+  background:#dfff8a;
+  color:#142017;
+  font-size:11px;
+  font-weight:850;
+}
+
+.player-follow-button.is-following{
+  border-color:rgba(255,255,255,.35);
+  background:rgba(255,255,255,.14);
+  color:#fff;
+}
+
+.player-follow-button:disabled{
+  cursor:default;
+  opacity:.62;
+}
+
+.player-follow-status{
+  margin:9px 0 0;
+  color:#b8eacb;
+  font-size:11px;
+  font-weight:700;
+}
+
 .player-detail-latest{
   align-self:center;
   display:grid;

@@ -11,7 +11,7 @@ import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import './PostDetailPage.css';
 
 function fallbackSource(post) {
-  const raw = String(post?.source || 'Unknown').replaceAll('_', ' ');
+  const raw = String(post?.source || post?.journalist || 'Unknown').replaceAll('_', ' ');
   const initials = raw.split(/\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 2).toUpperCase();
   return { name: raw, handle: '', initials: initials || 'X' };
 }

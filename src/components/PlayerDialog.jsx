@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getPlayer, getPlayerTransfers } from '../api/client';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { followPlayer, getFollowedPlayers, getPlayer, getPlayerTransfers, unfollowPlayer } from '../api/client';
 import { demo } from '../demo';
 import { displayDate, logoUrl, photoUrl, teamDisplayName, typeLabel } from '../utils';
 import ContentActions from './ContentActions';
@@ -11,9 +12,12 @@ function feeText(move) {
   return typeof raw === 'string' && raw.trim() ? raw.trim() : '비공개';
 }
 
-export default function PlayerDialog({ playerId, sample, teams, onClose }) {
+export default function PlayerDialog({ playerId, sample, teams, session, onClose, onFavoriteChange }) {
   const ref = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [state, setState] = useState({ loading: true, error: '', player: null, moves: [] });
+  const [favorite, setFavorite] = useState({ loading: false, following: false, busy: false, status: '' });
 
   const resolveTeam = name => {
     const matches = teams.filter(team => team.teamName === name);
@@ -83,6 +87,35 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
   }, [playerId, sample]);
 
   useEffect(() => {
+    if (!playerId || sample || !session?.accessToken) {
+      setFavorite({ loading: false, following: false, busy: false, status: '' });
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setFavorite({ loading: true, following: false, busy: false, status: '' });
+
+    getFollowedPlayers(session.accessToken, controller.signal)
+      .then(data => {
+        if (controller.signal.aborted) return;
+        const players = Array.isArray(data?.memberFollowPlayers) ? data.memberFollowPlayers : [];
+        setFavorite({
+          loading: false,
+          following: players.some(player => String(player.playerId) === String(playerId)),
+          busy: false,
+          status: ''
+        });
+      })
+      .catch(error => {
+        if (error.name !== 'AbortError') {
+          setFavorite({ loading: false, following: false, busy: false, status: '관심 선수 상태를 불러오지 못했습니다.' });
+        }
+      });
+
+    return () => controller.abort();
+  }, [playerId, sample, session?.accessToken]);
+
+  useEffect(() => {
     if (!state.player?.playerId) return;
     rememberRecent({
       key: `player:${state.player.playerId}`,
@@ -125,6 +158,45 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
         }
       : null;
   }, [latest, state.player, teams]);
+
+  function requestLoginForFavorite() {
+    navigate('/login', {
+      state: { returnTo: `${location.pathname}${location.search}` }
+    });
+  }
+
+  async function toggleFavoritePlayer() {
+    if (!state.player?.playerId || sample) return;
+    if (!session?.accessToken) {
+      requestLoginForFavorite();
+      return;
+    }
+
+    const nextFollowing = !favorite.following;
+    setFavorite(current => ({ ...current, busy: true, status: '' }));
+
+    try {
+      if (nextFollowing) {
+        await followPlayer(session.accessToken, state.player.playerId);
+      } else {
+        await unfollowPlayer(session.accessToken, state.player.playerId);
+      }
+
+      setFavorite(current => ({
+        ...current,
+        following: nextFollowing,
+        busy: false,
+        status: nextFollowing ? '관심 선수로 등록했습니다.' : '관심 선수에서 해제했습니다.'
+      }));
+      onFavoriteChange?.();
+    } catch (error) {
+      setFavorite(current => ({
+        ...current,
+        busy: false,
+        status: error.message || '관심 선수 설정을 변경하지 못했습니다.'
+      }));
+    }
+  }
 
 
   return (
@@ -175,17 +247,36 @@ export default function PlayerDialog({ playerId, sample, teams, onClose }) {
                 )}
                 <span>이적 기록 {state.moves.length}건</span>
               </div>
-              <ContentActions
-                compact
-                card
-                item={{
-                  key: `player:${state.player.playerId}`,
-                  type: 'player',
-                  title: `${state.player.playerName} 선수 정보`,
-                  summary: currentTeam?.name ? `${currentTeam.name} 소속 · 이적 기록 ${state.moves.length}건` : '선수 이적 정보',
-                  path: `/players?player=${state.player.playerId}`
-                }}
-              />
+              <div className="player-detail-actions">
+                <button
+                  type="button"
+                  className={`player-follow-button ${favorite.following ? 'is-following' : ''}`}
+                  onClick={toggleFavoritePlayer}
+                  disabled={favorite.busy || favorite.loading}
+                >
+                  {favorite.busy
+                    ? '처리 중...'
+                    : favorite.loading
+                      ? '확인 중...'
+                      : favorite.following
+                        ? '★ 관심 선수'
+                        : session?.accessToken
+                          ? '☆ 관심 선수 등록'
+                          : '로그인하고 관심 선수 등록'}
+                </button>
+                <ContentActions
+                  compact
+                  card
+                  item={{
+                    key: `player:${state.player.playerId}`,
+                    type: 'player',
+                    title: `${state.player.playerName} 선수 정보`,
+                    summary: currentTeam?.name ? `${currentTeam.name} 소속 · 이적 기록 ${state.moves.length}건` : '선수 이적 정보',
+                    path: `/players?player=${state.player.playerId}`
+                  }}
+                />
+              </div>
+              {favorite.status && <p className="player-follow-status" role="status">{favorite.status}</p>}
             </div>
 
             {latest && (

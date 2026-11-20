@@ -24,7 +24,7 @@ const POSITION_ORDER = ['GK', 'DF', 'MF', 'FW'];
 const RECENT_TEAMS_KEY = 'veyro.recent-teams';
 
 function getPostSource(post) {
-  return POST_SOURCES.find(source => source.code === post.source);
+  return POST_SOURCES.find(source => source.code === (post.source || post.journalist));
 }
 
 function getPostText(post) {
@@ -119,9 +119,10 @@ function resolveTeamName(name, ko, teams) {
   return found ? teamDisplayName(found) : (name || '—');
 }
 
-function FeaturedPost({ post, sample, index }) {
+function FeaturedPost({ post, sample, index, team }) {
   const source = getPostSource(post);
   const original = postOriginalUrl(post, sample);
+
   return (
     <article className={`team-news-feature ${index === 1 ? 'secondary' : ''}`}>
       <div className="team-news-feature-bg" aria-hidden="true">
@@ -129,7 +130,14 @@ function FeaturedPost({ post, sample, index }) {
           post={post}
           alt=""
           className="team-news-feature-image"
-          fallback={<span>{source?.initials || 'TT'}</span>}
+          fallback={
+            <div className="team-news-fallback">
+              <span className="team-news-fallback-emblem">{teamDisplayName(team).slice(0, 1)}</span>
+              <span className="team-news-fallback-grid" aria-hidden="true" />
+              <strong>{source?.initials || 'TT'}</strong>
+              <small>{teamDisplayName(team)} · TRANSFER DESK</small>
+            </div>
+          }
         />
       </div>
 
@@ -150,6 +158,7 @@ function FeaturedPost({ post, sample, index }) {
           <h3>{getPostText(post)}</h3>
 
           <div className="team-news-feature-foot">
+            {post.playerName && <span>선수 · {post.playerName}</span>}
             {original && (
               <a href={original} target="_blank" rel="noopener noreferrer">
                 원문 보기 ↗
@@ -182,6 +191,7 @@ function NewsRow({ post, sample }) {
           <strong>{source?.name || 'TransferTracker'}</strong>
           <time>{formatPostDate(post.postCreatedAt)}</time>
           {postTransferFlag(post) !== false && <span>이적 소식</span>}
+          {post.playerName && <span className="team-news-row-player">선수 · {post.playerName}</span>}
         </div>
 
         <p>{getPostText(post)}</p>
@@ -565,6 +575,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
                     post={post}
                     sample={sample}
                     index={index}
+                    team={team}
                   />
                 ))}
               </div>

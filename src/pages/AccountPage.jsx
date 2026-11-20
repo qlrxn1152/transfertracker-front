@@ -5,20 +5,22 @@ import {
   deleteFavoriteTeam,
   getFollowedJournalistPosts,
   getFollowedJournalists,
+  getFollowedPlayers,
   getFavoriteTeams,
   getKakaoLoginUrl,
   loginMember,
   signUpMember,
-  unfollowJournalist
+  unfollowJournalist,
+  unfollowPlayer
 } from '../api/client';
 import FcmTestPanel from '../components/FcmTestPanel';
 import { trackAnalyticsEvent } from '../firebase/analytics';
 import { POST_SOURCES } from '../constants';
-import { logoUrl, teamDisplayName } from '../utils';
+import { logoUrl, photoUrl, teamDisplayName } from '../utils';
 import { isPostRead, markPostRead } from '../utils/clientStore';
 import './AccountPage.css';
 
-export default function AccountPage({ mode, teams, session, onSessionChange }) {
+export default function AccountPage({ mode, teams, session, onSessionChange, playerFollowRefresh = 0 }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [loginId, setLoginId] = useState('');
@@ -26,6 +28,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState([]);
+  const [favoritePlayers, setFavoritePlayers] = useState([]);
   const [posts, setPosts] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [journalists, setJournalists] = useState([]);
@@ -54,10 +57,14 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
     if (mode !== 'account' || !session?.accessToken) return;
 
     const controller = new AbortController();
-    getFavoriteTeams(session.accessToken, controller.signal)
-      .then(data => {
-        setFavorites(Array.isArray(data.teamDetails) ? data.teamDetails : []);
-        setPosts(Array.isArray(data.postDetails) ? data.postDetails : []);
+    Promise.all([
+      getFavoriteTeams(session.accessToken, controller.signal),
+      getFollowedPlayers(session.accessToken, controller.signal)
+    ])
+      .then(([teamData, playerData]) => {
+        setFavorites(Array.isArray(teamData.teamDetails) ? teamData.teamDetails : []);
+        setPosts(Array.isArray(teamData.postDetails) ? teamData.postDetails : []);
+        setFavoritePlayers(Array.isArray(playerData?.memberFollowPlayers) ? playerData.memberFollowPlayers : []);
         setStatus('');
       })
       .catch(error => {
@@ -67,7 +74,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
       });
 
     return () => controller.abort();
-  }, [mode, onSessionChange, session?.accessToken]);
+  }, [mode, onSessionChange, session?.accessToken, playerFollowRefresh]);
 
   useEffect(() => {
     if (mode !== 'account' || !session?.accessToken) return undefined;
@@ -88,7 +95,13 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
           : [];
 
         setJournalists(followed);
-        setJournalistPosts(posts.sort((a, b) => (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0)));
+        setJournalistPosts(posts
+          .map(post => ({
+            ...post,
+            source: post.source || post.journalist || post.sourcer,
+            postCreatedAt: post.postCreatedAt || post.contentCreatedAt || null
+          }))
+          .sort((a, b) => (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0)));
       })
       .catch(error => {
         if (error.name !== 'AbortError') setStatus(error.message || '팔로우한 기자 소식을 불러오지 못했습니다.');
@@ -193,6 +206,22 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
     }
   }
 
+  async function removeFavoritePlayer(playerId) {
+    if (!session?.accessToken) return;
+
+    setLoading(true);
+    setStatus('');
+    try {
+      await unfollowPlayer(session.accessToken, playerId);
+      setFavoritePlayers(current => current.filter(player => String(player.playerId) !== String(playerId)));
+      setStatus('관심 선수에서 해제했습니다.');
+    } catch (error) {
+      setStatus(error.message || '관심 선수 해제에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function removeJournalist(journalist) {
     if (!session?.accessToken) return;
     setLoading(true);
@@ -238,8 +267,8 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
       <section className="account-page">
         <header className="account-hero">
           <p className="eyebrow">MY TRANSFER DESK</p>
-          <h1>{session.loginId}님의 관심 팀</h1>
-          <p>관심 팀의 관련 기자 소식을 한곳에서 확인합니다. <span className="account-grade">{session.memberGrade || 'USER'}</span></p>
+          <h1>{session.loginId}님의 관심 목록</h1>
+          <p>관심 팀·선수와 관련 기자 소식을 한곳에서 확인합니다. <span className="account-grade">{session.memberGrade || 'USER'}</span></p>
         </header>
 
         <section className="account-card">
@@ -268,6 +297,28 @@ export default function AccountPage({ mode, teams, session, onSessionChange }) {
               </article>
             ))}
             {!favorites.length && <p className="account-muted">아직 관심 팀이 없습니다.</p>}
+          </div>
+        </section>
+
+        <section className="account-card">
+          <div className="account-card-head">
+            <div><h2>관심 선수</h2><p>선수 상세에서 관심 선수로 등록하면 이곳에서 빠르게 다시 볼 수 있습니다.</p></div>
+            <Link className="account-inline-link" to="/players">선수 찾기 →</Link>
+          </div>
+          <div className="account-player-grid">
+            {favoritePlayers.map(player => (
+              <article key={player.playerId} className="account-player">
+                <Link to={`/players?player=${player.playerId}`}>
+                  <span>
+                    {(player.playerDisplayName || '?').slice(0, 1)}
+                    {photoUrl(player.playerPhotoUrl) && <img src={player.playerPhotoUrl} alt="" referrerPolicy="no-referrer" />}
+                  </span>
+                  <strong>{player.playerDisplayName}</strong>
+                </Link>
+                <button type="button" disabled={loading} onClick={() => removeFavoritePlayer(player.playerId)} aria-label={`${player.playerDisplayName} 관심 선수 해제`}>해제</button>
+              </article>
+            ))}
+            {!favoritePlayers.length && <p className="account-muted">아직 관심 선수가 없습니다. 선수 상세에서 별표를 눌러 등록해 보세요.</p>}
           </div>
         </section>
 

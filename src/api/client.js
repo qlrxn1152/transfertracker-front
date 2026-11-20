@@ -1,10 +1,7 @@
 const CURRENT_PRODUCTION_API_URL = 'https://transfertracker-api-production.up.railway.app';
 const configuredApiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-const useProductionApiInLocalAdmin = import.meta.env.DEV
-  && new URLSearchParams(window.location.search).get('api') === 'production';
 // 초기 Railway 서비스 주소가 로컬 환경 파일에 남아 있어도 현재 운영 API를 사용한다.
-const API_BASE_URL = useProductionApiInLocalAdmin
-  || configuredApiBaseUrl.includes('transfertracker-back-v1-production.up.railway.app')
+const API_BASE_URL = configuredApiBaseUrl.includes('transfertracker-back-v1-production.up.railway.app')
   ? CURRENT_PRODUCTION_API_URL
   : configuredApiBaseUrl;
 
@@ -71,20 +68,71 @@ export const getPlayer = (playerId, signal) => getJson(`/api/players/${playerId}
 export const getPlayerTransfers = (playerId, signal) =>
   getJson(`/api/players/${playerId}/transfers`, signal);
 
-export const getTeamDetail = (teamId, signal) => getJson(`/api/teams/test/${teamId}`, signal);
+function normalizePost(post, fallbackSource = '') {
+  if (!post || typeof post !== 'object') return post;
 
-export const getPostSources = signal => getJson('/api/posts/post-sources', signal);
+  return {
+    ...post,
+    source: post.source ?? post.journalist ?? post.sourcer ?? fallbackSource,
+    content: post.content ?? post.postContent ?? '',
+    photoUrl: post.photoUrl ?? post.postPhotoUrl ?? null,
+    postCreatedAt: post.postCreatedAt ?? post.contentCreatedAt ?? post.createdAt ?? post.publishedAt ?? null
+  };
+}
+
+function normalizePostsResponse(response, fallbackSource = '') {
+  if (!response || typeof response !== 'object') return response;
+
+  return {
+    ...response,
+    posts: Array.isArray(response.posts)
+      ? response.posts.map(post => normalizePost(post, fallbackSource))
+      : response.posts
+  };
+}
+
+function normalizeFavoriteTeamsResponse(response) {
+  if (!response || typeof response !== 'object') return response;
+
+  return {
+    ...response,
+    postDetails: Array.isArray(response.postDetails)
+      ? response.postDetails.map(post => normalizePost(post))
+      : response.postDetails
+  };
+}
+
+function normalizeFollowedJournalistPostsResponse(response) {
+  if (!response || typeof response !== 'object') return response;
+
+  return {
+    ...response,
+    allJournalistsPosts: Array.isArray(response.allJournalistsPosts)
+      ? response.allJournalistsPosts.map(page => normalizePostsResponse(page))
+      : response.allJournalistsPosts
+  };
+}
+
+export const getTeamDetail = (teamId, signal) => getJson(`/api/teams/test/${teamId}`, signal)
+  .then(response => ({ ...response, posts: normalizePostsResponse(response?.posts) }));
+
+export const getPostSources = signal => getJson('/api/posts/sources', signal);
 
 export const getPosts = (signal, page = 0) =>
-  getJson(`/api/posts?page=${page}`, signal);
+  getJson(`/api/posts?page=${page}`, signal).then(normalizePostsResponse);
 
 export const getPostsBySource = (source, signal, page = 0) =>
-  getJson(`/api/posts/source/${encodeURIComponent(source)}?page=${page}`, signal);
+  getJson(`/api/posts/journalists/${encodeURIComponent(source)}?page=${page}`, signal)
+    .then(response => normalizePostsResponse(response, source));
 
 export const getPostsByTeam = (teamId, signal, page = 0) =>
-  getJson(`/api/posts/team/${teamId}?page=${page}`, signal);
+  getJson(`/api/posts/teams/${teamId}?page=${page}`, signal).then(normalizePostsResponse);
 
-export const getPost = (postId, signal) => getJson(`/api/posts/${postId}`, signal);
+export const getPost = (postId, signal) => getJson(`/api/posts/${postId}`, signal)
+  .then(response => {
+    if (response?.post) return { ...response, post: normalizePost(response.post) };
+    return normalizePost(response);
+  });
 
 export const signUpMember = ({ loginId, password }) => request('/api/members/signup', {
   method: 'POST',
@@ -102,7 +150,7 @@ export const getKakaoLoginUrl = () => apiUrl('/api/auth/kakao/authorize');
 
 export const getMyMemberId = (token, signal) => request('/api/members/me', { token, signal });
 export const getFavoriteTeams = (token, signal) =>
-  request('/api/members/favorite-teams?page=0', { token, signal });
+  request('/api/members/favorite-teams?page=0', { token, signal }).then(normalizeFavoriteTeamsResponse);
 export const addFavoriteTeams = (token, teamIds) => request('/api/members/favorite-teams', {
   method: 'POST',
   token,
@@ -111,6 +159,21 @@ export const addFavoriteTeams = (token, teamIds) => request('/api/members/favori
 export const deleteFavoriteTeam = (token, teamId) => request(`/api/members/favorite-teams/${teamId}`, {
   method: 'DELETE',
   token
+});
+
+export const getFollowedPlayers = (token, signal) =>
+  request('/api/members/me/players/following', { token, signal });
+
+export const followPlayer = (token, playerId) => request('/api/members/me/players/follow', {
+  method: 'POST',
+  token,
+  body: JSON.stringify({ playerId })
+});
+
+export const unfollowPlayer = (token, playerId) => request('/api/members/me/players/unfollow', {
+  method: 'DELETE',
+  token,
+  body: JSON.stringify({ playerId })
 });
 
 export const getFollowedJournalists = (token, signal) =>
@@ -126,7 +189,8 @@ export const unfollowJournalist = (token, journalist) => request('/api/members/m
   body: JSON.stringify({ journalist })
 });
 export const getFollowedJournalistPosts = (token, signal, page = 0) =>
-  request(`/api/members/me/journalists/posts?page=${page}`, { token, signal });
+  request(`/api/members/me/journalists/posts?page=${page}`, { token, signal })
+    .then(normalizeFollowedJournalistPostsResponse);
 
 // FCM 토큰은 로그인한 회원에게 귀속된다. 백엔드는 관심 팀에 새 게시물이
 // 연결될 때 이 토큰으로 실제 알림을 보낸다.
@@ -153,7 +217,7 @@ export const removeNotificationTestPosts = token => request('/external/api/posts
   token
 });
 
-// 개발 환경 관리자용: 이미 저장된 게시물에서 비어 있는 사진 URL을 다시 수집해 보정한다.
+// 개발 환경 관리자용: 선택한 기자의 최신 게시물을 동기화한다.
 export const syncPosts = (token, source) => request(
   `/external/api/posts/${encodeURIComponent(source)}`,
   {

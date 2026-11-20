@@ -92,7 +92,11 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
         const posts = sources.flatMap((source, index) => {
           const result = postResults[index];
           if (result?.status !== 'fulfilled' || !Array.isArray(result.value.posts)) return [];
-          return result.value.posts.map(post => ({ ...post, source: source.code }));
+          return result.value.posts.map(post => ({
+            ...post,
+            source: post.source || post.journalist || source.code,
+            postCreatedAt: post.postCreatedAt || post.contentCreatedAt || null
+          }));
         }).sort((a, b) => (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0));
 
         setState({

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatPostDate, postTransferFlag } from '../utils';
 import ContentActions from './ContentActions';
 import JournalistAvatar from './JournalistAvatar';
 import { isPostRead, markPostRead } from '../utils/clientStore';
 
 function fallbackSource(post) {
-  const name = String(post.source || 'Unknown').replaceAll('_', ' ');
+  const name = String(post.source || post.journalist || 'Unknown').replaceAll('_', ' ');
   const initials = name.split(/\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 2).toUpperCase();
 
   return { name, handle: '', initials: initials || 'X' };
@@ -48,7 +48,7 @@ export default function PostCard({ post, sourceProfile, sample, onRead }) {
 
   const flag = postTransferFlag(post);
   const photo = imageUrl(post);
-  const displayContent = post.content ?? '';
+  const displayContent = post.content || '';
 
   function markRead() {
     if (read) return;
@@ -107,6 +107,26 @@ export default function PostCard({ post, sourceProfile, sample, onRead }) {
       </div>
 
       <p className="post-content">{displayContent}</p>
+
+      {(post.teamName || post.playerName) && (
+        <div className="post-related" aria-label="관련 대상">
+          <span>관련</span>
+          {post.teamName && (
+            post.teamId ? (
+              <Link to={`/teams/${post.teamId}`} className="post-related-chip team">
+                <i aria-hidden="true">T</i>{post.teamName}
+              </Link>
+            ) : <span className="post-related-chip team"><i aria-hidden="true">T</i>{post.teamName}</span>
+          )}
+          {post.playerName && (
+            post.playerId ? (
+              <Link to={`/players?player=${post.playerId}`} className="post-related-chip player">
+                <i aria-hidden="true">P</i>{post.playerName}
+              </Link>
+            ) : <span className="post-related-chip player"><i aria-hidden="true">P</i>{post.playerName}</span>
+          )}
+        </div>
+      )}
 
       {photo && (
         <figure className="post-media">

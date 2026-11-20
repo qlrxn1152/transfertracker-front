@@ -210,16 +210,16 @@ useEffect(() => {
     }
   }
 
-  async function handleOrnsteinPhotoRepair() {
+  async function handleOrnsteinSync() {
     if (!accessToken) return;
 
     setSyncingOrnstein(true);
     try {
       const result = await syncPosts(accessToken, 'DAVID_ORNSTEIN');
       const count = Array.isArray(result?.posts) ? result.posts.length : 0;
-      setStatus(`온스테인 게시물 ${count}건을 다시 확인했습니다. 사진이 비어 있던 기존 글은 원문 미디어가 있으면 함께 보정됩니다.`);
+      setStatus(`온스테인 게시물 ${count}건을 동기화했습니다.`);
     } catch (error) {
-      setStatus(`온스테인 사진 보정 실패: ${error.message}`);
+      setStatus(`온스테인 게시물 동기화 실패: ${error.message}`);
     } finally {
       setSyncingOrnstein(false);
     }
@@ -300,11 +300,11 @@ useEffect(() => {
             <div className="fcm-admin-test">
               <div>
                 <strong>로컬 관리자 데이터 보정</strong>
-                <p>온스테인 게시물을 다시 수집해, 인용 원문에 있는 사진 URL이 비어 있던 기존 게시물을 보정합니다. X API를 한 번 호출합니다.</p>
+                <p>온스테인 기자의 최신 게시물을 동기화합니다. X API를 한 번 호출합니다.</p>
               </div>
               <div className="fcm-admin-test-actions">
-                <button type="button" className="account-primary" onClick={handleOrnsteinPhotoRepair} disabled={syncingOrnstein}>
-                  {syncingOrnstein ? '온스테인 게시물 확인 중...' : '온스테인 사진 보정 실행'}
+                <button type="button" className="account-primary" onClick={handleOrnsteinSync} disabled={syncingOrnstein}>
+                  {syncingOrnstein ? '온스테인 게시물 동기화 중...' : '온스테인 게시물 동기화'}
                 </button>
               </div>
             </div>
