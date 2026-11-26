@@ -217,6 +217,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
     : null;
   const currentSource = sources.find(source => source.code === sourceFilter);
   const hasPagination = pageData.hasNext || pageData.hasPrevious || pageData.totalPageCount > 1;
+  const hasActiveFilters = teamMode || sourceFilter !== 'all' || typeFilter !== 'all' || unreadOnly || query.trim();
   const savedPostParams = new URLSearchParams();
   if (sourceFilter !== 'all') savedPostParams.set('source', sourceFilter);
   if (query.trim()) savedPostParams.set('q', query.trim());
@@ -232,6 +233,14 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   function changeSource(nextSource) {
     setSourceFilter(nextSource);
     setTypeFilter('all');
+  }
+
+  function resetFilters() {
+    setQuery('');
+    setTypeFilter('all');
+    setUnreadOnly(false);
+    onSelectedTeamChange('all');
+    changeSource('all');
   }
 
   function requestLoginForFollow(source) {
@@ -358,6 +367,11 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
           <button type="button" className={`journal-transfer-only ${unreadOnly ? 'active' : ''}`} onClick={() => setUnreadOnly(current => !current)}>
             읽지 않은 소식만
           </button>
+          {hasActiveFilters && (
+            <button type="button" className="journal-reset-filters" onClick={resetFilters}>
+              필터 초기화
+            </button>
+          )}
         </div>
 
         <SavedSearches scope="posts" label={savedPostLabel} path={savedPostPath} />
@@ -437,10 +451,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
               type="button"
               className="empty-action"
               onClick={() => {
-                setQuery('');
-                setTypeFilter('all');
-                onSelectedTeamChange('all');
-                changeSource('all');
+                resetFilters();
               }}
             >
               모든 기자 소식 보기 →
