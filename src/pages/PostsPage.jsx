@@ -36,7 +36,9 @@ const TIME_FILTERS = [
 ];
 
 function isWithinDays(value, days) {
-  if (!days) return true;
+  // 'all' is the visible default filter value. It must not be converted to
+  // NaN below, otherwise every post is filtered out on the initial screen.
+  if (!days || days === 'all') return true;
   const timestamp = Date.parse(value || '');
   if (Number.isNaN(timestamp)) return false;
   return timestamp >= Date.now() - Number(days) * 24 * 60 * 60 * 1000;
