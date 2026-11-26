@@ -181,127 +181,75 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
     return team ? teamDisplayName(team) : name;
   };
 
-  const top = transferGroups[0];
-  const topFrom = top ? findTeam(top.outTeamName) : null;
-  const topTo = top ? findTeam(top.inTeamName) : null;
   const latestPost = state.posts[0] || null;
   const latestPostSource = latestPost
     ? state.sources.find(item => item.code === latestPost.source)
     : null;
   const latestPostId = latestPost?.postId ?? latestPost?.id;
-  const briefing = useMemo(() => {
-    const newestTransfer = state.transfers
-      .map(item => item.date)
-      .filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || ''))
-      .sort()
-      .at(-1);
-    const newestPosts = state.posts
-      .map(item => item.postCreatedAt)
-      .filter(Boolean)
-      .sort((a, b) => String(b).localeCompare(String(a)));
-    const recentMoves = newestTransfer
-      ? state.transfers.filter(item => item.date === newestTransfer).length
-      : 0;
-    const linkedTeams = new Set(state.transfers.flatMap(item => [item.inTeamName, item.outTeamName]).filter(Boolean));
-    return { newestTransfer, newestPost: newestPosts[0], recentMoves, linkedTeams: linkedTeams.size, posts: state.posts.length };
-  }, [state.posts, state.transfers]);
+  const latestPhoto = latestPost && photoUrl(latestPost.photoUrl);
+  const latestTeam = latestPost && teams.find(item => String(item.teamId) === String(latestPost.teamId));
+  const latestTeamName = latestTeam ? teamDisplayName(latestTeam) : latestPost?.teamName;
 
   return (
     <section className="home-page">
-      <section className="home-hero">
-        <div className="home-hero-copy">
-          <span className="home-live">TRANSFER CENTRE</span>
-          <h1>이적 센터</h1>
-          <p>{briefing.newestTransfer ? `${displayDate(briefing.newestTransfer)} 기준 최신 이적과 기자 소식입니다.` : '최신 이적과 기자 소식을 불러오는 중입니다.'}</p>
-
-          <div className="home-hero-briefing" aria-label="오늘의 빠른 이동">
-            <Link className="home-hero-story" to={latestPostId ? `/posts/${latestPostId}` : '/posts'}>
-              <span>방금 올라온 기자 소식</span>
-              <strong>{latestPostSource?.name || '최신 기자 소식'}</strong>
-              <small>{latestPost?.content || '새로운 기자 소식을 불러오는 중입니다.'} <b>→</b></small>
-            </Link>
-            <Link to={session ? '/account' : '/teams'}>
-              <span>{session ? '내 이적 데스크' : '관심 팀 시작하기'}</span>
-              <strong>{session ? `${desk.favorites.length}팀` : '팀 찾기'}</strong>
-              <small>{session
-                ? desk.favorites.length ? '관심 팀 소식 모아보기' : '관심 팀을 추가해 보세요'
-                : '좋아하는 클럽부터 찾아보세요'} <b>→</b></small>
-            </Link>
+      <section className="home-newsroom" aria-label="오늘의 축구 브리핑">
+        <header className="home-newsroom-head">
+          <div>
+            <p className="eyebrow">TODAY'S FOOTBALL DESK</p>
+            <h1>오늘의 헤드라인</h1>
           </div>
+          <Link to="/posts">전체 기자 소식 →</Link>
+        </header>
 
-          <div className="home-hero-pulse" aria-label="현재 데이터 요약">
-            <span><strong>{state.loading ? '—' : briefing.recentMoves}</strong>최근 날짜 이적</span>
-            <span><strong>{state.loading ? '—' : briefing.posts}</strong>기자 소식</span>
-            <span><strong>{state.loading ? '—' : briefing.linkedTeams}</strong>관련 클럽</span>
-          </div>
-
-          <div className="home-hero-actions">
-            <Link className="home-primary-link" to="/transfers">이적 현황 →</Link>
-            <Link className="home-secondary-link" to="/posts">기자 소식</Link>
-          </div>
-        </div>
-
-        <div className="home-hero-feature home-feature-shell">
-          {top ? (
-            <button
-              className="home-feature-card"
-              type="button"
-              onClick={() => top.playerId && onPlayerOpen(Number(top.playerId))}
-            >
-              <div className="home-feature-top">
-                <span>Latest transfer</span>
-                <time>{displayDate(top.date)}</time>
-              </div>
-
-              <div className="home-feature-profile">
-                <span className="home-feature-portrait">
-                  {(top.playerName || '?').slice(0, 1)}
-                  {photoUrl(top.photoUrl) && (
-                    <img src={top.photoUrl} alt="" referrerPolicy="no-referrer" />
-                  )}
+        <div className="home-newsroom-grid">
+          {latestPost ? (
+            <Link className="home-lead-story" to={latestPostId ? `/posts/${latestPostId}` : '/posts'}>
+              <div className="home-lead-story-meta">
+                <span className="home-lead-reporter">
+                  <JournalistAvatar source={latestPostSource || { initials: 'TT' }} />
+                  <strong>{latestPostSource?.name || 'TransferTracker'}</strong>
                 </span>
-
+                <time>{formatPostDate(latestPost.postCreatedAt)}</time>
+              </div>
+              <h2>{latestPost.content || '새로운 기자 소식이 등록됐습니다.'}</h2>
+              {latestPhoto && <img src={latestPhoto} alt="" referrerPolicy="no-referrer" />}
+              <footer>
+                <span>기자 소식 읽기 <b>→</b></span>
                 <div>
-                  <small>PLAYER #{top.playerId ?? '—'}</small>
-                  <h2>{top.playerName}</h2>
-                  <p>최근 등록된 선수 이동</p>
+                  {latestTeamName && <em>{latestTeamName}</em>}
+                  {latestPost.playerName && <em>{latestPost.playerName}</em>}
                 </div>
-              </div>
-
-              <div className="home-feature-club-route">
-                <span className="home-feature-club">
-                  <i>
-                    {(top.outTeamName || '?').slice(0, 1)}
-                    {topFrom && logoUrl(topFrom.logoUrl) && (
-                      <img src={topFrom.logoUrl} alt="" referrerPolicy="no-referrer" />
-                    )}
-                  </i>
-                  <small>FROM</small>
-                  <strong>{teamName(top.outTeamName, top.outTeamNameKo)}</strong>
-                </span>
-
-                <b aria-hidden="true">→</b>
-
-                <span className="home-feature-club">
-                  <i>
-                    {(top.inTeamName || '?').slice(0, 1)}
-                    {topTo && logoUrl(topTo.logoUrl) && (
-                      <img src={topTo.logoUrl} alt="" referrerPolicy="no-referrer" />
-                    )}
-                  </i>
-                  <small>TO</small>
-                  <strong>{teamName(top.inTeamName, top.inTeamNameKo)}</strong>
-                </span>
-              </div>
-
-              <div className="home-feature-bottom">
-                <span>이적 기록 보기</span>
-                <strong>↗</strong>
-              </div>
-            </button>
+              </footer>
+            </Link>
           ) : (
-            <div className="home-feature-empty">최신 이적 데이터를 불러오는 중입니다.</div>
+            <div className="home-newsroom-empty">최신 기자 소식을 불러오는 중입니다.</div>
           )}
+
+          <aside className="home-newsroom-stream">
+            <div className="home-newsroom-stream-head">
+              <div><p className="eyebrow">JUST IN</p><h2>방금 들어온 소식</h2></div>
+              <Link to="/posts">더보기</Link>
+            </div>
+            <div>
+              {state.posts.slice(1, 4).map((post, index) => {
+                const source = state.sources.find(item => item.code === post.source);
+                const postId = post.postId ?? post.id;
+                return (
+                  <Link to={postId ? `/posts/${postId}` : '/posts'} key={`${post.source}-${postId ?? index}`}>
+                    <JournalistAvatar source={source || { initials: 'TT' }} />
+                    <span><strong>{source?.name || 'TransferTracker'}</strong><small>{post.content || '새로운 기자 소식'}</small></span>
+                    <time>{formatPostDate(post.postCreatedAt)}</time>
+                  </Link>
+                );
+              })}
+              {!state.loading && state.posts.length < 2 && <p className="home-newsroom-stream-empty">표시할 새 소식이 없습니다.</p>}
+            </div>
+            <Link className="home-newsroom-personal" to={session ? '/account' : '/teams'}>
+              <span>{session ? 'MY VEYRO' : 'CLUB DIRECTORY'}</span>
+              <strong>{session ? desk.favorites.length ? `관심 팀 ${desk.favorites.length}개` : '관심 팀을 추가해 보세요' : '좋아하는 팀 찾기'}</strong>
+              <small>{session ? '내 소식 모아보기 →' : '팀 · 선수 · 이적 소식 보기 →'}</small>
+            </Link>
+          </aside>
         </div>
       </section>
 
