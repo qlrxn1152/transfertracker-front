@@ -5,6 +5,7 @@ import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
 import { clearBookmarks, clearRecentItems, dismiss, hasDismissed, readBookmarks, readRecentItems, removeBookmark } from '../utils/clientStore';
 import PwaInstallPrompt from '../components/PwaInstallPrompt';
+import JournalistAvatar from '../components/JournalistAvatar';
 import {
   displayDate,
   formatPostDate,
@@ -23,7 +24,8 @@ function normalizeSources(values) {
       code,
       name: item.displayName || fallback?.name || item.xUsername || String(code || '').replaceAll('_', ' '),
       handle: item.xUsername || fallback?.handle || '',
-      initials: fallback?.initials || String(code || 'TT').split('_').map(value => value[0]).join('').slice(0, 2)
+      initials: fallback?.initials || String(code || 'TT').split('_').map(value => value[0]).join('').slice(0, 2),
+      profileImageUrl: item.profileImageUrl ?? item.profilePhotoUrl ?? item.avatarUrl ?? item.imageUrl ?? item.photoUrl
     };
   }).filter(source => source.code);
 }
@@ -456,16 +458,19 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
           <div className="home-news-list">
             {state.posts.slice(0,5).map((post, index) => {
               const source = state.sources.find(item => item.code === post.source);
+              const postId = post.postId ?? post.id;
               return (
                 <article key={`${post.source}-${post.postId ?? post.externalPostId ?? index}`}>
-                  <span className="home-news-avatar">{source?.initials || 'TT'}</span>
-                  <div>
-                    <div className="home-news-meta">
-                      <strong>{source?.name || 'TransferTracker'}</strong>
-                      <time>{formatPostDate(post.postCreatedAt)}</time>
+                  <Link to={postId ? `/posts/${postId}` : '/posts'} aria-label={`${source?.name || 'TransferTracker'} 게시물 상세 보기`}>
+                    <JournalistAvatar source={source || { initials: 'TT' }} className="home-news-avatar" />
+                    <div>
+                      <div className="home-news-meta">
+                        <strong>{source?.name || 'TransferTracker'}</strong>
+                        <time>{formatPostDate(post.postCreatedAt)}</time>
+                      </div>
+                      <p>{post.content || ''}</p>
                     </div>
-                    <p>{post.content || ''}</p>
-                  </div>
+                  </Link>
                 </article>
               );
             })}

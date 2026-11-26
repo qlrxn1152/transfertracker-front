@@ -49,6 +49,7 @@ export default function PostCard({ post, sourceProfile, sample, onRead, onPlayer
   const flag = postTransferFlag(post);
   const photo = imageUrl(post);
   const displayContent = post.content || '';
+  const postId = post.postId ?? post.id;
 
   function markRead() {
     if (read) return;
@@ -63,7 +64,6 @@ export default function PostCard({ post, sourceProfile, sample, onRead, onPlayer
     // 원문·공유·북마크 같은 카드 내부 동작은 그대로 유지한다.
     if (event.target.closest('a, button, summary, details')) return;
 
-    const postId = post.postId ?? post.id;
     if (postId !== null && postId !== undefined && String(postId).trim()) {
       navigate(`/posts/${postId}`);
     }
@@ -147,7 +147,7 @@ export default function PostCard({ post, sourceProfile, sample, onRead, onPlayer
             type: 'post',
             title: `${source.name} · ${post.content ?? '기자 소식'}`,
             summary: post.content ?? '',
-            path: '/posts'
+            path: postId ? `/posts/${postId}` : '/posts'
           }}
           card
         />

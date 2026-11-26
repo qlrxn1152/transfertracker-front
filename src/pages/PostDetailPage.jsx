@@ -116,6 +116,8 @@ export default function PostDetailPage({ sample, teams }) {
     : null;
   const team = teams.find(item => String(item.teamId) === String(post.teamId));
   const teamName = team ? teamDisplayName(team) : post.teamName;
+  const playerId = post.playerId;
+  const playerName = post.playerName;
   const readKey = `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`;
 
   return (
@@ -136,6 +138,11 @@ export default function PostDetailPage({ sample, teams }) {
         {teamName && (
           <Link className="post-detail-team" to={team ? `/teams/${team.teamId}` : '/teams'}>
             <i>{teamName.slice(0, 1)}{team && logoUrl(team.logoUrl) && <img src={team.logoUrl} alt="" referrerPolicy="no-referrer" />}</i>{teamName} 관련 팀 보기 →
+          </Link>
+        )}
+        {playerName && (
+          <Link className="post-detail-player" to={playerId ? `/players?player=${playerId}` : '/players'}>
+            <i>P</i>{playerName} 선수 정보 보기 →
           </Link>
         )}
         <ContentActions compact item={{ key: readKey, type: 'post', title: `${source.name} · ${content || '기자 소식'}`, summary: content || '', path: `/posts/${postId}` }} />
