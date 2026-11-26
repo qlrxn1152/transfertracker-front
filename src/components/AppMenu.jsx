@@ -40,25 +40,27 @@ export default function AppMenu({ session, onLogout }) {
             <button type="button" aria-label="더보기 메뉴 닫기" onClick={close}>×</button>
           </div>
 
-          <section>
-            <p className="app-menu-label">빠른 이동</p>
-            <div className="app-menu-shortcuts">
-              <Link to="/teams" onClick={close}><b>◐</b><span>팀 찾기</span></Link>
-              <Link to="/players" onClick={close}><b>♙</b><span>선수 찾기</span></Link>
-              <Link to="/posts" onClick={close}><b>▤</b><span>기자 소식</span></Link>
-            </div>
-          </section>
+          {session && (
+            <section>
+              <p className="app-menu-label">내 관심</p>
+              <div className="app-menu-shortcuts">
+                <Link to="/account#favorite-teams" onClick={close}><b>♥</b><span>관심 팀</span></Link>
+                <Link to="/account#favorite-players" onClick={close}><b>★</b><span>관심 선수</span></Link>
+                <Link to="/account#followed-journalists" onClick={close}><b>◎</b><span>팔로우 기자</span></Link>
+              </div>
+            </section>
+          )}
 
           <section className="app-menu-section">
             <p className="app-menu-label">내 VEYRO</p>
             {session ? (
               <>
-                <Link className="app-menu-row" to="/account" onClick={close}><span>♥</span><b>내 이적 데스크</b><i>›</i></Link>
+                <Link className="app-menu-row" to="/account" onClick={close}><span>♥</span><b>내 관심 전체 보기</b><i>›</i></Link>
                 <button className="app-menu-row" type="button" onClick={() => { close(); onLogout(); }}><span>↪</span><b>로그아웃</b><i>›</i></button>
               </>
             ) : (
               <>
-                <Link className="app-menu-row" to="/login" onClick={close}><span>↪</span><b>로그인</b><i>›</i></Link>
+                <Link className="app-menu-row" to="/login" onClick={close}><span>↪</span><b>로그인하고 관심 목록 보기</b><i>›</i></Link>
                 <Link className="app-menu-row" to="/signup" onClick={close}><span>＋</span><b>회원가입</b><i>›</i></Link>
               </>
             )}

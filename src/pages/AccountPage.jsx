@@ -285,7 +285,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange, pla
           </div>
         </section>
 
-        <section className="account-card">
+        <section className="account-card" id="favorite-teams">
           <div className="account-card-head"><div><h2>내 팀</h2><p>{favorites.length}개 팀을 구독 중입니다.</p></div></div>
           <div className="account-team-grid">
             {favorites.map(team => (
@@ -301,7 +301,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange, pla
           </div>
         </section>
 
-        <section className="account-card">
+        <section className="account-card" id="favorite-players">
           <div className="account-card-head">
             <div><h2>관심 선수</h2><p>선수 상세에서 관심 선수로 등록하면 이곳에서 빠르게 다시 볼 수 있습니다.</p></div>
             <Link className="account-inline-link" to="/players">선수 찾기 →</Link>
@@ -371,7 +371,7 @@ export default function AccountPage({ mode, teams, session, onSessionChange, pla
           </div>
         </section>
 
-        <section className="account-card">
+        <section className="account-card" id="followed-journalists">
           <div className="account-card-head">
             <div>
               <h2>팔로우한 기자</h2>
