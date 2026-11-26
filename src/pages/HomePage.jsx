@@ -184,6 +184,11 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
   const top = transferGroups[0];
   const topFrom = top ? findTeam(top.outTeamName) : null;
   const topTo = top ? findTeam(top.inTeamName) : null;
+  const latestPost = state.posts[0] || null;
+  const latestPostSource = latestPost
+    ? state.sources.find(item => item.code === latestPost.source)
+    : null;
+  const latestPostId = latestPost?.postId ?? latestPost?.id;
   const briefing = useMemo(() => {
     const newestTransfer = state.transfers
       .map(item => item.date)
@@ -210,20 +215,17 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
           <p>{briefing.newestTransfer ? `${displayDate(briefing.newestTransfer)} 기준 최신 이적과 기자 소식입니다.` : '최신 이적과 기자 소식을 불러오는 중입니다.'}</p>
 
           <div className="home-hero-briefing" aria-label="오늘의 빠른 이동">
-            <Link to="/transfers">
-              <span>오늘의 이적</span>
-              <strong>{state.loading ? '—' : `${briefing.recentMoves}건`}</strong>
-              <small>{briefing.newestTransfer ? `${displayDate(briefing.newestTransfer)} 기준` : '이적 현황 열기'} <b>→</b></small>
-            </Link>
-            <Link to="/posts">
-              <span>새 기자 소식</span>
-              <strong>{state.loading ? '—' : `${briefing.posts}건`}</strong>
-              <small>{briefing.newestPost ? '최신순으로 읽기' : '기자 소식 열기'} <b>→</b></small>
+            <Link className="home-hero-story" to={latestPostId ? `/posts/${latestPostId}` : '/posts'}>
+              <span>방금 올라온 기자 소식</span>
+              <strong>{latestPostSource?.name || '최신 기자 소식'}</strong>
+              <small>{latestPost?.content || '새로운 기자 소식을 불러오는 중입니다.'} <b>→</b></small>
             </Link>
             <Link to={session ? '/account' : '/teams'}>
               <span>{session ? '내 이적 데스크' : '관심 팀 시작하기'}</span>
-              <strong>{session ? 'MY' : '팀 찾기'}</strong>
-              <small>{session ? '관심 소식 모아보기' : '좋아하는 클럽부터'} <b>→</b></small>
+              <strong>{session ? `${desk.favorites.length}팀` : '팀 찾기'}</strong>
+              <small>{session
+                ? desk.favorites.length ? '관심 팀 소식 모아보기' : '관심 팀을 추가해 보세요'
+                : '좋아하는 클럽부터 찾아보세요'} <b>→</b></small>
             </Link>
           </div>
 
