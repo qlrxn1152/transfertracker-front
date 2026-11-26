@@ -520,3 +520,36 @@ body{background:radial-gradient(ellipse 70% 28% at 50% -8%,rgba(125,157,67,.12),
 .journal-follow-avatar{width:24px!important;height:24px!important;font-size:8px!important}
 .journal-source-profile-avatar{width:48px!important;height:48px!important;font-size:13px!important}
 @media(max-width:640px){.journal-source-profile-avatar{width:42px!important;height:42px!important;font-size:11px!important}}
+
+/* Information-first home: keep the brand, but let the daily feed lead. */
+.home-page{gap:18px!important}
+.home-hero{grid-template-columns:minmax(0,1.08fr) minmax(310px,.92fr)!important;min-height:274px!important;border-radius:16px!important}
+.home-hero-copy{padding:30px 34px!important}
+.home-live{margin-bottom:11px!important}
+.home-hero h1{font-size:clamp(30px,3.7vw,44px)!important;line-height:1.13!important}
+.home-hero-copy>p{margin-top:11px!important;font-size:12px!important;line-height:1.6!important}
+.home-hero-pulse{display:flex;gap:8px;margin-top:16px}
+.home-hero-pulse span{display:grid;gap:2px;min-width:0;padding:7px 10px;border:1px solid #d7e4d5;border-radius:9px;background:rgba(255,255,255,.68);color:var(--v-text-muted);font-size:9px;font-weight:750;line-height:1.35}
+.home-hero-pulse strong{color:#668536;font-size:16px;line-height:1;font-weight:900}
+.home-hero-actions{margin-top:16px!important}
+.home-hero-actions a{display:inline-flex;align-items:center;min-height:38px;padding:9px 13px!important}
+.home-hero-feature{min-height:274px!important}
+.home-feature-card{padding:22px!important}
+.home-feature-card h2{font-size:22px!important}
+.home-briefing{padding:17px 20px!important;gap:18px!important}
+.home-briefing h2{font-size:19px!important}
+.home-briefing-stats a{min-height:78px!important;padding:11px!important}
+.home-briefing-stats strong{font-size:19px!important}
+.home-desk{order:1}.home-grid{order:2}.home-clubs{order:3}.home-saved{order:4}.home-recent-items{order:5}.home-briefing{order:6}.home-starter{order:7}.pwa-install-prompt{order:8}.posts-notice{order:-1}
+@media(max-width:760px){
+  .home-page{gap:14px!important}
+  .home-hero{grid-template-columns:1fr!important;min-height:0!important}
+  .home-hero-copy{padding:24px 20px!important}
+  .home-hero h1{font-size:31px!important}
+  .home-hero-pulse{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:14px}
+  .home-hero-pulse span{padding:7px 6px;font-size:8px;text-align:center}
+  .home-hero-pulse strong{font-size:15px}
+  .home-hero-feature{min-height:210px!important}
+  .home-feature-card{padding:18px!important}
+  .home-briefing{padding:16px!important}
+}

@@ -203,13 +203,19 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
     <section className="home-page">
       <section className="home-hero">
         <div className="home-hero-copy">
-          <span className="home-live">VEYRO · TRANSFER DESK</span>
-          <h1>축구 이적의 흐름을<br />가장 먼저, 더 깊게.</h1>
-          <p>이적 기록과 신뢰할 수 있는 기자 소식을 한곳에서 읽는 축구 인텔리전스.</p>
+          <span className="home-live">LIVE · TRANSFER DESK</span>
+          <h1>오늘의 축구 이적,<br />한 화면에서 확인하세요.</h1>
+          <p>최신 이적 기록과 기자 소식을 빠르게 훑고, 관심 팀의 변화를 놓치지 마세요.</p>
+
+          <div className="home-hero-pulse" aria-label="현재 데이터 요약">
+            <span><strong>{state.loading ? '—' : briefing.recentMoves}</strong>최근 날짜 이적</span>
+            <span><strong>{state.loading ? '—' : briefing.posts}</strong>기자 소식</span>
+            <span><strong>{state.loading ? '—' : briefing.linkedTeams}</strong>관련 클럽</span>
+          </div>
 
           <div className="home-hero-actions">
-            <Link className="home-primary-link" to="/transfers">이적 현황 보기 →</Link>
-            <Link className="home-secondary-link" to="/posts">기자 소식 보기</Link>
+            <Link className="home-primary-link" to="/transfers">이적 현황 →</Link>
+            <Link className="home-secondary-link" to="/posts">기자 소식</Link>
           </div>
         </div>
 
