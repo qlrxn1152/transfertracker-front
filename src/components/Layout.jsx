@@ -3,6 +3,7 @@ import './Layout.css';
 import GlobalSearch from './GlobalSearch';
 import ClientPreferences from './ClientPreferences';
 import KeyboardShortcuts from './KeyboardShortcuts';
+import AppMenu from './AppMenu';
 
 const navClass = ({ isActive }) => `app-nav-link ${isActive ? 'active' : ''}`;
 
@@ -34,8 +35,7 @@ export default function Layout({ sample, teams, onPlayerOpen, session, onLogout 
             <NavItem to="/transfers" icon="↗">이적 현황</NavItem>
             <NavItem to="/posts" icon="▤">기자 소식</NavItem>
             <NavItem to="/teams" icon="◐">팀</NavItem>
-            <NavItem to="/players" icon="♙">선수</NavItem>
-            {session && <NavItem to="/account" icon="♥">내 팀</NavItem>}
+            <AppMenu session={session} onLogout={onLogout} />
           </nav>
 
           <div className="app-header-actions">

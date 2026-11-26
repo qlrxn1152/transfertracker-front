@@ -38,6 +38,12 @@ export default function KeyboardShortcuts() {
     return () => window.removeEventListener('keydown', handler);
   }, [navigate]);
 
+  useEffect(() => {
+    const openFromMenu = () => setOpen(true);
+    window.addEventListener('veyro:open-shortcuts', openFromMenu);
+    return () => window.removeEventListener('veyro:open-shortcuts', openFromMenu);
+  }, []);
+
   if (!open) return null;
   return <dialog className="keyboard-shortcuts" open onClick={event => { if (event.target === event.currentTarget) setOpen(false); }}><div><div className="keyboard-shortcuts-head"><div><p className="eyebrow">QUICK NAVIGATION</p><h2>키보드 단축키</h2></div><button type="button" onClick={() => setOpen(false)} aria-label="단축키 안내 닫기">×</button></div><ul>{shortcuts.map(([key, label]) => <li key={key}><kbd>{key}</kbd><span>{label}</span></li>)}</ul></div></dialog>;
 }

@@ -19,6 +19,12 @@ export default function ClientPreferences() {
     savePreferences(preferences);
   }, [preferences]);
 
+  useEffect(() => {
+    const openFromMenu = () => dialogRef.current?.showModal();
+    window.addEventListener('veyro:open-preferences', openFromMenu);
+    return () => window.removeEventListener('veyro:open-preferences', openFromMenu);
+  }, []);
+
   function open() {
     dialogRef.current?.showModal();
   }
