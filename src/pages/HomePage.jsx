@@ -181,57 +181,21 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
     return team ? teamDisplayName(team) : name;
   };
 
-  const latestPost = state.posts[0] || null;
-  const latestPostSource = latestPost
-    ? state.sources.find(item => item.code === latestPost.source)
-    : null;
-  const latestPostId = latestPost?.postId ?? latestPost?.id;
-  const latestPhoto = latestPost && photoUrl(latestPost.photoUrl);
-  const latestTeam = latestPost && teams.find(item => String(item.teamId) === String(latestPost.teamId));
-  const latestTeamName = latestTeam ? teamDisplayName(latestTeam) : latestPost?.teamName;
-
   return (
     <section className="home-page">
       <section className="home-newsroom" aria-label="오늘의 축구 브리핑">
         <header className="home-newsroom-head">
           <div>
             <p className="eyebrow">TODAY'S FOOTBALL DESK</p>
-            <h1>오늘의 헤드라인</h1>
+            <h1>방금 들어온 소식</h1>
           </div>
           <Link to="/posts">전체 기자 소식 →</Link>
         </header>
 
         <div className="home-newsroom-grid">
-          {latestPost ? (
-            <Link className="home-lead-story" to={latestPostId ? `/posts/${latestPostId}` : '/posts'}>
-              <div className="home-lead-story-meta">
-                <span className="home-lead-reporter">
-                  <JournalistAvatar source={latestPostSource || { initials: 'TT' }} />
-                  <strong>{latestPostSource?.name || 'TransferTracker'}</strong>
-                </span>
-                <time>{formatPostDate(latestPost.postCreatedAt)}</time>
-              </div>
-              <h2>{latestPost.content || '새로운 기자 소식이 등록됐습니다.'}</h2>
-              {latestPhoto && <img src={latestPhoto} alt="" referrerPolicy="no-referrer" />}
-              <footer>
-                <span>기자 소식 읽기 <b>→</b></span>
-                <div>
-                  {latestTeamName && <em>{latestTeamName}</em>}
-                  {latestPost.playerName && <em>{latestPost.playerName}</em>}
-                </div>
-              </footer>
-            </Link>
-          ) : (
-            <div className="home-newsroom-empty">최신 기자 소식을 불러오는 중입니다.</div>
-          )}
-
-          <aside className="home-newsroom-stream">
-            <div className="home-newsroom-stream-head">
-              <div><p className="eyebrow">JUST IN</p><h2>방금 들어온 소식</h2></div>
-              <Link to="/posts">더보기</Link>
-            </div>
+          <section className="home-newsroom-stream">
             <div>
-              {state.posts.slice(1, 4).map((post, index) => {
+              {state.posts.slice(0, 6).map((post, index) => {
                 const source = state.sources.find(item => item.code === post.source);
                 const postId = post.postId ?? post.id;
                 return (
@@ -242,13 +206,23 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
                   </Link>
                 );
               })}
-              {!state.loading && state.posts.length < 2 && <p className="home-newsroom-stream-empty">표시할 새 소식이 없습니다.</p>}
+              {!state.loading && !state.posts.length && <p className="home-newsroom-stream-empty">표시할 새 소식이 없습니다.</p>}
             </div>
+          </section>
+
+          <aside className="home-newsroom-side">
             <Link className="home-newsroom-personal" to={session ? '/account' : '/teams'}>
               <span>{session ? 'MY VEYRO' : 'CLUB DIRECTORY'}</span>
               <strong>{session ? desk.favorites.length ? `관심 팀 ${desk.favorites.length}개` : '관심 팀을 추가해 보세요' : '좋아하는 팀 찾기'}</strong>
               <small>{session ? '내 소식 모아보기 →' : '팀 · 선수 · 이적 소식 보기 →'}</small>
             </Link>
+            <div className="home-newsroom-explore">
+              <p className="eyebrow">EXPLORE</p>
+              <h2>원하는 방식으로 살펴보기</h2>
+              <Link to="/teams">팀 둘러보기 <b>→</b></Link>
+              <Link to="/players">선수 찾아보기 <b>→</b></Link>
+              <Link to="/transfers">이적 현황 보기 <b>→</b></Link>
+            </div>
           </aside>
         </div>
       </section>
