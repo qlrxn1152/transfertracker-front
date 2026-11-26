@@ -203,9 +203,9 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
     <section className="home-page">
       <section className="home-hero">
         <div className="home-hero-copy">
-          <span className="home-live">LIVE · TRANSFER DESK</span>
-          <h1>오늘의 축구 이적,<br />한 화면에서 확인하세요.</h1>
-          <p>최신 이적 기록과 기자 소식을 빠르게 훑고, 관심 팀의 변화를 놓치지 마세요.</p>
+          <span className="home-live">TRANSFER CENTRE</span>
+          <h1>이적 센터</h1>
+          <p>{briefing.newestTransfer ? `${displayDate(briefing.newestTransfer)} 기준 최신 이적과 기자 소식입니다.` : '최신 이적과 기자 소식을 불러오는 중입니다.'}</p>
 
           <div className="home-hero-pulse" aria-label="현재 데이터 요약">
             <span><strong>{state.loading ? '—' : briefing.recentMoves}</strong>최근 날짜 이적</span>
@@ -280,15 +280,6 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
           ) : (
             <div className="home-feature-empty">최신 이적 데이터를 불러오는 중입니다.</div>
           )}
-        </div>
-      </section>
-
-      <section className="home-briefing" aria-label="현재 이적 브리핑">
-        <div className="home-briefing-copy"><p className="eyebrow">TRANSFER BRIEFING</p><h2>지금 확인할 이적 흐름</h2><p>현재 불러온 최신 기록을 기준으로 빠르게 훑어보세요.</p></div>
-        <div className="home-briefing-stats">
-          <Link to="/transfers"><strong>{briefing.recentMoves}</strong><span>최근 날짜 이적</span><small>{briefing.newestTransfer ? displayDate(briefing.newestTransfer) : '기록 확인 중'}</small></Link>
-          <Link to="/posts"><strong>{briefing.posts}</strong><span>최신 기자 소식</span><small>{briefing.newestPost ? formatPostDate(briefing.newestPost) : '소식 확인 중'}</small></Link>
-          <Link to="/teams"><strong>{briefing.linkedTeams}</strong><span>이적 관련 클럽</span><small>현재 목록 기준</small></Link>
         </div>
       </section>
 
