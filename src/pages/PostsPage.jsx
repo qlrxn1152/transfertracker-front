@@ -29,6 +29,19 @@ const EMPTY_PAGE = {
   hasPrevious: false
 };
 
+const TIME_FILTERS = [
+  { value: 'all', label: '전체 기간' },
+  { value: '1', label: '24시간' },
+  { value: '7', label: '7일' }
+];
+
+function isWithinDays(value, days) {
+  if (!days) return true;
+  const timestamp = Date.parse(value || '');
+  if (Number.isNaN(timestamp)) return false;
+  return timestamp >= Date.now() - Number(days) * 24 * 60 * 60 * 1000;
+}
+
 function sourceInitials(name, code) {
   const initials = String(name || code || '')
     .split(/\s+|_/)
@@ -95,6 +108,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   const [loading, setLoading] = useState(true);
   const [sourceFilter, setSourceFilter] = useState(() => new URLSearchParams(location.search).get('source') || 'all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState(() => new URLSearchParams(location.search).get('period') || 'all');
   const [query, setQuery] = useState(() => new URLSearchParams(location.search).get('q') || '');
   const [page, setPage] = useState(0);
   const [sources, setSources] = useState(() => normalizeSources(POST_SOURCES));
@@ -110,6 +124,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
     setSourceFilter(params.get('source') || 'all');
     setQuery(params.get('q') || '');
     setTypeFilter(params.get('type') === 'transfer' ? 'transfer' : 'all');
+    setTimeFilter(['1', '7'].includes(params.get('period')) ? params.get('period') : 'all');
   }, [location.search]);
 
   useEffect(() => {
@@ -203,12 +218,17 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
 
   const filtered = useMemo(() => pageData.posts
     .filter(post => typeFilter === 'all' || postTransferFlag(post) === true)
+    .filter(post => isWithinDays(post.postCreatedAt, timeFilter))
     .filter(post => text(post.content).includes(text(query)))
     .filter(post => !unreadOnly || !isPostRead(`post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`))
     .sort((a, b) =>
       (Date.parse(b.postCreatedAt) || 0) - (Date.parse(a.postCreatedAt) || 0)
       || String(b.externalPostId || b.postId || '').localeCompare(String(a.externalPostId || a.postId || ''))
-    ), [pageData.posts, typeFilter, query, unreadOnly, readRefresh]);
+    ), [pageData.posts, typeFilter, timeFilter, query, unreadOnly, readRefresh]);
+
+  const unreadCount = useMemo(() => pageData.posts.filter(post => !isPostRead(
+    `post:${post.postId ?? post.externalPostId ?? `${post.source}-${post.postCreatedAt}`}`
+  )).length, [pageData.posts, readRefresh]);
 
   const availableTeams = [...teams]
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko'));
@@ -217,11 +237,12 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
     : null;
   const currentSource = sources.find(source => source.code === sourceFilter);
   const hasPagination = pageData.hasNext || pageData.hasPrevious || pageData.totalPageCount > 1;
-  const hasActiveFilters = teamMode || sourceFilter !== 'all' || typeFilter !== 'all' || unreadOnly || query.trim();
+  const hasActiveFilters = teamMode || sourceFilter !== 'all' || typeFilter !== 'all' || timeFilter !== 'all' || unreadOnly || query.trim();
   const savedPostParams = new URLSearchParams();
   if (sourceFilter !== 'all') savedPostParams.set('source', sourceFilter);
   if (query.trim()) savedPostParams.set('q', query.trim());
   if (typeFilter === 'transfer') savedPostParams.set('type', 'transfer');
+  if (timeFilter !== 'all') savedPostParams.set('period', timeFilter);
   if (teamMode) savedPostParams.set('teamId', selectedTeamId);
   const savedPostPath = `/posts${savedPostParams.size ? `?${savedPostParams}` : ''}`;
   const savedPostLabel = [
@@ -233,6 +254,7 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
   function changeSource(nextSource) {
     setSourceFilter(nextSource);
     setTypeFilter('all');
+    setTimeFilter('all');
   }
 
   function resetFilters() {
@@ -359,6 +381,20 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
             이적 관련만
           </button>
 
+          <div className="journal-time-filter" aria-label="게시물 기간">
+            <span>기간</span>
+            {TIME_FILTERS.map(option => (
+              <button
+                key={option.value}
+                type="button"
+                className={timeFilter === option.value ? 'active' : ''}
+                onClick={() => setTimeFilter(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
           <label className="search journal-search">
             <span aria-hidden="true">⌕</span>
             <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="소식 검색" />
@@ -424,7 +460,9 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
       <div className="journal-feed-head">
         <div>
           <strong>{selectedTeam ? teamDisplayName(selectedTeam) : currentSource?.name || '전체 소식'}</strong>
-          <span>{loading ? '불러오는 중' : `${filtered.length}건 표시 · ${page + 1} / ${Math.max(pageData.totalPageCount, 1)} 페이지`}</span>
+          <span>{loading
+            ? '불러오는 중'
+            : `${filtered.length}건 표시 · 읽지 않은 소식 ${unreadCount}건 · ${page + 1} / ${Math.max(pageData.totalPageCount, 1)} 페이지`}</span>
         </div>
       </div>
 

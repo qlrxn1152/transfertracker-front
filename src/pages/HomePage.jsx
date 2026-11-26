@@ -209,6 +209,24 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
           <h1>이적 센터</h1>
           <p>{briefing.newestTransfer ? `${displayDate(briefing.newestTransfer)} 기준 최신 이적과 기자 소식입니다.` : '최신 이적과 기자 소식을 불러오는 중입니다.'}</p>
 
+          <div className="home-hero-briefing" aria-label="오늘의 빠른 이동">
+            <Link to="/transfers">
+              <span>오늘의 이적</span>
+              <strong>{state.loading ? '—' : `${briefing.recentMoves}건`}</strong>
+              <small>{briefing.newestTransfer ? `${displayDate(briefing.newestTransfer)} 기준` : '이적 현황 열기'} <b>→</b></small>
+            </Link>
+            <Link to="/posts">
+              <span>새 기자 소식</span>
+              <strong>{state.loading ? '—' : `${briefing.posts}건`}</strong>
+              <small>{briefing.newestPost ? '최신순으로 읽기' : '기자 소식 열기'} <b>→</b></small>
+            </Link>
+            <Link to={session ? '/account' : '/teams'}>
+              <span>{session ? '내 이적 데스크' : '관심 팀 시작하기'}</span>
+              <strong>{session ? 'MY' : '팀 찾기'}</strong>
+              <small>{session ? '관심 소식 모아보기' : '좋아하는 클럽부터'} <b>→</b></small>
+            </Link>
+          </div>
+
           <div className="home-hero-pulse" aria-label="현재 데이터 요약">
             <span><strong>{state.loading ? '—' : briefing.recentMoves}</strong>최근 날짜 이적</span>
             <span><strong>{state.loading ? '—' : briefing.posts}</strong>기자 소식</span>

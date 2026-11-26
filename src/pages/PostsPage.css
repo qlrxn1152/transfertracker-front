@@ -19,6 +19,7 @@
 .journal-team-select select{min-width:170px;padding:8px 27px 8px 9px;border:1px solid #dfe5e0;border-radius:8px;background:#fff;color:#415047;font-size:10px}
 .journal-transfer-only{border:1px solid #dfe6e1;border-radius:8px;background:#fff;color:#69786e;padding:9px 11px;font-size:10px;font-weight:800}
 .journal-transfer-only.active{border-color:#ff9aa5;background:#fff0f2;color:#db3c4c}
+.journal-time-filter{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding-top:1px}.journal-time-filter>span{margin-right:2px;color:#89948c;font-size:10px;font-weight:800}.journal-time-filter button{border:1px solid #dfe6e1;border-radius:999px;background:#fff;color:#69786e;padding:7px 10px;font:inherit;font-size:10px;font-weight:800}.journal-time-filter button.active{border-color:#c9d9c5;background:#edf5e8;color:#668536}
 .journal-reset-filters{border:0;background:transparent;color:#718077;padding:8px 4px;font-size:10px;font-weight:800;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .journal-reset-filters:hover{color:#17211b}
 .journal-search{justify-self:end;width:min(260px,100%)}
@@ -45,6 +46,7 @@
   .journal-team-select{display:grid;grid-template-columns:auto 1fr}
   .journal-team-select select{min-width:0;width:100%}
   .journal-search{grid-column:1/-1;width:100%}
+  .journal-time-filter{grid-column:1/-1}
   .journal-reset-filters{justify-self:start}
   .journal-follow-panel{grid-template-columns:1fr}.journal-follow-source{min-width:0;flex:1 1 155px}
 }

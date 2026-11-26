@@ -607,3 +607,23 @@ body{background:radial-gradient(ellipse 70% 28% at 50% -8%,rgba(125,157,67,.12),
 .app-menu-head{display:flex;align-items:start;justify-content:space-between;margin-bottom:13px}.app-menu-head h2{margin:4px 0 0;font-size:20px;letter-spacing:-.05em}.app-menu-head button{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--v-line);border-radius:50%;background:#fff;color:var(--v-text-muted);font-size:18px}.app-menu-label{margin:0 0 8px;color:var(--v-text-faint);font-size:9px;font-weight:850;letter-spacing:.1em}.app-menu-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.app-menu-shortcuts a{display:grid;justify-items:center;gap:6px;min-width:0;padding:11px 5px;border:1px solid #e0e8e1;border-radius:11px;background:#fbfdfb;color:var(--v-text);font-size:10px;font-weight:750;text-align:center;text-decoration:none}.app-menu-shortcuts a:hover{border-color:#bcd2b4;background:#f2f8ee}.app-menu-shortcuts b{display:grid;place-items:center;width:25px;height:25px;border-radius:9px;background:#e8f3e3;color:#668536;font-size:14px}.app-menu-section{margin-top:15px;padding-top:14px;border-top:1px solid #edf1ed}.app-menu-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;width:100%;min-height:39px;padding:7px 3px;border:0;border-bottom:1px solid #f0f3f0;background:transparent;color:var(--v-text);font:inherit;font-size:12px;text-align:left;text-decoration:none}.app-menu-row:last-child{border-bottom:0}.app-menu-row:hover{color:#668536}.app-menu-row>span{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#f0f6ed;color:#668536;font-size:12px}.app-menu-row b{font-weight:750}.app-menu-row i{color:var(--v-text-faint);font-size:18px;font-style:normal}
 @media(max-width:760px){.app-menu-trigger{flex:1;min-width:0;min-height:54px;padding:5px 2px;border-radius:10px}.app-menu{bottom:calc(78px + env(safe-area-inset-bottom));padding:16px;border-radius:15px}}
 .account-card[id]{scroll-margin-top:96px}
+
+/* Home should answer "what can I do now?" at a glance.  The former hero
+   left a large decorative gap between its title and actions, so this keeps
+   the same data but turns the space into three concrete next steps. */
+.home-hero{grid-template-columns:minmax(0,1fr) 355px!important;min-height:360px!important}
+.home-hero-copy{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;gap:0!important;padding:40px 46px!important}
+.home-live{align-self:flex-start!important;margin:0 0 15px!important;padding:7px 10px!important;border-radius:999px!important;font-size:9px!important}
+.home-hero h1{margin:0!important;font-size:42px!important;line-height:1.08!important}
+.home-hero-copy>p{max-width:520px;margin:10px 0 0!important;font-size:12px!important;line-height:1.6!important}
+.home-hero-briefing{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:23px}
+.home-hero-briefing a{display:grid;gap:5px;min-width:0;min-height:91px;padding:13px 14px;border:1px solid #d8e4d6;border-radius:12px;background:rgba(255,255,255,.76);color:var(--v-text);text-decoration:none;box-shadow:0 5px 14px rgba(45,69,47,.04);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.home-hero-briefing a:hover{border-color:#b8cfad;box-shadow:0 10px 20px rgba(45,69,47,.1);transform:translateY(-2px)}
+.home-hero-briefing span{color:#6b8152;font-size:9px;font-weight:900;letter-spacing:.04em}
+.home-hero-briefing strong{overflow:hidden;color:#243127;font-size:19px;letter-spacing:-.05em;text-overflow:ellipsis;white-space:nowrap}
+.home-hero-briefing small{overflow:hidden;color:var(--v-text-muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}.home-hero-briefing b{color:#668536;font-size:12px}
+.home-hero-pulse{display:none!important}
+.home-hero-actions{margin-top:16px!important}.home-hero-actions a{min-height:38px!important;padding:9px 14px!important;font-size:11px!important}
+.home-hero-feature{min-height:360px!important}.home-feature-card{padding:20px!important}
+@media(max-width:900px){.home-hero{grid-template-columns:minmax(0,1fr) 305px!important}.home-hero-copy{padding:32px 30px!important}.home-hero-briefing{grid-template-columns:1fr 1fr}.home-hero-briefing a:last-child{grid-column:1/-1;min-height:64px}.home-hero-briefing a:last-child small{display:none}}
+@media(max-width:760px){.home-hero{display:block!important;min-height:0!important}.home-hero-copy{padding:24px 18px!important}.home-hero h1{font-size:31px!important}.home-hero-briefing{margin-top:18px}.home-hero-briefing a{min-height:78px;padding:11px}.home-hero-feature{display:none!important}.home-hero-actions{margin-top:13px!important}}
