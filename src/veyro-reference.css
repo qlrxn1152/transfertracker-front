@@ -37,7 +37,26 @@ button,input,select{font:inherit}
 .app-side-nav{display:grid!important;gap:4px;margin-top:38px}.app-sidebar .app-nav-link{display:flex!important;align-items:center;gap:11px;min-height:39px;padding:0 12px!important;border-radius:8px;color:var(--v-text-muted)!important;font-size:12px!important;font-weight:760!important;text-decoration:none}.app-sidebar .app-nav-link:hover{background:rgba(255,255,255,.055);color:var(--v-text)!important}.app-sidebar .app-nav-link.active{background:rgba(52,120,246,.18)!important;color:#a8c5ff!important}.app-sidebar .app-nav-link.active::after{display:none!important}.app-sidebar .app-nav-icon{display:grid;place-items:center;width:17px;color:inherit;font-size:17px;line-height:1}.app-side-account{margin-top:auto;padding:13px 12px;border-top:1px solid var(--v-line-soft)}.app-side-account a{display:grid;gap:3px;color:var(--v-text);text-decoration:none}.app-side-account small{color:var(--v-text-faint);font-size:9px;font-weight:900;letter-spacing:.13em}.app-side-account strong{font-size:12px}
 
 .app-header{position:sticky!important;z-index:50;top:0!important;margin-left:220px!important;border:0!important;border-bottom:1px solid var(--v-line-soft)!important;background:rgba(16,16,18,.88)!important;backdrop-filter:blur(18px)!important}.app-header-inner{display:flex!important;justify-content:flex-end!important;max-width:1440px!important;min-height:62px!important;margin:0 auto!important;padding:0 28px!important}.app-mobile-brand{display:none}.app-header .global-search{width:min(320px,42vw);margin-right:15px}.app-header-actions{display:flex!important;align-items:center;gap:10px}.app-account-link{border:1px solid var(--v-line-soft);border-radius:8px;padding:8px 10px;color:var(--v-text-muted)!important;font-size:10px!important;text-decoration:none}.app-join-button,.app-logout-button{display:none!important}.app-menu-trigger{display:grid!important;place-items:center;width:33px;height:33px;border:1px solid var(--v-line-soft);border-radius:8px;background:var(--v-surface-raised);color:var(--v-text)}.app-menu-trigger>span:last-child{display:none}.app-main{min-height:calc(100vh - 62px);margin-left:220px!important;padding:32px 28px 60px!important}.app-footer{border-color:var(--v-line-soft)!important;color:var(--v-text-faint)!important}.app-mobile-nav{display:none}
-@media(min-width:961px){.app-sidebar .app-nav{position:static!important;inset:auto!important;display:grid!important;min-height:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}.app-sidebar .app-nav-link{position:static!important;display:flex!important;flex:none!important}.app-mobile-nav{display:none!important}}
+@media(min-width:1101px){
+  .app-sidebar .app-nav{
+    position:static!important;
+    inset:auto!important;
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    transform:none!important;
+    display:grid!important;
+    min-height:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  .app-sidebar .app-nav-link{position:static!important;display:flex!important;flex:none!important}
+  .app-menu{top:74px!important;right:28px!important;bottom:auto!important;left:auto!important;transform:none!important;width:320px!important}
+  .app-mobile-nav{display:none!important}
+}
 
 /* Reusable panel and page headings */
 .view,.home-page,.journal-page{max-width:1320px!important}.eyebrow{color:var(--v-lime-dim)!important;font-size:10px!important;letter-spacing:.15em!important}.journal-head h1,.fixture-page-head h1,.players-head h1,.account-page h1{color:var(--v-text)!important}.journal-head>div>p:last-child,.fixture-page-head p:last-child{color:var(--v-text-muted)!important}.home-panel,.home-clubs,.home-saved,.home-recent-items,.transfer-market-board,.transfer-story-card,.players-card,.team-card,.league-filter,.journal-filter-row,.journal-team-banner,.account-card,.fcm-test-panel,.team-page-panel,.team-transfer-section,.team-news-section,.team-roster-panel,.detail-card,.lookup-form,.empty,.loading-placeholder,.global-search-panel,dialog{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important;box-shadow:none!important}
@@ -56,7 +75,7 @@ button,input,select{font:inherit}
 /* Transfers, teams, players and account inherit the same calm dark cards. */
 .transfer-market-head h1,.players-head h1,.team-page-identity h2,.account-page h1{color:var(--v-text)!important}.transfer-market-head p,.players-head p,.account-hero p{color:var(--v-text-muted)!important}.transfer-market-toolbar,.players-search{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important}.transfer-market-row,.players-card,.team-card,.account-team,.account-post-list a{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important;color:var(--v-text)!important}.transfer-market-row:hover,.players-card:hover,.team-card:hover{border-color:var(--v-line-strong)!important;background:var(--v-surface-hover)!important}.team-page-hero,.team-detail-hero{border-color:var(--v-line-soft)!important;background:linear-gradient(135deg,#202228,#111217 68%)!important}.team-detail-hero-pattern{opacity:.3!important}.team-detail-logo,.team-page-emblem{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important}.account-team small,.account-post-related,.account-muted{color:var(--v-text-muted)!important}
 
-@media(max-width:960px){
+@media(max-width:1100px){
   .app-sidebar{display:none}.app-header{margin-left:0!important;background:rgba(16,16,18,.94)!important}.app-header-inner{justify-content:space-between!important;min-height:58px!important;padding:0 15px!important}.app-mobile-brand{display:block;color:var(--v-text);font-size:19px;font-weight:950;letter-spacing:-.055em;text-decoration:none}.app-header .global-search{width:auto;flex:1;margin:0 10px}.global-search-box{min-height:34px!important;background:var(--v-surface-raised)!important}.global-search-box input{font-size:11px!important}.app-account-link,.app-header .client-preferences-button{display:none!important}.app-main{margin-left:0!important;padding:19px 12px 86px!important}.app-footer{display:none!important}.app-mobile-nav{position:fixed;z-index:80;display:flex;align-items:stretch;justify-content:space-around;left:0;right:0;bottom:0;min-height:66px;padding:5px 7px calc(5px + env(safe-area-inset-bottom));border-top:1px solid var(--v-line-soft);background:rgba(16,16,18,.97);backdrop-filter:blur(14px)}.app-mobile-nav .app-nav-link{display:grid;justify-items:center;align-content:center;flex:1;gap:3px;min-width:0;border:0!important;border-radius:8px;color:var(--v-text-muted);font-size:9px;font-weight:750;text-decoration:none}.app-mobile-nav .app-nav-icon{font-size:19px;line-height:1}.app-mobile-nav .app-nav-link.active{color:#83adff;background:rgba(52,120,246,.16)}.app-mobile-nav .app-nav-link.active::after{display:none}.app-menu-trigger{width:31px;height:31px}.home-newsroom-grid{grid-template-columns:1fr!important}.home-newsroom-side{border-left:0;border-top:1px solid var(--v-line-soft)}.home-newsroom-side{grid-template-columns:1fr 1fr}.home-newsroom-explore{display:none}.journal-head>strong{display:none}.journal-follow-panel{grid-template-columns:1fr!important}.fixture-detail-panel{position:static!important}
 }
 @media(max-width:600px){
@@ -155,6 +174,23 @@ select option{background:var(--v-surface-raised);color:var(--v-text)}
 .home-recent-items{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important;color:var(--v-text)!important}
 .home-recent-items a{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important;color:var(--v-text)!important}
 .home-recent-items small{color:var(--v-lime-dim)!important}.home-recent-items span,.home-recent-items>.home-panel-head>span{color:var(--v-text-muted)!important}
+
+/* The home is a dashboard, not a chronological dump of every convenience
+   widget.  Put the two everyday actions first, then personal context. */
+.home-newsroom{order:0!important}
+.home-grid{order:1!important}
+.home-desk{order:2!important}
+.home-clubs{order:3!important}
+.home-saved,.home-recent-items{order:4!important}
+.home-starter,.pwa-install-prompt{order:5!important}
+@media(min-width:1101px){
+  .home-page{gap:18px!important}
+  .home-grid{grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr)!important}
+  .home-club-list{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+  .home-club-list a:nth-child(n+7){display:none!important}
+  .home-recent-items>div:last-child{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .home-recent-items a:nth-child(n+5){display:none!important}
+}
 
 .post-detail-page,.post-detail-page h1,.post-detail-page b,.post-detail-page a{color:var(--v-text)!important}
 .post-detail-page time,.post-detail-page small,.post-detail-page .post-detail-foot>span{color:var(--v-text-muted)!important}

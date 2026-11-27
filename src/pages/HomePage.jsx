@@ -227,7 +227,7 @@ export default function HomePage({ sample, teams, refreshKey, session, onPlayerO
         </div>
       </section>
 
-      {showStarter && (
+      {!session && showStarter && (
         <section className="home-starter" aria-label="VEYRO 시작 안내">
           <div>
             <p className="eyebrow">START HERE</p>
