@@ -331,37 +331,40 @@ export default function PostsPage({ sample, teams, selectedTeamId, onSelectedTea
         </div>
 
         {!sample && (
-          <section className={`journal-follow-panel ${location.state?.followJournalist ? 'is-returned' : ''}`}>
-            <div className="journal-follow-copy">
-              <p className="eyebrow">REPORTER ALERT</p>
-              <h2>기자 팔로우</h2>
-              <p>{session
-                ? '팔로우한 기자가 새 게시물을 등록하면 이 브라우저로 알림을 보냅니다.'
-                : '로그인하면 신뢰하는 기자를 팔로우하고 새 소식 알림을 받을 수 있어요.'}</p>
-            </div>
-            <div className="journal-follow-list">
-              {sources.map(source => {
-                const followed = followingCodes.includes(source.code);
-                const busy = followBusyCode === source.code;
-                return (
-                  <article className="journal-follow-source" key={source.code}>
-                    <JournalistAvatar source={source} className="journal-follow-avatar" />
-                    <strong>{source.name}</strong>
-                    <button
-                      type="button"
-                      className={followed ? 'following' : ''}
-                      onClick={() => toggleFollow(source)}
-                      disabled={busy}
-                      autoFocus={location.state?.followJournalist === source.code}
-                    >
-                      {busy ? '처리 중...' : followed ? '팔로우 중' : '팔로우'}
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-            {followStatus && <p className="journal-follow-status" role="status">{followStatus}</p>}
-          </section>
+          <details className={`journal-follow-disclosure ${location.state?.followJournalist ? 'is-returned' : ''}`} open={Boolean(location.state?.followJournalist)}>
+            <summary>기자 팔로우 관리 <span>{followingCodes.length ? `${followingCodes.length}명 팔로우 중` : '새 소식 알림 설정'}</span></summary>
+            <section className="journal-follow-panel">
+              <div className="journal-follow-copy">
+                <p className="eyebrow">REPORTER ALERT</p>
+                <h2>기자 팔로우</h2>
+                <p>{session
+                  ? '팔로우한 기자가 새 게시물을 등록하면 이 브라우저로 알림을 보냅니다.'
+                  : '로그인하면 신뢰하는 기자를 팔로우하고 새 소식 알림을 받을 수 있어요.'}</p>
+              </div>
+              <div className="journal-follow-list">
+                {sources.map(source => {
+                  const followed = followingCodes.includes(source.code);
+                  const busy = followBusyCode === source.code;
+                  return (
+                    <article className="journal-follow-source" key={source.code}>
+                      <JournalistAvatar source={source} className="journal-follow-avatar" />
+                      <strong>{source.name}</strong>
+                      <button
+                        type="button"
+                        className={followed ? 'following' : ''}
+                        onClick={() => toggleFollow(source)}
+                        disabled={busy}
+                        autoFocus={location.state?.followJournalist === source.code}
+                      >
+                        {busy ? '처리 중...' : followed ? '팔로우 중' : '팔로우'}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+              {followStatus && <p className="journal-follow-status" role="status">{followStatus}</p>}
+            </section>
+          </details>
         )}
 
         <div className="journal-filter-row">

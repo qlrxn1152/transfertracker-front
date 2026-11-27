@@ -30,6 +30,23 @@ function imageUrl(post) {
   }
 }
 
+function postCopy(post) {
+  const content = String(post?.content || '').replace(/\s+/g, ' ').trim();
+  const explicitHeadline = String(post?.headline || post?.title || '').trim();
+  if (explicitHeadline) return { headline: explicitHeadline, summary: content === explicitHeadline ? '' : content };
+
+  // 목록 API에는 제목/요약 필드가 아직 없으므로, 문장을 새로 쓰지 않고
+  // 원문 첫 문장과 남은 문장으로만 시각적 계층을 만든다.
+  const ending = content.search(/[.!?](?:\s|$)/);
+  if (ending >= 0 && ending < content.length - 2) {
+    return {
+      headline: content.slice(0, ending + 1),
+      summary: content.slice(ending + 1).trim()
+    };
+  }
+  return { headline: content, summary: '' };
+}
+
 export default function PostCard({ post, sourceProfile, sample, onRead, onPlayerOpen }) {
   const navigate = useNavigate();
   const source = sourceProfile || fallbackSource(post);
@@ -50,6 +67,7 @@ export default function PostCard({ post, sourceProfile, sample, onRead, onPlayer
   const photo = imageUrl(post);
   const displayContent = post.content || '';
   const postId = post.postId ?? post.id;
+  const { headline, summary } = postCopy(post);
 
   function markRead() {
     if (read) return;
@@ -85,28 +103,27 @@ export default function PostCard({ post, sourceProfile, sample, onRead, onPlayer
       aria-label={`${source.name} 게시물 상세 보기`}
     >
       <div className="post-card-head">
-        <JournalistAvatar source={source} className="post-avatar" />
-        <div className="post-author">
-          <strong>{source.name}</strong>
-          <span>@{source.handle}</span>
-        </div>
-        <time>{formatPostDate(post.postCreatedAt)}</time>
-      </div>
-
-      <div className="post-meta">
-        <span className={`post-read-badge ${read ? 'read' : 'unread'}`}>
-          <i aria-hidden="true" />{read ? '읽음' : '새 글'}
+        <span className={`post-status ${flag === true ? 'transfer' : ''}`}>
+          {flag === true ? '이적 관련' : '기자 소식'}
         </span>
-        {flag === true ? (
-          <span className="post-tag transfer">↗ 이적 관련</span>
-        ) : flag === false ? (
-          <span className="post-tag">일반 게시물</span>
-        ) : (
-          <span className="post-tag">분류 정보 없음</span>
-        )}
+        <time>{formatPostDate(post.postCreatedAt)}</time>
+        <span className={`post-read-badge ${read ? 'read' : 'unread'}`} aria-label={read ? '읽음' : '새 글'}><i aria-hidden="true" /></span>
       </div>
 
-      <p className="post-content">{displayContent}</p>
+      {(post.playerName || post.teamName) && (
+        <div className="post-subject">
+          <span className="post-subject-mark" aria-hidden="true">{(post.playerName || post.teamName || 'V').slice(0, 1)}</span>
+          <div>
+            <strong>{post.playerName || post.teamName}</strong>
+            {post.playerName && post.teamName && <span>{post.teamName} 관련 소식</span>}
+          </div>
+        </div>
+      )}
+
+      <div className="post-copy">
+        {headline && <h2>{headline}</h2>}
+        {summary && <p className="post-content">{summary}</p>}
+      </div>
 
       {(post.teamName || post.playerName) && (
         <div className="post-related" aria-label="관련 대상">
@@ -139,7 +156,7 @@ export default function PostCard({ post, sourceProfile, sample, onRead, onPlayer
       )}
 
       <div className="post-card-foot">
-        <span>{sample ? '샘플 데이터' : 'X 게시물'}</span>
+        <span className="post-source"><JournalistAvatar source={source} className="post-avatar" /><b>{source.name}</b></span>
         <ContentActions
           compact
           item={{
