@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getTeamDetail, getTransfers } from '../api/client';
+import TeamMatchesPanel from '../components/TeamMatchesPanel';
 import TeamNotificationCard from '../components/TeamNotificationCard';
 import ContentActions from '../components/ContentActions';
 import { rememberRecent } from '../utils/clientStore';
@@ -545,6 +546,8 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
           </div>
         )}
       </section>
+
+      {!sample && <TeamMatchesPanel teamId={team.teamId} teams={teams} />}
 
       <div className="team-detail-layout">
         <main className="team-detail-main">

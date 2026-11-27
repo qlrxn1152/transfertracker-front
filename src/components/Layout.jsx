@@ -34,6 +34,7 @@ export default function Layout({ sample, teams, onPlayerOpen, session, onLogout 
             <NavItem end to="/" icon="⌂">홈</NavItem>
             <NavItem to="/transfers" icon="↗">이적 현황</NavItem>
             <NavItem to="/posts" icon="▤">기자 소식</NavItem>
+            <NavItem to="/fixtures" icon="◉">경기</NavItem>
             <NavItem to="/teams" icon="◐">팀</NavItem>
             <AppMenu session={session} onLogout={onLogout} />
           </nav>
