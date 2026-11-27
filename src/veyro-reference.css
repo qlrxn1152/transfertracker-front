@@ -332,3 +332,37 @@ select option{background:var(--v-surface-raised);color:var(--v-text)}
   box-shadow:none!important;
 }
 .app-menu-head button,.global-search-box{background:var(--v-surface-raised)!important}
+
+/* Transfer/detail badges use bespoke markup instead of the shared card classes. */
+.post-source{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface-raised)!important;
+  color:var(--v-text-muted)!important;
+}
+.post-source b{color:var(--v-text)!important}
+.journalist-avatar,.journalist-avatar img{
+  background:var(--v-surface-raised)!important;
+  color:#8eb3ff!important;
+}
+.team-detail-hero-stat{
+  border-color:var(--v-line-strong)!important;
+  background:rgba(22,23,28,.88)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.team-detail-hero-stat strong{color:var(--v-text)!important}
+.team-detail-hero-stat span{color:var(--v-text-muted)!important}
+.player-detail-latest{
+  border-color:var(--v-line-strong)!important;
+  background:rgba(22,23,28,.9)!important;
+  color:var(--v-text)!important;
+}
+.player-detail-latest small{color:var(--v-text-muted)!important}
+.player-detail-latest span{color:#8eb3ff!important}
+.player-detail-close{
+  border-color:var(--v-line-strong)!important;
+  background:var(--v-surface-raised)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.player-detail-close:hover{background:var(--v-surface-hover)!important;color:#c9daff!important}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'transfertracker-shell-v6';
+const CACHE_NAME = 'transfertracker-shell-v7';
 const APP_SHELL = ['/manifest.webmanifest', '/icons/transfertracker-icon.svg'];
 
 self.addEventListener('install', event => {
