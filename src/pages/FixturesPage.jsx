@@ -101,6 +101,11 @@ function PlayerAvatar({ player, className = '' }) {
   </span>;
 }
 
+function EventParticipant({ player, label, fallbackName }) {
+  const name = eventPlayerName(player) || fallbackName || '선수 정보 없음';
+  return <span className="fixture-event-person"><PlayerAvatar player={player} /><span><small className="fixture-event-label">{label}</small><strong>{name}</strong></span></span>;
+}
+
 function FixtureGoalSummary({ events, teamId, side }) {
   const goals = events
     .filter(event => event?.type === 'GOAL' && String(event?.team?.teamId) === String(teamId))
@@ -132,8 +137,8 @@ function FixtureEventRow({ event, fixture }) {
   const minute = event?.elapsed == null ? '—' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`;
   return <article className={`fixture-event ${home ? 'home' : 'away'} ${type.toLowerCase()}`}>
     <div className="fixture-event-copy">
-      <span className="fixture-event-avatars"><PlayerAvatar player={event?.player} />{relatedPlayer && <PlayerAvatar player={event?.relatedPlayer} className="related" />}</span>
-      <span className="fixture-event-copy-text"><small className="fixture-event-label">{labels.primary}</small><strong>{player}</strong>{relatedPlayer && <small className="fixture-event-related"><b>{labels.related}</b> {relatedPlayer}</small>}{detail && <small className="fixture-event-note">{detail}</small>}</span>
+      <div className="fixture-event-participants"><EventParticipant player={event?.player} label={labels.primary} fallbackName={player} />{relatedPlayer && <EventParticipant player={event?.relatedPlayer} label={labels.related} fallbackName={relatedPlayer} />}</div>
+      {detail && <small className="fixture-event-note">{detail}</small>}
     </div>
     <time>{minute}</time>
   </article>;
