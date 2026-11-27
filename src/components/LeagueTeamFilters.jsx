@@ -1,6 +1,8 @@
 import { LEAGUE_GROUPS, OTHER_LEAGUE_CODE } from '../constants';
 import { teamDisplayName, teamLeague } from '../utils';
 
+const TRANSFER_RELATED_GROUPS = new Set(['EUROPEAN_COMPETITIONS', 'DOMESTIC_CUPS']);
+
 export default function LeagueTeamFilters({
   leagueCode,
   teamId,
@@ -9,6 +11,11 @@ export default function LeagueTeamFilters({
   onTeamChange,
   prefix
 }) {
+  // 대항전·컵은 팀의 소속 리그가 아니므로 이적/선수 디렉터리의 기준에서 뺀다.
+  // 경기 센터는 모든 대회를 그대로 보여 준다.
+  const groups = LEAGUE_GROUPS.filter(group =>
+    prefix === 'fixtures' || !TRANSFER_RELATED_GROUPS.has(group.code)
+  );
   const candidates = [...teams]
     .filter(team => !leagueCode || teamLeague(team) === leagueCode)
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko'));
@@ -27,7 +34,7 @@ export default function LeagueTeamFilters({
             전체
           </button>
 
-          {LEAGUE_GROUPS.map(group => (
+          {groups.map(group => (
             <div className="compact-filter-group" key={group.code}>
               <span>{group.name}</span>
               {group.leagues.map(([code, name]) => (
