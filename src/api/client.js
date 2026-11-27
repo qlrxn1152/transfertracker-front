@@ -64,6 +64,27 @@ export const getTeams = signal => getJson('/api/teams', signal);
 export const getTeamsByLeague = (leagueCode, signal) =>
   getJson(`/api/teams/league?leagueCode=${encodeURIComponent(leagueCode)}`, signal);
 
+// Fixture API는 경기 결과를 프론트에서 추정하지 않고, 서버가 저장한 최신
+// 상태·점수만 그대로 사용한다. date는 백엔드 조회 정책과 동일하게 KST 날짜다.
+export const getFixtures = ({ date, leagueCode } = {}, signal) => {
+  const params = new URLSearchParams();
+  if (date) params.set('date', date);
+  if (leagueCode) params.set('leagueCode', leagueCode);
+  return getJson(`/api/fixtures?${params.toString()}`, signal);
+};
+
+export const getFixture = (fixtureId, signal) =>
+  getJson(`/api/fixtures/${encodeURIComponent(fixtureId)}`, signal);
+
+export const getTeamFixtures = (teamId, page = 0, signal) =>
+  getJson(`/api/fixtures/teams/${encodeURIComponent(teamId)}?page=${page}`, signal);
+
+export const getTeamUpcomingFixtures = (teamId, signal) =>
+  getJson(`/api/fixtures/teams/${encodeURIComponent(teamId)}/upcoming`, signal);
+
+export const getTeamRecentFixtures = (teamId, signal) =>
+  getJson(`/api/fixtures/teams/${encodeURIComponent(teamId)}/recent`, signal);
+
 export const getPlayer = (playerId, signal) => getJson(`/api/players/${playerId}`, signal)
   .then(normalizePlayer);
 export const getPlayerTransfers = (playerId, signal) =>

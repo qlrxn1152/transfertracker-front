@@ -156,6 +156,19 @@
   margin:27px 0 70px;
 }
 
+.team-matches-panel{
+  margin-top:24px;
+  padding:25px;
+  border:1px solid var(--team-line);
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 4px 18px rgba(31,45,35,.045);
+}
+.team-matches-panel>p{margin:0;color:var(--team-muted);font-size:12px}
+.team-matches-block+.team-matches-block{margin-top:23px;padding-top:22px;border-top:1px solid var(--team-line)}
+.team-matches-block h3{margin:0 0 10px;color:#1f2923;font-size:14px}
+.team-match-line{display:grid;grid-template-columns:76px minmax(0,1fr) 80px minmax(0,1fr) 28px;align-items:center;gap:10px;min-height:58px;border-top:1px solid #edf0ed;color:#25322b;text-decoration:none}.team-match-line:hover{background:#f5faf3}.team-match-line time{color:#7f8d84;font-size:10px}.team-match-club{display:flex;align-items:center;gap:7px;min-width:0}.team-match-club.home{justify-content:flex-end;text-align:right}.team-match-club strong{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.team-match-mark{position:relative;display:grid;place-items:center;flex:none;width:26px;height:26px;overflow:hidden;border-radius:50%;background:#edf4eb;color:#73984a;font-size:9px;font-weight:900}.team-match-mark img{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:contain}.team-match-score{display:grid;justify-items:center;gap:2px}.team-match-score b{font-size:14px}.team-match-score small{color:#87938c;font-size:9px}.team-match-score small.live{color:#159f60;font-weight:900}.team-match-result{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;font-size:10px;font-style:normal;font-weight:850}.team-match-result.win{background:#e5f7e9;color:#168044}.team-match-result.draw{background:#f0f2ef;color:#5e685f}.team-match-result.lose{background:#fff0ef;color:#cc4d49}
+
 .team-notification-card{
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;

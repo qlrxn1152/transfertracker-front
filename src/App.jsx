@@ -11,6 +11,7 @@ import TeamsPage from './pages/TeamsPage';
 import TeamDetailPage from './pages/TeamDetailPage';
 import PlayersPage from './pages/PlayersPage';
 import AccountPage from './pages/AccountPage';
+import FixturesPage from './pages/FixturesPage';
 import KakaoAuthCallbackPage from './pages/KakaoAuthCallbackPage';
 import { getTeams, getTeamsByLeague } from './api/client';
 import { LEAGUES } from './constants';
@@ -25,6 +26,7 @@ function analyticsPageName(pathname) {
   if (pathname === '/') return 'home';
   if (pathname === '/transfers') return 'transfers';
   if (pathname === '/posts') return 'reporter_posts';
+  if (pathname === '/fixtures' || pathname.startsWith('/fixtures/')) return 'fixtures';
   if (pathname.startsWith('/posts/')) return 'reporter_post_detail';
   if (pathname === '/teams') return 'teams';
   if (pathname.startsWith('/teams/')) return 'team_detail';
@@ -245,6 +247,8 @@ function AppRoutes() {
               />
             }
           />
+          <Route path="/fixtures" element={<FixturesPage teams={teams} />} />
+          <Route path="/fixtures/:fixtureId" element={<FixturesPage teams={teams} />} />
           <Route path="/posts/:postId" element={<PostDetailPage sample={sample} teams={teams} />} />
           <Route path="/teams" element={<TeamsPage teams={teams} error={teamError} sample={sample} />} />
           <Route
