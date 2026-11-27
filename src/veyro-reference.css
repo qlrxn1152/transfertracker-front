@@ -75,3 +75,99 @@ button,input,select{font:inherit}
 /* Keep advanced reporter and list controls available without letting controls
    take over the first screen on a phone. */
 .journal-filters{padding:0!important;border:0!important;background:transparent!important}.journal-follow-disclosure{display:block;margin:0 0 10px;border:1px solid var(--v-line-soft);border-radius:11px;background:var(--v-surface)}.journal-follow-disclosure summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;color:var(--v-text-muted);font-size:11px;font-weight:800;cursor:pointer;list-style:none}.journal-follow-disclosure summary::-webkit-details-marker{display:none}.journal-follow-disclosure summary::after{content:'⌄';color:var(--v-lime);font-size:14px}.journal-follow-disclosure[open] summary{border-bottom:1px solid var(--v-line-soft);color:var(--v-text)}.journal-follow-disclosure[open] summary::after{transform:rotate(180deg)}.journal-follow-disclosure summary span{margin-left:auto;color:var(--v-text-faint);font-size:10px;font-weight:650}.journal-follow-disclosure .journal-follow-panel{margin:0;border:0;border-radius:0;background:transparent!important}.journal-filter-row{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important}.journal-team-select{color:var(--v-text-faint)!important}.journal-team-select select,.journal-search,.journal-search input{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important;color:var(--v-text)!important}.journal-transfer-only,.journal-time-filter button,.journal-reset-filters{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important;color:var(--v-text-muted)!important}.journal-transfer-only.active,.journal-time-filter button.active{border-color:rgba(52,120,246,.7)!important;background:rgba(52,120,246,.2)!important;color:#c9daff!important}.journal-reading-tools button,.saved-searches button{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important;color:var(--v-text-muted)!important}
+
+/* Contrast repair: the legacy light stylesheet has highly-specific rules on
+   account, detail and saved-content controls.  Keep every interactive surface
+   on the same dark canvas and never rely on inherited text colour. */
+input:not([type='checkbox']):not([type='radio']), select, textarea{
+  border-color:var(--v-line-strong)!important;
+  background:var(--v-surface-raised)!important;
+  color:var(--v-text)!important;
+  caret-color:var(--v-lime)!important;
+}
+input::placeholder,textarea::placeholder{color:var(--v-text-faint)!important;opacity:1!important}
+select option{background:var(--v-surface-raised);color:var(--v-text)}
+
+.app-sidebar{box-sizing:border-box!important;min-width:220px!important}
+.app-sidebar .app-nav-link{
+  flex-direction:row!important;
+  justify-content:flex-start!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+.app-sidebar .app-nav-link>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important}
+.app-sidebar .app-nav-icon{flex:none!important}
+.app-menu-trigger{background:var(--v-surface-raised)!important;color:var(--v-text)!important}
+.app-menu,.app-menu-head button,.app-menu-shortcuts a,.app-menu-row{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  color:var(--v-text)!important;
+}
+.app-menu-head button{background:var(--v-surface-raised)!important}
+.app-menu-row{border-width:0 0 1px!important}
+.app-menu-row>span{background:rgba(52,120,246,.15)!important;color:var(--v-lime)!important}
+.app-menu-row i,.app-menu-label{color:var(--v-text-faint)!important}
+
+.account-page{color:var(--v-text)!important}
+.account-page h1,.account-page h2,.account-page h3,.account-page label,.account-page strong{color:var(--v-text)!important}
+.account-page p,.account-page .account-muted,.account-page .account-social-note,.account-page .account-switch{color:var(--v-text-muted)!important}
+.account-card,.post-push-settings,.fcm-test-panel{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.account-form input,.account-add-row select,.fcm-admin-test-actions select,.fcm-admin-test-actions input{
+  min-height:48px!important;
+  border-color:var(--v-line-strong)!important;
+  background:var(--v-surface-raised)!important;
+  color:var(--v-text)!important;
+}
+.account-primary{background:var(--v-lime)!important;color:#081227!important}
+.account-inline-link,.account-switch a{color:#8eb3ff!important}
+.account-social-divider{color:var(--v-text-muted)!important}.account-social-divider::before,.account-social-divider::after{background:var(--v-line-soft)!important}
+.account-team,.account-player,.account-journalist,.account-post-list a{
+  border-color:var(--v-line-soft)!important;
+  background:rgba(255,255,255,.018)!important;
+  color:var(--v-text)!important;
+}
+.account-team a>span,.account-player-open>span,.account-journalist>span,.account-post-team-logo{
+  background:var(--v-surface-raised)!important;
+  border-color:var(--v-line-soft)!important;
+  color:var(--v-lime)!important;
+}
+
+.home-desk,.home-briefing,.home-starter,.pwa-install-prompt{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.home-desk-head h2,.home-briefing h2,.home-starter h2,.pwa-install-prompt h2{color:var(--v-text)!important}
+.home-desk-head p:last-child,.home-briefing p:last-child,.home-starter>div>p:last-child,.pwa-install-prompt p:last-child{color:var(--v-text-muted)!important}
+.home-desk-block,.home-briefing-stats a,.home-starter li span{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface-raised)!important;
+  color:var(--v-text)!important;
+}
+.home-desk-muted,.home-desk-recent a,.home-desk-posts small,.home-briefing-stats small{color:var(--v-text-muted)!important}
+.home-recent-items{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important;color:var(--v-text)!important}
+.home-recent-items a{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important;color:var(--v-text)!important}
+.home-recent-items small{color:var(--v-lime-dim)!important}.home-recent-items span,.home-recent-items>.home-panel-head>span{color:var(--v-text-muted)!important}
+
+.post-detail-page,.post-detail-page h1,.post-detail-page b,.post-detail-page a{color:var(--v-text)!important}
+.post-detail-page time,.post-detail-page small,.post-detail-page .post-detail-foot>span{color:var(--v-text-muted)!important}
+.post-detail-page .post-detail-foot,.post-detail-page .post-detail-head{border-color:var(--v-line-soft)!important}
+.post-detail-page .post-detail-tags span{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important;color:var(--v-text-muted)!important}
+.post-detail-page .post-detail-tags .transfer{border-color:rgba(249,115,22,.45)!important;background:rgba(249,115,22,.15)!important;color:#fb923c!important}
+.post-detail-page .post-detail-team,.post-detail-page .post-detail-player{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important}
+.post-detail-foot,.post-detail-foot>span,.post-detail-foot small{color:var(--v-text-muted)!important}
+.post-detail-foot>a{color:#c9daff!important}
+.content-actions button,.share-card-button{border-color:var(--v-line-strong)!important;background:var(--v-surface-raised)!important;color:var(--v-text)!important}
+.content-actions button:hover,.content-actions button[aria-pressed='true'],.share-card-button:hover:not(:disabled){border-color:rgba(52,120,246,.65)!important;background:rgba(52,120,246,.16)!important;color:#c9daff!important}
+
+.global-search-box{border-color:var(--v-line-strong)!important;background:var(--v-surface-raised)!important}
+.global-search-box>span,.global-search-box input,.global-search-box input::placeholder{color:var(--v-text-muted)!important}
+.global-search-panel,.global-search-panel button{background:var(--v-surface)!important;color:var(--v-text)!important}
+.global-search-panel strong{color:var(--v-text)!important}.global-search-panel small,.global-search-panel h3{color:var(--v-text-muted)!important}
