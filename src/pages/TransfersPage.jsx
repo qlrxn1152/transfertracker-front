@@ -14,7 +14,6 @@ import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import SavedSearches from '../components/SavedSearches';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
-import ContentActions from '../components/ContentActions';
 import './TransfersPage.css';
 
 const initial = {
@@ -174,15 +173,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
   const transferCards = useMemo(() => [...transfers]
     .sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))), [transfers]);
 
-  const playerTransferCounts = useMemo(() => {
-    const counts = new Map();
-    transfers.forEach(item => {
-      const key = item.playerId != null ? `id:${item.playerId}` : `name:${item.playerName}`;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    });
-    return counts;
-  }, [transfers]);
-
   const latest = useMemo(() => {
     const dates = transfers
       .map(item => item.date)
@@ -190,20 +180,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
     return dates.length ? displayDate([...dates].sort().at(-1)) : '—';
   }, [transfers]);
-
-  const transferSummary = useMemo(() => {
-    const newest = transferCards[0];
-    const loans = transferCards.filter(item => String(item?.type || '').toUpperCase() === 'LOAN').length;
-    const freeAgents = transferCards.filter(item => String(item?.type || '').toUpperCase() === 'FREE').length;
-
-    return {
-      players: new Set(transfers.map(item => item.playerId ?? item.playerName)).size,
-      transfers: transferCards.length,
-      loans,
-      freeAgents,
-      newest: newest?.date ? displayDate(newest.date) : '—'
-    };
-  }, [transferCards, transfers]);
 
   const findTeam = name => {
     const matches = teams.filter(team => team.teamName === name);
@@ -267,9 +243,9 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
       <div className="transfer-market-head">
         <div>
           <p className="eyebrow">TRANSFER MARKET</p>
-          <h2>이적 현황</h2>
+          <h2>공식 이적 기록</h2>
           <p>
-            선수의 최신 이적을 한눈에 비교하세요.
+            구단과 선수의 이동이 확인된 기록입니다.
             <span> 페이지 최근 기록 {latest}</span>
           </p>
         </div>
@@ -298,13 +274,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
         path={`/transfers${paramsKey ? `?${paramsKey}` : ''}`}
       />
 
-      <section className="transfer-market-summary" aria-label="이적 현황 요약">
-        <div><span>현재 페이지</span><strong>{transferSummary.transfers}</strong><small>이적 기록</small></div>
-        <div><span>최근 기록</span><strong>{transferSummary.newest}</strong><small>표시 중인 최신 날짜</small></div>
-        <div><span>임대</span><strong>{transferSummary.loans}</strong><small>현재 페이지 기준</small></div>
-        <div><span>자유계약</span><strong>{transferSummary.freeAgents}</strong><small>현재 페이지 기준</small></div>
-      </section>
-
       <LeagueTeamFilters
         prefix="transfers"
         leagueCode={state.leagueCode}
@@ -323,8 +292,6 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
               const fromLogo = teamLogo(item.outTeamName);
               const toLogo = teamLogo(item.inTeamName);
               const status = transferStatus(item);
-              const playerKey = item.playerId != null ? `id:${item.playerId}` : `name:${item.playerName}`;
-              const historyCount = playerTransferCounts.get(playerKey) || 1;
               const fromTeam = findTeam(item.outTeamName);
               const toTeam = findTeam(item.inTeamName);
 
@@ -341,7 +308,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
                   <button
                     className="transfer-story-player"
                     type="button"
-                    onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}
+                    onClick={() => item.playerId && onPlayerOpen(Number(item.playerId), item)}
                   >
                     <span className="transfer-story-avatar">
                       {(item.playerName || '?').slice(0, 1)}
@@ -352,9 +319,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
                     <span className="transfer-story-player-copy">
                       <strong>{item.playerName}</strong>
-                      <small>
-                        {historyCount > 1 ? `현재 페이지 이적 기록 ${historyCount}건` : `PLAYER #${item.playerId ?? '—'}`}
-                      </small>
+                      <small>공식 이적 기록</small>
                     </span>
                   </button>
 
@@ -391,20 +356,10 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
                   </div>
 
                   <div className="transfer-story-actions">
-                    <button type="button" onClick={() => item.playerId && onPlayerOpen(Number(item.playerId))}>
-                      선수 상세 보기 →
+                    <span>{status.label} · {displayDate(item.date)}</span>
+                    <button type="button" onClick={() => item.playerId && onPlayerOpen(Number(item.playerId), item)}>
+                      이적 상세 보기 →
                     </button>
-                    <ContentActions
-                      compact
-                      card
-                      item={{
-                        key: `transfer:${item.playerId ?? item.playerName}:${item.date}:${item.inTeamId ?? item.inTeamName}`,
-                        type: 'transfer',
-                        title: `${item.playerName} · ${transferName(item.outTeamName, item.outTeamNameKo)} → ${transferName(item.inTeamName, item.inTeamNameKo)}`,
-                        summary: `${displayDate(item.date)} · ${status.label}`,
-                        path: `/transfers${paramsKey ? `?${paramsKey}` : ''}`
-                      }}
-                    />
                   </div>
                 </article>
               );
@@ -415,7 +370,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
       )}
 
       <p className="showing transfer-market-showing">
-        {state.page + 1} 페이지 · 이적 {transferCards.length}건 · 선수 {transferSummary.players}명 ·
+        {state.page + 1} 페이지 · 이적 {transferCards.length}건 ·
         {' '}{state.leagueCode ? leagueName(state.leagueCode) : '전체 리그'}
         {selectedTeam ? ` · ${teamDisplayName(selectedTeam)}` : ''}
         {state.keyWord ? ` · 검색어 “${state.keyWord}”` : ''}

@@ -11,10 +11,10 @@ import './PlayerDialog.css';
 
 function feeText(move) {
   const raw = move?.fee ?? move?.transferFee;
-  return typeof raw === 'string' && raw.trim() ? raw.trim() : '비공개';
+  return raw == null || raw === '' ? null : String(raw);
 }
 
-export default function PlayerDialog({ playerId, sample, teams, session, onClose, onFavoriteChange }) {
+export default function PlayerDialog({ playerId, selectedTransfer, sample, teams, session, onClose, onFavoriteChange }) {
   const ref = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -150,6 +150,16 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
   }, [playerId]);
 
   const latest = state.moves[0] ?? null;
+  const highlightedTransfer = useMemo(() => {
+    if (!selectedTransfer) return latest;
+
+    return state.moves.find(move => (
+      String(move.date || '') === String(selectedTransfer.date || '')
+      && String(move.outTeamName || '') === String(selectedTransfer.outTeamName || '')
+      && String(move.inTeamName || '') === String(selectedTransfer.inTeamName || '')
+    )) || selectedTransfer;
+  }, [latest, selectedTransfer, state.moves]);
+  const isTransferDetail = Boolean(selectedTransfer);
   const picture = state.player ? photoUrl(state.player.photoUrl) : null;
 
   const currentTeam = useMemo(() => {
@@ -264,7 +274,7 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
             </div>
 
             <div className="player-detail-profile">
-              <p>PLAYER PROFILE · #{state.player.playerId}</p>
+              <p>{isTransferDetail ? 'TRANSFER DETAIL' : `PLAYER PROFILE · #${state.player.playerId}`}</p>
               <h2>{state.player.playerName}</h2>
 
               <div className="player-detail-meta">
@@ -274,7 +284,7 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
                     {currentTeam.name}
                   </span>
                 )}
-                <span>이적 기록 {state.moves.length}건</span>
+                <span>{isTransferDetail ? '선택한 공식 이적 기록' : `이적 기록 ${state.moves.length}건`}</span>
               </div>
               <div className="player-detail-actions">
                 <button
@@ -308,34 +318,35 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
               {favorite.status && <p className="player-follow-status" role="status">{favorite.status}</p>}
             </div>
 
-            {latest && (
+            {highlightedTransfer && (
               <div className="player-detail-latest">
-                <small>최근 이적</small>
-                <strong>{displayDate(latest.date)}</strong>
-                <span>{typeLabel(latest.type)}</span>
+                <small>{isTransferDetail ? '이적 일자' : '최근 이적'}</small>
+                <strong>{displayDate(highlightedTransfer.date)}</strong>
+                <span>{typeLabel(highlightedTransfer.type)}</span>
               </div>
             )}
           </section>
 
-          {latest && (() => {
-            const names = teamName(latest);
-            const outLogo = teamLogo(latest.outTeamName);
-            const inLogo = teamLogo(latest.inTeamName);
+          {highlightedTransfer && (() => {
+            const names = teamName(highlightedTransfer);
+            const outLogo = teamLogo(highlightedTransfer.outTeamName);
+            const inLogo = teamLogo(highlightedTransfer.inTeamName);
+            const fee = feeText(highlightedTransfer);
 
             return (
               <section className="player-detail-highlight">
                 <div className="player-detail-highlight-head">
                   <div>
-                    <p className="eyebrow">LATEST MOVE</p>
-                    <h3>최근 이적</h3>
+                    <p className="eyebrow">{isTransferDetail ? 'OFFICIAL TRANSFER' : 'LATEST MOVE'}</p>
+                    <h3>{isTransferDetail ? '이적 상세' : '최근 이적'}</h3>
                   </div>
-                  <span>{displayDate(latest.date)}</span>
+                  <span>{displayDate(highlightedTransfer.date)}</span>
                 </div>
 
                 <div className="player-detail-route">
                   <div className="player-detail-club">
                     <span className="player-detail-club-logo">
-                      {(latest.outTeamName || '?').slice(0, 1)}
+                      {(highlightedTransfer.outTeamName || '?').slice(0, 1)}
                       {outLogo && <img src={outLogo} alt="" referrerPolicy="no-referrer" />}
                     </span>
                     <small>FROM</small>
@@ -346,7 +357,7 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
 
                   <div className="player-detail-club">
                     <span className="player-detail-club-logo">
-                      {(latest.inTeamName || '?').slice(0, 1)}
+                      {(highlightedTransfer.inTeamName || '?').slice(0, 1)}
                       {inLogo && <img src={inLogo} alt="" referrerPolicy="no-referrer" />}
                     </span>
                     <small>TO</small>
@@ -354,18 +365,15 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
                   </div>
                 </div>
 
-                <div className="player-detail-summary">
+                <div className={`player-detail-summary ${fee ? '' : 'without-fee'}`}>
                   <div>
                     <span>이적 유형</span>
-                    <strong>{typeLabel(latest.type)}</strong>
+                    <strong>{typeLabel(highlightedTransfer.type)}</strong>
                   </div>
-                  <div>
-                    <span>이적료</span>
-                    <strong>{feeText(latest)}</strong>
-                  </div>
+                  {fee && <div><span>이적료</span><strong>{fee}</strong></div>}
                   <div>
                     <span>날짜</span>
-                    <strong>{displayDate(latest.date)}</strong>
+                    <strong>{displayDate(highlightedTransfer.date)}</strong>
                   </div>
                 </div>
               </section>
@@ -411,7 +419,7 @@ export default function PlayerDialog({ playerId, sample, teams, session, onClose
                       </div>
 
                       <span className="player-detail-history-type">{typeLabel(move.type)}</span>
-                      <strong className="player-detail-history-fee">{feeText(move)}</strong>
+                      <strong className="player-detail-history-fee">{feeText(move) || '—'}</strong>
                     </article>
                   );
                 })}

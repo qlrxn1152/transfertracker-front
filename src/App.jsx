@@ -56,6 +56,7 @@ function AppRoutes() {
   const [connection, setConnection] = useState({ message: '연결 확인 중', state: '' });
   const [refreshKey, setRefreshKey] = useState(0);
   const [playerId, setPlayerId] = useState(null);
+  const [selectedTransfer, setSelectedTransfer] = useState(null);
   const [postTeamId, setPostTeamId] = useState('all');
   const [session, setSession] = useState(readStoredSession);
   const [playerFollowRefresh, setPlayerFollowRefresh] = useState(0);
@@ -154,12 +155,13 @@ function AppRoutes() {
     return () => controller.abort();
   }, [sample, refreshKey]);
 
-  function openPlayer(id) {
+  function openPlayer(id, transfer = null) {
     const value = Number(id);
     if (!Number.isSafeInteger(value) || value < 1) return;
 
     // URL 업데이트와 별개로 모달 상태를 즉시 연다.
     setPlayerId(value);
+    setSelectedTransfer(transfer);
 
     const params = new URLSearchParams(location.search);
     params.set('player', String(value));
@@ -171,6 +173,7 @@ function AppRoutes() {
   }
 
   function closePlayer() {
+    setSelectedTransfer(null);
     const params = new URLSearchParams(location.search);
     params.delete('player');
 
@@ -304,6 +307,7 @@ function AppRoutes() {
 
       <PlayerDialog
         playerId={playerId}
+        selectedTransfer={selectedTransfer}
         sample={sample}
         teams={teams}
         session={session}
