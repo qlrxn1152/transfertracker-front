@@ -88,11 +88,34 @@ function eventMeta(event) {
   return { icon: '•', label: event.detail || '경기 이벤트' };
 }
 
+function eventPlayerName(player) {
+  return player?.displayName || player?.playerName || '';
+}
+
+function FixtureGoalSummary({ events, teamId, side }) {
+  const goals = events
+    .filter(event => event?.type === 'GOAL' && String(event?.team?.teamId) === String(teamId))
+    .map(event => ({
+      minute: event.elapsed == null ? '' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`,
+      scorer: eventPlayerName(event.player),
+      assist: eventPlayerName(event.relatedPlayer)
+    }))
+    .filter(goal => goal.scorer);
+
+  if (!goals.length) return null;
+  return <div className={`fixture-goals fixture-goals-${side}`} aria-label={`${side === 'home' ? '홈팀' : '원정팀'} 득점 기록`}>
+    {goals.map((goal, index) => <p key={`${goal.scorer}-${goal.minute}-${index}`}><span>{goal.scorer} {goal.minute}</span>{goal.assist && <small>도움 {goal.assist}</small>}</p>)}
+  </div>;
+}
+
 function FixtureEventRow({ event, fixture }) {
   const meta = eventMeta(event);
   const home = String(event?.team?.teamId) === String(fixture?.homeTeam?.teamId);
-  const player = event?.player?.playerName || event?.team?.teamName || '선수 정보 없음';
-  const description = event?.relatedPlayer?.playerName ? `${meta.label} · ${event.relatedPlayer.playerName}` : event?.comments || meta.label;
+  const player = eventPlayerName(event?.player) || event?.team?.teamName || '선수 정보 없음';
+  const relatedPlayer = eventPlayerName(event?.relatedPlayer);
+  const description = relatedPlayer
+    ? `${meta.label} · ${event?.type === 'GOAL' ? `도움 ${relatedPlayer}` : relatedPlayer}`
+    : event?.comments || meta.label;
   const minute = event?.elapsed == null ? '—' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`;
   return <article className={`fixture-event ${home ? 'home' : 'away'} ${String(event?.type || '').toLowerCase()}`}>
     <div className="fixture-event-copy"><span className="fixture-event-icon" aria-hidden="true">{meta.icon}</span><span><strong>{player}</strong><small>{description}</small></span></div>
@@ -125,7 +148,11 @@ function FixtureDetail({ fixture, events, teams, loading, error, onClose }) {
   const orderedEvents = [...events].sort((a, b) => Number(a.elapsed || 0) - Number(b.elapsed || 0) || Number(a.extra || 0) - Number(b.extra || 0) || Number(a.fixtureEventId || 0) - Number(b.fixtureEventId || 0));
   return <aside className="fixture-detail-panel">
     <div className="fixture-detail-head"><button type="button" onClick={onClose} aria-label="경기 목록으로 돌아가기">‹</button><div><p className="eyebrow">MATCH DETAIL</p><h2>{leagueLabel(fixture.leagueCode)}</h2><p>{fixture.round || '라운드 정보 없음'}</p></div><span className={`fixture-status-pill ${LIVE.has(fixture.status) ? 'live' : ''}`}>{statusLabel(fixture)}</span></div>
-    <div className="fixture-detail-score"><TeamBadge team={fixture.homeTeam} teams={teams} side="home" large /><div><strong>{scoreLabel(fixture)}</strong><small className={LIVE.has(fixture.status) ? 'live' : ''}>{statusLabel(fixture)}</small></div><TeamBadge team={fixture.awayTeam} teams={teams} side="away" large /></div>
+    <div className="fixture-detail-score">
+      <div className="fixture-detail-side fixture-detail-side-home"><TeamBadge team={fixture.homeTeam} teams={teams} side="home" large /><FixtureGoalSummary events={orderedEvents} teamId={fixture.homeTeam?.teamId} side="home" /></div>
+      <div className="fixture-detail-result"><strong>{scoreLabel(fixture)}</strong><small className={LIVE.has(fixture.status) ? 'live' : ''}>{statusLabel(fixture)}</small></div>
+      <div className="fixture-detail-side fixture-detail-side-away"><TeamBadge team={fixture.awayTeam} teams={teams} side="away" large /><FixtureGoalSummary events={orderedEvents} teamId={fixture.awayTeam?.teamId} side="away" /></div>
+    </div>
     <div className="fixture-detail-tabs" role="tablist" aria-label="경기 상세 탭"><button type="button" role="tab" aria-selected={tab === 'events'} className={tab === 'events' ? 'active' : ''} onClick={() => setTab('events')}>이벤트 {orderedEvents.length ? `(${orderedEvents.length})` : ''}</button><button type="button" role="tab" aria-selected={tab === 'info'} className={tab === 'info' ? 'active' : ''} onClick={() => setTab('info')}>기본 정보</button></div>
     {tab === 'events' && (orderedEvents.length ? <div className="fixture-events" aria-label="경기 이벤트 타임라인">{orderedEvents.map(event => <FixtureEventRow key={event.fixtureEventId} event={event} fixture={fixture} />)}</div> : <div className="fixture-events-empty">등록된 경기 이벤트가 없습니다.</div>)}
     {tab === 'info' && <FixtureInformation fixture={fixture} teams={teams} />}
