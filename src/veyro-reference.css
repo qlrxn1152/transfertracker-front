@@ -262,6 +262,18 @@ select option{background:var(--v-surface-raised);color:var(--v-text)}
 .fixture-league-filter-group{padding-left:4px;border-left:1px solid var(--v-line-soft)}
 @media(max-width:560px){.compact-filter-group,.fixture-league-filter-group{gap:5px}.compact-filter-group>span,.fixture-league-filter-group>span{font-size:8px}}
 
+/* 팀 목록에서 선택 리그의 순위를 클럽 카드보다 먼저 읽을 수 있게 한다. */
+.team-league-standings{margin:0 0 16px;border:1px solid var(--v-line-soft);border-radius:14px;background:var(--v-surface-raised);overflow:hidden}
+.team-league-standings header{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:14px 15px 11px;border-bottom:1px solid var(--v-line-soft)}
+.team-league-standings h3{margin:3px 0 0;color:var(--v-text);font-size:17px;letter-spacing:-.045em}.team-league-standings header>span{color:var(--v-text-muted);font-size:10px;font-weight:750}
+.team-league-standings-head,.team-league-standings li button{display:grid;grid-template-columns:42px minmax(0,1fr) 42px 42px 48px;align-items:center;gap:8px}
+.team-league-standings-head{padding:9px 15px;background:rgba(52,120,246,.08);color:var(--v-text-faint);font-size:9px;font-weight:850}.team-league-standings-head span:nth-child(n+3){text-align:right}
+.team-league-standings ol{margin:0;padding:0;list-style:none}.team-league-standings li{border-top:1px solid var(--v-line-soft)}.team-league-standings li:first-child{border-top:0}
+.team-league-standings li button{width:100%;border:0;background:transparent;padding:9px 15px;color:var(--v-text);font:inherit;text-align:left;cursor:pointer}.team-league-standings li button:hover{background:rgba(52,120,246,.08)}
+.team-league-standings li b{color:#8eb3ff;font-size:12px}.team-league-standing-club{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;font-size:12px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}.team-league-standing-club img{flex:none;width:22px;height:22px;object-fit:contain}
+.team-league-standings li small,.team-league-standings li strong{text-align:right}.team-league-standings li small{color:var(--v-text-muted);font-size:11px}.team-league-standings li strong{color:#c9daff;font-size:13px}
+@media(max-width:560px){.team-league-standings-head,.team-league-standings li button{grid-template-columns:34px minmax(0,1fr) 30px 30px 38px;gap:5px;padding-inline:11px}.team-league-standings-head{padding-block:8px}.team-league-standing-club{font-size:11px}.team-league-standing-club img{width:19px;height:19px}.team-league-standings li small{font-size:10px}}
+
 .player-compare,.team-compare{
   border-color:var(--v-line-soft)!important;
   background:linear-gradient(145deg,#1a1b21,#111217)!important;

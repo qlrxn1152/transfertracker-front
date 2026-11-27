@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LEAGUES, OTHER_LEAGUE } from '../constants';
+import { getLeagueStandings } from '../api/client';
+import { LEAGUES, OTHER_LEAGUE, STANDING_LEAGUE_CODES } from '../constants';
 import { logoUrl, teamDisplayName, teamLeague, text } from '../utils';
 import TeamCompare from '../components/TeamCompare';
 
@@ -13,6 +14,44 @@ const matchesClubSearch = (name, query) => {
   }).join('');
   return text(value).includes(text(query)) || initials.includes(text(query));
 };
+
+function TeamLeagueStandings({ leagueCode, teams, onTeamOpen }) {
+  const [state, setState] = useState({ loading: false, rows: [] });
+
+  useEffect(() => {
+    if (!STANDING_LEAGUE_CODES.has(leagueCode)) {
+      setState({ loading: false, rows: [] });
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setState({ loading: true, rows: [] });
+    getLeagueStandings({ leagueCode }, controller.signal)
+      .then(data => {
+        const rows = Array.isArray(data)
+          ? data.flatMap(group => Array.isArray(group?.standings) ? group.standings : [])
+          : [];
+        setState({ loading: false, rows });
+      })
+      .catch(error => {
+        if (error.name !== 'AbortError') setState({ loading: false, rows: [] });
+      });
+    return () => controller.abort();
+  }, [leagueCode]);
+
+  if (!STANDING_LEAGUE_CODES.has(leagueCode) || (!state.loading && !state.rows.length)) return null;
+
+  const nameFor = row => {
+    const team = teams.find(candidate => String(candidate.teamId) === String(row?.team?.teamId));
+    return team ? teamDisplayName(team) : row?.team?.teamName || '팀 정보 없음';
+  };
+
+  return <section className="team-league-standings" aria-label="리그 순위표">
+    <header><div><p className="eyebrow">LEAGUE TABLE</p><h3>현재 순위</h3></div><span>{state.loading ? '순위표를 불러오는 중' : `${state.rows.length}팀`}</span></header>
+    {!state.loading && <div className="team-league-standings-head"><span>순위</span><span>클럽</span><span>경기</span><span>득실</span><span>승점</span></div>}
+    <ol>{state.rows.map(row => <li key={row.leagueStandingId ?? row.team?.teamId}><button type="button" onClick={() => row?.team?.teamId && onTeamOpen(row.team.teamId)}><b>{row.ranking ?? '—'}</b><span className="team-league-standing-club">{row.team?.logoUrl && <img src={logoUrl(row.team.logoUrl)} alt="" referrerPolicy="no-referrer" />}{nameFor(row)}</span><small>{row.all?.played ?? 0}</small><small>{row.goalsDiff ?? 0}</small><strong>{row.points ?? 0}</strong></button></li>)}</ol>
+  </section>;
+}
 
 export default function TeamsPage({ teams, error, sample }) {
   const navigate = useNavigate();
@@ -161,6 +200,12 @@ export default function TeamsPage({ teams, error, sample }) {
                   </h3>
                 </div>
               </div>
+
+              <TeamLeagueStandings
+                leagueCode={code}
+                teams={teams}
+                onTeamOpen={teamId => navigate(`/teams/${teamId}`)}
+              />
 
               <div className="team-grid">
                 {clubs.map(item => {

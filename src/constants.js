@@ -58,6 +58,11 @@ export const LEAGUE_GROUPS = [
 export const LEAGUES = LEAGUE_GROUPS.flatMap(group => group.leagues);
 export const OTHER_LEAGUE_CODE = 'OTHER';
 export const OTHER_LEAGUE = [OTHER_LEAGUE_CODE, '기타 리그', '기타'];
+export const STANDING_LEAGUE_CODES = new Set(
+  LEAGUE_GROUPS
+    .filter(group => ['CORE', 'EUROPEAN_MAJOR', 'JAPAN'].includes(group.code))
+    .flatMap(group => group.leagues.map(([code]) => code))
+);
 
 // 이 코드는 서버가 leagueCode 파라미터로 직접 처리한다. 그 외 수집 리그는
 // 팀 소속 정보를 기준으로 프론트에서 걸러 보여준다.
