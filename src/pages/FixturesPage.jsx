@@ -114,9 +114,9 @@ function PlayerAvatar({ player, className = '' }) {
   </span>;
 }
 
-function EventParticipant({ player, label, fallbackName }) {
+function EventParticipant({ player, label, fallbackName, role = '' }) {
   const name = eventPlayerName(player) || fallbackName || '선수 정보 없음';
-  return <span className="fixture-event-person"><PlayerAvatar player={player} /><span><small className="fixture-event-label">{label}</small><strong>{name}</strong></span></span>;
+  return <span className={`fixture-event-person ${role}`}><PlayerAvatar player={player} /><span><small className="fixture-event-label">{label}</small><strong>{name}</strong></span></span>;
 }
 
 function FixtureGoalSummary({ events, teamId, side }) {
@@ -146,7 +146,7 @@ function FixtureEventRow({ event, fixture }) {
   const labels = type === 'GOAL'
     ? { primary: goal.scored ? `득점 · ${goal.label}` : goal.label, related: '도움' }
     : type === 'SUBSTITUTION'
-      ? { primary: '교체 투입', related: '교체 아웃' }
+      ? { primary: '↑ 투입', related: '↓ 교체 아웃' }
       : { primary: meta.label, related: '' };
   const detail = type === 'GOAL' && !relatedPlayer
     ? (goal.assistApplies ? '도움 기록 없음' : '도움 적용 없음')
@@ -154,7 +154,7 @@ function FixtureEventRow({ event, fixture }) {
   const minute = event?.elapsed == null ? '—' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`;
   return <article className={`fixture-event ${home ? 'home' : 'away'} ${type.toLowerCase()} ${eventStyle(event)}`}>
     <div className="fixture-event-copy">
-      <div className="fixture-event-participants"><EventParticipant player={event?.player} label={labels.primary} fallbackName={player} />{relatedPlayer && <EventParticipant player={event?.relatedPlayer} label={labels.related} fallbackName={relatedPlayer} />}</div>
+      <div className="fixture-event-participants"><EventParticipant player={event?.player} label={labels.primary} fallbackName={player} role={type === 'SUBSTITUTION' ? 'substitution-in' : ''} />{relatedPlayer && <EventParticipant player={event?.relatedPlayer} label={labels.related} fallbackName={relatedPlayer} role={type === 'SUBSTITUTION' ? 'substitution-out' : ''} />}</div>
       {detail && <small className="fixture-event-note">{detail}</small>}
     </div>
     <time>{minute}</time>

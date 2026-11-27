@@ -210,6 +210,9 @@
 .team-notification-status{ grid-column:1/-1; padding-top:13px; border-top:1px solid rgba(255,255,255,.1); }
 
 .team-detail-main,
+/* 팀 뉴스 목록은 이미지 유무와 관계없이 어두운 정보 카드로 읽힌다. */
+.team-news-section,.team-roster-panel{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important;box-shadow:none!important}.team-detail-section-head h2,.team-roster-head h2,.team-news-list-title h3{color:var(--v-text)!important}.team-detail-section-head>div>p:last-child,.team-news-list-title span{color:var(--v-text-muted)!important}.team-detail-more{border-color:var(--v-line-strong)!important;background:var(--v-surface-raised)!important;color:#a9c4ff!important}.team-detail-more:hover{border-color:rgba(52,120,246,.65)!important;background:rgba(52,120,246,.14)!important}.team-news-row{border-color:var(--v-line-soft)!important}.team-news-row-source{background:var(--v-surface-raised)!important;color:var(--v-lime)!important}.team-news-row-meta strong,.team-news-row p{color:var(--v-text)!important}.team-news-row-meta time{color:var(--v-text-muted)!important}.team-news-row-meta span{background:rgba(249,115,22,.16)!important;color:#fb923c!important}.team-news-row-link{border-color:var(--v-line-strong)!important;color:#a9c4ff!important}.team-news-row-link:hover{border-color:rgba(52,120,246,.65)!important;background:rgba(52,120,246,.14)!important}
+
 .team-detail-sidebar{
   min-width:0;
 }

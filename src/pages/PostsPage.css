@@ -39,6 +39,9 @@
 .journal-feed .post-content{font-size:14px;line-height:1.75}
 .post-media{margin:16px 0 0;overflow:hidden;border:1px solid #e5ebe7;border-radius:10px;background:#f5f8f6}
 .post-media img{display:block;width:100%;max-height:480px;object-fit:cover;background:#f5f8f6}
+/* 페이지 단위의 레거시 라이트 규칙이 전역 테마를 다시 덮지 않도록 한다. */
+.journal-page .post-card{background:linear-gradient(140deg,#17181d,#121317)!important;border-color:var(--v-line-soft)!important;color:var(--v-text)!important}.journal-page .post-card.is-read{background:#141519!important}.journal-page .post-card h2{color:var(--v-text)!important}.journal-page .post-card .post-content{color:#d1d1d6!important}.journal-page .post-card-head time,.journal-page .post-card-foot,.journal-page .post-source{color:var(--v-text-muted)!important}.journal-page .post-card-foot{border-color:var(--v-line-soft)!important}.journal-page .post-card-foot>a{color:#d7e4ff!important}.journal-page .post-media{border-color:var(--v-line-soft)!important;background:#0d0e12!important}.journal-page .post-status{background:#303138!important;color:#d7d7dc!important}.journal-page .post-status.transfer{background:rgba(249,115,22,.2)!important;color:#fb923c!important}
+
 @media(max-width:650px){
   .journal-head h1{font-size:28px}
   .journal-head>strong{display:none}
