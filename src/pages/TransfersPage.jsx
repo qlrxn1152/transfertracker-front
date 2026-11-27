@@ -7,9 +7,11 @@ import {
   leagueName,
   logoUrl,
   photoUrl,
+  teamLeague,
   teamDisplayName,
   typeLabel
 } from '../utils';
+import { OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import SavedSearches from '../components/SavedSearches';
@@ -142,7 +144,12 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
             hasPrevious: state.page > 0
           };
         } else {
-          data = await getTransfers(state, controller.signal);
+          data = await getTransfers({
+            ...state,
+            // 확장 수집 리그·기타는 팀의 리그 정보로 현재 페이지에서 거른다.
+            // 서버가 직접 지원하는 LeagueCode만 API 필터로 전달한다.
+            leagueCode: SERVER_LEAGUE_CODES.has(state.leagueCode) ? state.leagueCode : ''
+          }, controller.signal);
         }
 
         if (!Array.isArray(data.transfers)) {
@@ -170,16 +177,27 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
   }, [sample, state.page, state.keyWord, state.leagueCode, state.teamId, refreshKey]);
 
   // 한 선수의 여러 이적도 별개의 사건으로 모두 보여 준다. 카드 하나가 이적 한 건이다.
-  const transferCards = useMemo(() => [...transfers]
-    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))), [transfers]);
+  const clientFilteredTransfers = useMemo(() => {
+    if (!state.leagueCode || SERVER_LEAGUE_CODES.has(state.leagueCode)) return transfers;
+    const leagueForTeam = name => teamLeague(teams.find(team => team.teamName === name || teamDisplayName(team) === name));
+    return transfers.filter(item => {
+      const leagues = [leagueForTeam(item.inTeamName), leagueForTeam(item.outTeamName)];
+      return state.leagueCode === OTHER_LEAGUE_CODE
+        ? leagues.some(code => code === OTHER_LEAGUE_CODE)
+        : leagues.includes(state.leagueCode);
+    });
+  }, [state.leagueCode, teams, transfers]);
+
+  const transferCards = useMemo(() => [...clientFilteredTransfers]
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))), [clientFilteredTransfers]);
 
   const latest = useMemo(() => {
-    const dates = transfers
+    const dates = clientFilteredTransfers
       .map(item => item.date)
       .filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value || ''));
 
     return dates.length ? displayDate([...dates].sort().at(-1)) : '—';
-  }, [transfers]);
+  }, [clientFilteredTransfers]);
 
   const findTeam = name => {
     const matches = teams.filter(team => team.teamName === name);

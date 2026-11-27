@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { getPlayerRankings, getPlayers } from '../api/client';
 import { demo } from '../demo';
-import { leagueName, logoUrl, photoUrl, teamDisplayName } from '../utils';
+import { leagueName, logoUrl, photoUrl, teamDisplayName, teamLeague } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import PlayerCompare from '../components/PlayerCompare';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import './PlayersPage.css';
+import { OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
 
 function PlayerRankings({ leagueCode, onPlayerOpen }) {
   const [state, setState] = useState({ goals: [], assists: [] });
@@ -71,7 +72,10 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
             hasPrevious: state.page > 0
           };
         } else {
-          data = await getPlayers(state, controller.signal);
+          data = await getPlayers({
+            ...state,
+            leagueCode: SERVER_LEAGUE_CODES.has(state.leagueCode) ? state.leagueCode : ''
+          }, controller.signal);
         }
 
         if (!Array.isArray(data.players)) throw new Error('예상과 다른 선수 목록 응답 형식입니다.');
@@ -96,6 +100,14 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
     return () => controller.abort();
   }, [sample, state.page, state.keyWord, state.leagueCode, state.teamId, refreshKey]);
 
+  const visiblePlayers = state.leagueCode && !SERVER_LEAGUE_CODES.has(state.leagueCode)
+    ? players.filter(player => {
+      const team = teams.find(candidate => candidate.teamName === player.teamName || teamDisplayName(candidate) === (player.teamNameKo ?? player.teamName));
+      const playerLeague = teamLeague(team);
+      return state.leagueCode === OTHER_LEAGUE_CODE ? playerLeague === OTHER_LEAGUE_CODE : playerLeague === state.leagueCode;
+    })
+    : players;
+
   const filters = [];
   if (state.leagueCode) filters.push(leagueName(state.leagueCode));
   if (state.teamId) {
@@ -111,7 +123,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
           <h1>선수</h1>
           <p>선수를 검색하고 현재 소속팀과 이적 기록으로 바로 이동하세요.</p>
         </div>
-        <strong>{players.length}<span>현재 페이지</span></strong>
+        <strong>{visiblePlayers.length}<span>현재 페이지</span></strong>
       </header>
 
       <label className="search players-search">
@@ -133,15 +145,15 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
         onTeamChange={teamId => setState(current => ({ ...current, page: 0, teamId }))}
       />
 
-      {!sample && state.leagueCode && <PlayerRankings leagueCode={state.leagueCode} onPlayerOpen={onPlayerOpen} />}
+      {!sample && SERVER_LEAGUE_CODES.has(state.leagueCode) && <PlayerRankings leagueCode={state.leagueCode} onPlayerOpen={onPlayerOpen} />}
 
-      {!state.loading && <PlayerCompare players={players} sample={sample} onPlayerOpen={onPlayerOpen} />}
+      {!state.loading && <PlayerCompare players={visiblePlayers} sample={sample} onPlayerOpen={onPlayerOpen} />}
 
       {state.loading ? (
         <LoadingPlaceholder label="선수 목록을 불러오는 중입니다." />
-      ) : players.length ? (
+      ) : visiblePlayers.length ? (
         <div className="players-cards" aria-live="polite">
-          {players.map(item => {
+          {visiblePlayers.map(item => {
             const displayTeamName = item.teamNameKo ?? item.teamName;
             const team = teams.find(candidate => candidate.teamName === item.teamName)
               || teams.find(candidate => teamDisplayName(candidate) === displayTeamName);
@@ -179,7 +191,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
       )}
 
       <p className="showing">
-        {state.page + 1} 페이지 · {players.length}명 표시
+        {state.page + 1} 페이지 · {visiblePlayers.length}명 표시
         {filters.length ? ` · ${filters.join(' · ')}` : ''}
       </p>
 

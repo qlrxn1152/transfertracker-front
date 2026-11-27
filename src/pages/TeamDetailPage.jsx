@@ -449,7 +449,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
             <p className="team-detail-kicker">CLUB PROFILE {sample ? '/ SAMPLE' : ''}</p>
             <h1>{teamDisplayName(team)}</h1>
             <div className="team-detail-meta">
-              <span>{league === 'unclassified' ? '리그 미분류' : leagueName(league)}</span>
+              <span>{leagueName(league)}</span>
               <span>선수 {count.toLocaleString()}명</span>
             </div>
           </div>
@@ -470,7 +470,7 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
             key: `team:${team.teamId}`,
             type: 'team',
             title: `${teamDisplayName(team)} 팀 상세`,
-            summary: `${league === 'unclassified' ? '리그 미분류' : leagueName(league)} · 선수 ${roster.length}명 · 관련 이적 ${transfers.length}건`,
+            summary: `${leagueName(league)} · 선수 ${roster.length}명 · 관련 이적 ${transfers.length}건`,
             path: `/teams/${team.teamId}`
           }}
         />

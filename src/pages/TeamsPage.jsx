@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LEAGUES } from '../constants';
+import { LEAGUES, OTHER_LEAGUE } from '../constants';
 import { logoUrl, teamDisplayName, teamLeague, text } from '../utils';
 import TeamCompare from '../components/TeamCompare';
 
@@ -20,7 +20,7 @@ export default function TeamsPage({ teams, error, sample }) {
   const [search, setSearch] = useState('');
 
   const counts = useMemo(() => {
-    const result = new Map(LEAGUES.map(([code]) => [code, 0]));
+    const result = new Map([...LEAGUES, OTHER_LEAGUE].map(([code]) => [code, 0]));
 
     for (const team of teams) {
       result.set(
@@ -37,9 +37,10 @@ export default function TeamsPage({ teams, error, sample }) {
     && [item.teamName, item.teamNameKo].some(name => matchesClubSearch(name, search))
   );
 
+  const allLeagueOptions = [...LEAGUES, OTHER_LEAGUE];
   const order = leagueFilter === 'all'
-    ? LEAGUES
-    : LEAGUES.filter(([code]) => code === leagueFilter);
+    ? allLeagueOptions
+    : allLeagueOptions.filter(([code]) => code === leagueFilter);
 
   return (
     <section className="view">
@@ -56,8 +57,8 @@ export default function TeamsPage({ teams, error, sample }) {
           </h2>
 
           <p>
-            EPL · 라리가 · 분데스리가 · 리그 1 · 세리에 A · K리그의
-            클럽을 살펴보세요.
+            주요 리그와 유럽 대항전, 국내 컵, 유럽 주요 리그, J리그를
+            한곳에서 살펴보세요.
           </p>
         </div>
       </div>
@@ -82,11 +83,8 @@ export default function TeamsPage({ teams, error, sample }) {
           </strong>
         </button>
 
-        {LEAGUES
-          .filter(
-            ([code]) =>
-              code !== 'unclassified' || counts.get(code)
-          )
+        {allLeagueOptions
+          .filter(([code]) => counts.get(code))
           .map(([code, name, country]) => (
             <button
               key={code}

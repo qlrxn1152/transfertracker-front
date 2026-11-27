@@ -14,7 +14,7 @@ import AccountPage from './pages/AccountPage';
 import FixturesPage from './pages/FixturesPage';
 import KakaoAuthCallbackPage from './pages/KakaoAuthCallbackPage';
 import { getTeams, getTeamsByLeague } from './api/client';
-import { LEAGUES } from './constants';
+import { CORE_SERVER_LEAGUE_CODES, SERVER_LEAGUE_CODES } from './constants';
 import { demo } from './demo';
 import { leagueName } from './utils';
 import { trackPageView } from './firebase/analytics';
@@ -106,7 +106,7 @@ function AppRoutes() {
       setConnection({ message: '불러오는 중', state: '' });
 
       try {
-        const codes = LEAGUES.filter(([code]) => code !== 'unclassified').map(([code]) => code);
+        const codes = [...SERVER_LEAGUE_CODES];
         const results = await Promise.allSettled([
           getTeams(controller.signal),
           ...codes.map(code => getTeamsByLeague(code, controller.signal))
@@ -125,7 +125,9 @@ function AppRoutes() {
         codes.forEach((code, index) => {
           const result = results[index + 1];
           if (result.status !== 'fulfilled' || !Array.isArray(result.value.teams)) {
-            failed.push(leagueName(code));
+            // 확장 대회 API는 백엔드 배포 순서에 따라 나중에 열릴 수 있다.
+            // 기존 핵심 리그만 연결 상태 오류로 노출한다.
+            if (CORE_SERVER_LEAGUE_CODES.has(code)) failed.push(leagueName(code));
             return;
           }
           result.value.teams.forEach(team => leagueById.set(String(team.teamId), code));
@@ -133,7 +135,9 @@ function AppRoutes() {
 
         const normalized = clubs.value.teams.map(team => ({
           ...team,
-          leagueCode: leagueById.get(String(team.teamId)) || team.leagueCode
+          // 확장 수집 API가 리그 코드를 직접 내려 주는 경우를 우선 사용하고,
+          // 기존 API 응답은 리그별 조회 결과로 보완한다.
+          leagueCode: team.leagueCode ?? team.collectionLeagueCode ?? team.collectionLeague ?? leagueById.get(String(team.teamId))
         }));
 
         setTeams(normalized);

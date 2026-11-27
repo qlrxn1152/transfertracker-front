@@ -1,4 +1,4 @@
-import { LEAGUES } from '../constants';
+import { LEAGUE_GROUPS, OTHER_LEAGUE_CODE } from '../constants';
 import { teamDisplayName, teamLeague } from '../utils';
 
 export default function LeagueTeamFilters({
@@ -27,17 +27,30 @@ export default function LeagueTeamFilters({
             전체
           </button>
 
-          {LEAGUES.filter(([code]) => code !== 'unclassified').map(([code, name]) => (
-            <button
-              key={code}
-              type="button"
-              className={`compact-filter ${leagueCode === code ? 'selected' : ''}`}
-              aria-pressed={leagueCode === code}
-              onClick={() => onLeagueChange(code)}
-            >
-              {name}
-            </button>
+          {LEAGUE_GROUPS.map(group => (
+            <div className="compact-filter-group" key={group.code}>
+              <span>{group.name}</span>
+              {group.leagues.map(([code, name]) => (
+                <button
+                  key={code}
+                  type="button"
+                  className={`compact-filter ${leagueCode === code ? 'selected' : ''}`}
+                  aria-pressed={leagueCode === code}
+                  onClick={() => onLeagueChange(code)}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
           ))}
+          <button
+            type="button"
+            className={`compact-filter ${leagueCode === OTHER_LEAGUE_CODE ? 'selected' : ''}`}
+            aria-pressed={leagueCode === OTHER_LEAGUE_CODE}
+            onClick={() => onLeagueChange(OTHER_LEAGUE_CODE)}
+          >
+            기타 리그
+          </button>
         </div>
       </div>
 

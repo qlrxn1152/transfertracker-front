@@ -1,4 +1,4 @@
-import { LEAGUES } from './constants';
+import { LEAGUES, OTHER_LEAGUE_CODE } from './constants';
 
 export const text = value => String(value ?? '').toLocaleLowerCase();
 
@@ -22,10 +22,16 @@ export const logoUrl = value =>
     ? value
     : null;
 
-export const leagueName = code => LEAGUES.find(([key]) => key === code)?.[1] || '기타 팀';
+export const leagueName = code => {
+  if (code === OTHER_LEAGUE_CODE) return '기타 리그';
+  return LEAGUES.find(([key]) => key === code)?.[1] || '기타 리그';
+};
 
 const knownLeagues = new Set(LEAGUES.map(([code]) => code));
-export const teamLeague = team => knownLeagues.has(team?.leagueCode) ? team.leagueCode : 'unclassified';
+export const teamLeague = team => {
+  const code = team?.leagueCode ?? team?.collectionLeagueCode ?? team?.collectionLeague;
+  return knownLeagues.has(code) ? code : OTHER_LEAGUE_CODE;
+};
 export const teamDisplayName = team => team?.teamNameKo ?? team?.teamName ?? '—';
 
 export function feeMillions(item) {

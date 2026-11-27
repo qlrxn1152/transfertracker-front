@@ -255,6 +255,13 @@ select option{background:var(--v-surface-raised);color:var(--v-text)}
 }
 .filter:disabled,.league-filter:disabled,.pagination button:disabled{background:var(--v-surface)!important;color:var(--v-text-faint)!important}
 
+/* 확장 리그 필터는 카테고리별로 묶되, 모바일에서도 가로 스크롤로 모두 선택할 수 있다. */
+.compact-filters,.fixture-league-filter{align-items:flex-start!important}
+.compact-filter-group,.fixture-league-filter-group{display:flex;align-items:center;flex:none;gap:6px;min-width:max-content}
+.compact-filter-group>span,.fixture-league-filter-group>span{padding:0 2px;color:var(--v-text-faint);font-size:9px;font-weight:850;letter-spacing:.06em;white-space:nowrap}
+.fixture-league-filter-group{padding-left:4px;border-left:1px solid var(--v-line-soft)}
+@media(max-width:560px){.compact-filter-group,.fixture-league-filter-group{gap:5px}.compact-filter-group>span,.fixture-league-filter-group>span{font-size:8px}}
+
 .player-compare,.team-compare{
   border-color:var(--v-line-soft)!important;
   background:linear-gradient(145deg,#1a1b21,#111217)!important;

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getFixture, getFixturePlayerStatistics, getFixtureStatistics, getFixtures, getLeagueStandings } from '../api/client';
-import { LEAGUES } from '../constants';
+import { LEAGUE_GROUPS, LEAGUES, OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
 import { logoUrl, photoUrl, teamDisplayName } from '../utils';
 import './FixturesPage.css';
 
@@ -291,7 +291,7 @@ export default function FixturesPage({ teams }) {
   useEffect(() => {
     const controller = new AbortController();
     setState(current => ({ ...current, loading: true, error: '' }));
-    getFixtures({ date: selectedDate, leagueCode: selectedLeague || undefined }, controller.signal)
+    getFixtures({ date: selectedDate, leagueCode: SERVER_LEAGUE_CODES.has(selectedLeague) ? selectedLeague : undefined }, controller.signal)
       .then(data => { if (!Array.isArray(data)) throw new Error('예상과 다른 경기 목록 응답입니다.'); setState({ loading: false, error: '', fixtures: data }); })
       .catch(error => { if (error.name !== 'AbortError') setState({ loading: false, error: error.message || '경기 정보를 불러오지 못했습니다.', fixtures: [] }); });
     return () => controller.abort();
@@ -315,7 +315,12 @@ export default function FixturesPage({ teams }) {
     return () => controller.abort();
   }, [fixtureId, state.fixtures]);
 
-  const grouped = useMemo(() => state.fixtures.reduce((result, fixture) => { const key = fixture.leagueCode || 'OTHER'; result[key] = [...(result[key] || []), fixture]; return result; }, {}), [state.fixtures]);
+  const visibleFixtures = useMemo(() => state.fixtures.filter(fixture => {
+    if (!selectedLeague) return true;
+    const fixtureLeague = LEAGUES.some(([code]) => code === fixture?.leagueCode) ? fixture.leagueCode : OTHER_LEAGUE_CODE;
+    return fixtureLeague === selectedLeague;
+  }), [selectedLeague, state.fixtures]);
+  const grouped = useMemo(() => visibleFixtures.reduce((result, fixture) => { const key = fixture.leagueCode || OTHER_LEAGUE_CODE; result[key] = [...(result[key] || []), fixture]; return result; }, {}), [visibleFixtures]);
   const updateFilter = (nextDate, nextLeague = selectedLeague) => { const next = new URLSearchParams(); next.set('date', nextDate); if (nextLeague) next.set('leagueCode', nextLeague); setParams(next); };
   const selectFixture = id => navigate(`/fixtures/${id}?${params.toString()}`);
   const closeDetail = () => navigate(`/fixtures?${params.toString()}`);
@@ -325,8 +330,8 @@ export default function FixturesPage({ teams }) {
     <header className="fixture-page-head"><p className="eyebrow">MATCH CENTRE</p><h1>경기</h1></header>
     <div className="fixture-toolbar"><button type="button" onClick={() => updateFilter(shiftDate(selectedDate, -1))} aria-label="이전 날짜">‹</button><div className="fixture-date-heading">{dateLabel(selectedDate)}</div><button type="button" onClick={() => updateFilter(shiftDate(selectedDate, 1))} aria-label="다음 날짜">›</button></div>
     <div className="fixture-date-strip" aria-label="날짜 선택">{dateStrip.map(date => <button type="button" key={date} className={date === selectedDate ? 'active' : ''} onClick={() => updateFilter(date)}>{dateLabel(date, true)}</button>)}<label className="fixture-date-picker">날짜 선택<input type="date" value={selectedDate} onChange={event => updateFilter(event.target.value)} /></label></div>
-    <div className="fixture-league-filter" aria-label="리그 필터"><button type="button" className={!selectedLeague ? 'active' : ''} onClick={() => updateFilter(selectedDate, '')}>전체</button>{LEAGUES.filter(([code]) => code !== 'unclassified').map(([code, name]) => <button key={code} type="button" className={selectedLeague === code ? 'active' : ''} onClick={() => updateFilter(selectedDate, code)}>{name}</button>)}</div>
-    {selectedLeague && <LeagueStandings leagueCode={selectedLeague} />}
-    <div className="fixture-layout"><main className="fixture-list-panel"><div className="fixture-list-title"><div><p className="eyebrow">{selectedDate}</p><h2>{dateLabel(selectedDate)}</h2></div><span>{state.fixtures.length}경기</span></div>{state.loading && <div className="fixture-empty">경기 정보를 불러오는 중입니다.</div>}{!state.loading && state.error && <div className="fixture-empty error">{state.error}<button type="button" onClick={() => updateFilter(selectedDate, selectedLeague)}>다시 시도</button></div>}{!state.loading && !state.error && !state.fixtures.length && <div className="fixture-empty"><strong>선택한 날짜에 저장된 경기가 없습니다.</strong><span>날짜를 바꾸거나, 경기 데이터 동기화 후 다시 확인해 주세요.</span></div>}{!state.loading && !state.error && Object.entries(grouped).map(([leagueCode, fixtures]) => <section className="fixture-league-group" key={leagueCode}><h3><span>{leagueLabel(leagueCode)}</span><small>{fixtures.length}경기</small></h3>{fixtures.map(fixture => <FixtureRow key={fixture.fixtureId} fixture={fixture} teams={teams} selected={String(fixture.fixtureId) === String(fixtureId)} onSelect={selectFixture} />)}</section>)}</main><FixtureDetail {...detail} teams={teams} onClose={closeDetail} /></div>
+    <div className="fixture-league-filter" aria-label="리그 필터"><button type="button" className={!selectedLeague ? 'active' : ''} onClick={() => updateFilter(selectedDate, '')}>전체</button>{LEAGUE_GROUPS.map(group => <div className="fixture-league-filter-group" key={group.code}><span>{group.name}</span>{group.leagues.map(([code, name]) => <button key={code} type="button" className={selectedLeague === code ? 'active' : ''} onClick={() => updateFilter(selectedDate, code)}>{name}</button>)}</div>)}<button type="button" className={selectedLeague === OTHER_LEAGUE_CODE ? 'active' : ''} onClick={() => updateFilter(selectedDate, OTHER_LEAGUE_CODE)}>기타 리그</button></div>
+    {selectedLeague && SERVER_LEAGUE_CODES.has(selectedLeague) && <LeagueStandings leagueCode={selectedLeague} />}
+    <div className="fixture-layout"><main className="fixture-list-panel"><div className="fixture-list-title"><div><p className="eyebrow">{selectedDate}</p><h2>{dateLabel(selectedDate)}</h2></div><span>{visibleFixtures.length}경기</span></div>{state.loading && <div className="fixture-empty">경기 정보를 불러오는 중입니다.</div>}{!state.loading && state.error && <div className="fixture-empty error">{state.error}<button type="button" onClick={() => updateFilter(selectedDate, selectedLeague)}>다시 시도</button></div>}{!state.loading && !state.error && !visibleFixtures.length && <div className="fixture-empty"><strong>선택한 조건에 저장된 경기가 없습니다.</strong><span>날짜 또는 리그를 바꾸거나, 경기 데이터 동기화 후 다시 확인해 주세요.</span></div>}{!state.loading && !state.error && Object.entries(grouped).map(([leagueCode, fixtures]) => <section className="fixture-league-group" key={leagueCode}><h3><span>{leagueLabel(leagueCode)}</span><small>{fixtures.length}경기</small></h3>{fixtures.map(fixture => <FixtureRow key={fixture.fixtureId} fixture={fixture} teams={teams} selected={String(fixture.fixtureId) === String(fixtureId)} onSelect={selectFixture} />)}</section>)}</main><FixtureDetail {...detail} teams={teams} onClose={closeDetail} /></div>
   </section>;
 }
