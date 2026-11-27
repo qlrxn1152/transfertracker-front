@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getFixture, getFixtures } from '../api/client';
 import { LEAGUES } from '../constants';
-import { logoUrl, teamDisplayName } from '../utils';
+import { logoUrl, photoUrl, teamDisplayName } from '../utils';
 import './FixturesPage.css';
 
 const KST = 'Asia/Seoul';
@@ -81,15 +81,24 @@ function FixtureRow({ fixture, teams, selected, onSelect }) {
 
 function eventMeta(event) {
   const type = String(event?.type || '');
-  if (type === 'GOAL') return { icon: '⚽', label: '득점' };
-  if (type === 'CARD') return { icon: '■', label: event.detail || '카드' };
-  if (type === 'SUBSTITUTION') return { icon: '⇄', label: '교체 투입' };
-  if (type === 'VAR') return { icon: 'VAR', label: event.detail || 'VAR 판정' };
-  return { icon: '•', label: event.detail || '경기 이벤트' };
+  if (type === 'GOAL') return { label: '득점' };
+  if (type === 'CARD') return { label: /red/i.test(event.detail || '') ? '퇴장' : '경고' };
+  if (type === 'SUBSTITUTION') return { label: '교체 투입' };
+  if (type === 'VAR') return { label: 'VAR 판정' };
+  return { label: event.detail || '경기 이벤트' };
 }
 
 function eventPlayerName(player) {
   return player?.displayName || player?.playerName || '';
+}
+
+function PlayerAvatar({ player, className = '' }) {
+  const name = eventPlayerName(player) || '선수';
+  const image = photoUrl(player?.photoUrl);
+  return <span className={`fixture-player-avatar ${className}`} aria-label={name}>
+    <span aria-hidden="true">{name.slice(0, 1)}</span>
+    {image && <img src={image} alt="" referrerPolicy="no-referrer" onError={event => { event.currentTarget.remove(); }} />}
+  </span>;
 }
 
 function FixtureGoalSummary({ events, teamId, side }) {
@@ -113,12 +122,19 @@ function FixtureEventRow({ event, fixture }) {
   const home = String(event?.team?.teamId) === String(fixture?.homeTeam?.teamId);
   const player = eventPlayerName(event?.player) || event?.team?.teamName || '선수 정보 없음';
   const relatedPlayer = eventPlayerName(event?.relatedPlayer);
-  const description = relatedPlayer
-    ? `${meta.label} · ${event?.type === 'GOAL' ? `도움 ${relatedPlayer}` : relatedPlayer}`
-    : event?.comments || meta.label;
+  const type = String(event?.type || '');
+  const labels = type === 'GOAL'
+    ? { primary: '득점', related: '도움' }
+    : type === 'SUBSTITUTION'
+      ? { primary: '교체 투입', related: '교체 아웃' }
+      : { primary: meta.label, related: '' };
+  const detail = !relatedPlayer ? (event?.comments || (type === 'CARD' ? event.detail : '')) : '';
   const minute = event?.elapsed == null ? '—' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`;
-  return <article className={`fixture-event ${home ? 'home' : 'away'} ${String(event?.type || '').toLowerCase()}`}>
-    <div className="fixture-event-copy"><span className="fixture-event-icon" aria-hidden="true">{meta.icon}</span><span><strong>{player}</strong><small>{description}</small></span></div>
+  return <article className={`fixture-event ${home ? 'home' : 'away'} ${type.toLowerCase()}`}>
+    <div className="fixture-event-copy">
+      <span className="fixture-event-avatars"><PlayerAvatar player={event?.player} />{relatedPlayer && <PlayerAvatar player={event?.relatedPlayer} className="related" />}</span>
+      <span className="fixture-event-copy-text"><small className="fixture-event-label">{labels.primary}</small><strong>{player}</strong>{relatedPlayer && <small className="fixture-event-related"><b>{labels.related}</b> {relatedPlayer}</small>}{detail && <small className="fixture-event-note">{detail}</small>}</span>
+    </div>
     <time>{minute}</time>
   </article>;
 }
