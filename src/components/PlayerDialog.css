@@ -221,6 +221,18 @@
   background:#fff;
 }
 
+.player-detail-statistics{
+  margin:0 18px;
+  padding:22px;
+  border:1px solid #e3e9e4;
+  border-radius:14px;
+  background:#fff;
+}
+
+.player-season-stat-list{display:grid;gap:9px}
+.player-season-stat-list article{padding:13px;border:1px solid #e5ebe6;border-radius:10px;background:#fbfdfb}
+.player-season-stat-list header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}.player-season-stat-list header strong{color:#1f2923;font-size:12px}.player-season-stat-list header span{color:#849087;font-size:10px}.player-season-stat-list article>div{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.player-season-stat-list article>div>span{display:grid;gap:3px}.player-season-stat-list small{color:#8a968e;font-size:9px}.player-season-stat-list b{color:#24322a;font-size:13px}
+
 .player-detail-highlight-head,
 .player-detail-section-head{
   display:flex;
@@ -643,3 +655,5 @@
     height:36px;
   }
 }
+
+@media(max-width:480px){.player-season-stat-list article>div{grid-template-columns:repeat(3,minmax(0,1fr))}.player-season-stat-list header{align-items:flex-start;flex-direction:column;gap:3px}}

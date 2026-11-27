@@ -79,8 +79,15 @@ export const getFixture = (fixtureId, signal) =>
   getJson(`/api/fixtures/${encodeURIComponent(fixtureId)}`, signal)
     .then(data => ({
       fixture: data?.fixture ?? data ?? null,
-      events: Array.isArray(data?.events) ? data.events : []
+      events: Array.isArray(data?.events) ? data.events : [],
+      lineups: Array.isArray(data?.lineups) ? data.lineups : []
     }));
+
+export const getFixtureStatistics = (fixtureId, signal) =>
+  getJson(`/api/fixtures/${encodeURIComponent(fixtureId)}/statistics`, signal);
+
+export const getFixturePlayerStatistics = (fixtureId, signal) =>
+  getJson(`/api/fixtures/${encodeURIComponent(fixtureId)}/player-statistics`, signal);
 
 export const getTeamFixtures = (teamId, page = 0, signal) =>
   getJson(`/api/fixtures/teams/${encodeURIComponent(teamId)}?page=${page}`, signal);
@@ -95,6 +102,21 @@ export const getPlayer = (playerId, signal) => getJson(`/api/players/${playerId}
   .then(normalizePlayer);
 export const getPlayerTransfers = (playerId, signal) =>
   getJson(`/api/players/${playerId}/transfers`, signal);
+
+export const getPlayerSeasonStatistics = (playerId, signal) =>
+  getJson(`/api/players/${encodeURIComponent(playerId)}/season-statistics`, signal);
+
+export const getPlayerRankings = ({ leagueCode, season, type }, signal) => {
+  const params = new URLSearchParams({ leagueCode, type });
+  if (season) params.set('season', String(season));
+  return getJson(`/api/player-rankings?${params}`, signal);
+};
+
+export const getLeagueStandings = ({ leagueCode, season }, signal) => {
+  const params = new URLSearchParams({ leagueCode });
+  if (season) params.set('season', String(season));
+  return getJson(`/api/standings?${params}`, signal);
+};
 
 function normalizePost(post, fallbackSource = '') {
   if (!post || typeof post !== 'object') return post;

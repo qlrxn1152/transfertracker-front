@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { getFixture, getFixtures } from '../api/client';
+import { getFixture, getFixturePlayerStatistics, getFixtureStatistics, getFixtures, getLeagueStandings } from '../api/client';
 import { LEAGUES } from '../constants';
 import { logoUrl, photoUrl, teamDisplayName } from '../utils';
 import './FixturesPage.css';
@@ -177,7 +177,81 @@ function FixtureInformation({ fixture, teams }) {
   </>;
 }
 
-function FixtureDetail({ fixture, events, teams, loading, error, onClose }) {
+function fixtureLineupName(player) {
+  return player?.displayName || player?.playerName || '선수 정보 없음';
+}
+
+function LineupPlayer({ player }) {
+  const name = fixtureLineupName(player);
+  const image = photoUrl(player?.photoUrl);
+  return <li className="fixture-lineup-player">
+    <span className="fixture-lineup-photo">{name.slice(0, 1)}{image && <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span>
+    <span><strong>{player?.number != null ? `${player.number}. ` : ''}{name}</strong><small>{player?.position || '포지션 정보 없음'}</small></span>
+  </li>;
+}
+
+function FixtureLineups({ lineups, fixture, teams }) {
+  if (!lineups.length) return <div className="fixture-events-empty">등록된 선발 명단과 포메이션이 없습니다.</div>;
+  const ordered = [...lineups].sort((a, b) => String(a?.team?.teamId) === String(fixture?.homeTeam?.teamId) ? -1 : String(b?.team?.teamId) === String(fixture?.homeTeam?.teamId) ? 1 : 0);
+  return <div className="fixture-lineups">{ordered.map(lineup => {
+    const team = lineup.team || {};
+    const name = teamMeta(team, teams).name;
+    const starters = Array.isArray(lineup.startXI) ? lineup.startXI : [];
+    const substitutes = Array.isArray(lineup.substitutes) ? lineup.substitutes : [];
+    return <section className="fixture-lineup-team" key={lineup.fixtureLineupId ?? team.teamId}>
+      <header><strong>{name}</strong><span>{lineup.formation ? `${lineup.formation} 포메이션` : '포메이션 정보 없음'}</span></header>
+      <h3>선발 명단 <small>{starters.length}</small></h3>
+      {starters.length ? <ul>{starters.map(player => <LineupPlayer key={player.playerId ?? `${player.number}-${player.playerName}`} player={player} />)}</ul> : <p>등록된 선발 선수가 없습니다.</p>}
+      {substitutes.length > 0 && <details className="fixture-lineup-substitutes"><summary>대기 명단 {substitutes.length}명</summary><ul>{substitutes.map(player => <LineupPlayer key={player.playerId ?? `${player.number}-${player.playerName}`} player={player} />)}</ul></details>}
+    </section>;
+  })}</div>;
+}
+
+const TEAM_STAT_ROWS = [
+  ['ballPossession', '점유율', value => value == null ? '—' : `${value}%`],
+  ['expectedGoals', '기대 득점', value => value == null ? '—' : Number(value).toFixed(2)],
+  ['totalShots', '슈팅', value => value ?? '—'],
+  ['shotsOnGoal', '유효 슈팅', value => value ?? '—'],
+  ['passesAccurate', '패스 성공', value => value ?? '—'],
+  ['cornerKicks', '코너킥', value => value ?? '—'],
+  ['fouls', '파울', value => value ?? '—'],
+  ['yellowCards', '경고', value => value ?? '—'],
+  ['redCards', '퇴장', value => value ?? '—']
+];
+
+function FixtureTeamStatistics({ statistics, fixture }) {
+  if (!statistics.length) return <div className="fixture-events-empty">등록된 팀 기록이 없습니다.</div>;
+  const home = statistics.find(item => String(item.teamId) === String(fixture?.homeTeam?.teamId));
+  const away = statistics.find(item => String(item.teamId) === String(fixture?.awayTeam?.teamId));
+  if (!home && !away) return <div className="fixture-events-empty">팀 기록을 경기 팀과 연결하지 못했습니다.</div>;
+  return <div className="fixture-statistics"><div className="fixture-statistics-head"><strong>{fixture?.homeTeam?.teamName || home?.teamName || '홈팀'}</strong><span>경기 기록</span><strong>{fixture?.awayTeam?.teamName || away?.teamName || '원정팀'}</strong></div>{TEAM_STAT_ROWS.map(([key, label, format]) => <div className="fixture-stat-row" key={key}><strong>{format(home?.[key])}</strong><span>{label}</span><strong>{format(away?.[key])}</strong></div>)}</div>;
+}
+
+function FixturePlayerStatistics({ statistics, fixture }) {
+  if (!statistics.length) return <div className="fixture-events-empty">등록된 선수 기록이 없습니다.</div>;
+  const teamName = id => String(id) === String(fixture?.homeTeam?.teamId) ? fixture?.homeTeam?.teamName : String(id) === String(fixture?.awayTeam?.teamId) ? fixture?.awayTeam?.teamName : '선수 기록';
+  const grouped = statistics.reduce((result, item) => ({ ...result, [item.teamId]: [...(result[item.teamId] || []), item] }), {});
+  return <div className="fixture-player-statistics">{Object.entries(grouped).map(([teamId, players]) => <section key={teamId}><h3>{teamName(teamId)}</h3>{[...players].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).map(player => {
+    const image = photoUrl(player.photoUrl);
+    const name = player.playerName || '선수 정보 없음';
+    return <article className="fixture-player-stat" key={player.id ?? player.playerId}><span className="fixture-player-stat-photo">{name.slice(0, 1)}{image && <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span><div><strong>{name}</strong><small>{player.position || '—'} · {player.minutes ?? '—'}분</small></div><div className="fixture-player-stat-numbers"><span>평점 <b>{player.rating ?? '—'}</b></span><span>득점 <b>{player.goals ?? 0}</b></span><span>도움 <b>{player.assists ?? 0}</b></span></div></article>;
+  })}</section>)}</div>;
+}
+
+function LeagueStandings({ leagueCode }) {
+  const [rows, setRows] = useState([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    getLeagueStandings({ leagueCode }, controller.signal)
+      .then(data => setRows(Array.isArray(data) ? data.flatMap(group => Array.isArray(group?.standings) ? group.standings : []) : []))
+      .catch(error => { if (error.name !== 'AbortError') setRows([]); });
+    return () => controller.abort();
+  }, [leagueCode]);
+  if (!rows.length) return null;
+  return <section className="fixture-standings"><header><div><p className="eyebrow">LEAGUE TABLE</p><h2>{leagueLabel(leagueCode)} 순위</h2></div><span>상위 {Math.min(rows.length, 5)}팀</span></header><div>{rows.slice(0, 5).map(row => <Link to={`/teams/${row.team?.teamId}`} key={row.leagueStandingId ?? row.team?.teamId}><b>{row.ranking}</b><span className="fixture-standing-team">{row.team?.logoUrl && <img src={logoUrl(row.team.logoUrl)} alt="" referrerPolicy="no-referrer" />}{row.team?.teamName || '팀 정보 없음'}</span><small>{row.all?.played ?? 0}경기</small><strong>{row.points ?? 0}</strong></Link>)}</div></section>;
+}
+
+function FixtureDetail({ fixture, events, lineups, statistics, playerStatistics, teams, loading, error, onClose }) {
   const [tab, setTab] = useState('events');
   useEffect(() => setTab(Array.isArray(events) && events.length ? 'events' : 'info'), [fixture?.fixtureId, events?.length]);
   if (loading) return <aside className="fixture-detail-panel"><p className="fixture-detail-muted">경기 정보를 불러오는 중입니다.</p></aside>;
@@ -191,8 +265,11 @@ function FixtureDetail({ fixture, events, teams, loading, error, onClose }) {
       <div className="fixture-detail-result"><strong>{scoreLabel(fixture)}</strong><small className={LIVE.has(fixture.status) ? 'live' : ''}>{statusLabel(fixture)}</small></div>
       <div className="fixture-detail-side fixture-detail-side-away"><TeamBadge team={fixture.awayTeam} teams={teams} side="away" large /><FixtureGoalSummary events={orderedEvents} teamId={fixture.awayTeam?.teamId} side="away" /></div>
     </div>
-    <div className="fixture-detail-tabs" role="tablist" aria-label="경기 상세 탭"><button type="button" role="tab" aria-selected={tab === 'events'} className={tab === 'events' ? 'active' : ''} onClick={() => setTab('events')}>이벤트 {orderedEvents.length ? `(${orderedEvents.length})` : ''}</button><button type="button" role="tab" aria-selected={tab === 'info'} className={tab === 'info' ? 'active' : ''} onClick={() => setTab('info')}>기본 정보</button></div>
+    <div className="fixture-detail-tabs" role="tablist" aria-label="경기 상세 탭"><button type="button" role="tab" aria-selected={tab === 'events'} className={tab === 'events' ? 'active' : ''} onClick={() => setTab('events')}>이벤트 {orderedEvents.length ? `(${orderedEvents.length})` : ''}</button><button type="button" role="tab" aria-selected={tab === 'lineups'} className={tab === 'lineups' ? 'active' : ''} onClick={() => setTab('lineups')}>라인업</button><button type="button" role="tab" aria-selected={tab === 'stats'} className={tab === 'stats' ? 'active' : ''} onClick={() => setTab('stats')}>기록</button><button type="button" role="tab" aria-selected={tab === 'players'} className={tab === 'players' ? 'active' : ''} onClick={() => setTab('players')}>선수</button><button type="button" role="tab" aria-selected={tab === 'info'} className={tab === 'info' ? 'active' : ''} onClick={() => setTab('info')}>기본</button></div>
     {tab === 'events' && (orderedEvents.length ? <div className="fixture-events" aria-label="경기 이벤트 타임라인">{orderedEvents.map(event => <FixtureEventRow key={event.fixtureEventId} event={event} fixture={fixture} />)}</div> : <div className="fixture-events-empty">등록된 경기 이벤트가 없습니다.</div>)}
+    {tab === 'lineups' && <FixtureLineups lineups={lineups} fixture={fixture} teams={teams} />}
+    {tab === 'stats' && <FixtureTeamStatistics statistics={statistics} fixture={fixture} />}
+    {tab === 'players' && <FixturePlayerStatistics statistics={playerStatistics} fixture={fixture} />}
     {tab === 'info' && <FixtureInformation fixture={fixture} teams={teams} />}
   </aside>;
 }
@@ -204,7 +281,7 @@ export default function FixturesPage({ teams }) {
   const selectedDate = params.get('date') || kstDate();
   const selectedLeague = params.get('leagueCode') || '';
   const [state, setState] = useState({ loading: true, error: '', fixtures: [] });
-  const [detail, setDetail] = useState({ loading: false, error: '', fixture: null, events: [] });
+  const [detail, setDetail] = useState({ loading: false, error: '', fixture: null, events: [], lineups: [], statistics: [], playerStatistics: [] });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -217,13 +294,18 @@ export default function FixturesPage({ teams }) {
 
   useEffect(() => {
     const id = Number(fixtureId);
-    if (!Number.isSafeInteger(id) || id < 1) { setDetail({ loading: false, error: '', fixture: null, events: [] }); return; }
+    if (!Number.isSafeInteger(id) || id < 1) { setDetail({ loading: false, error: '', fixture: null, events: [], lineups: [], statistics: [], playerStatistics: [] }); return; }
     const fromList = state.fixtures.find(item => Number(item.fixtureId) === id);
     // 목록에서 이미 선택한 경기라면 점수판을 먼저 보여 주고, 상세·이벤트만 이어서 갱신한다.
-    setDetail({ loading: !fromList, error: '', fixture: fromList || null, events: [] });
+    setDetail({ loading: !fromList, error: '', fixture: fromList || null, events: [], lineups: [], statistics: [], playerStatistics: [] });
     const controller = new AbortController();
-    getFixture(id, controller.signal)
-      .then(data => { if (!data.fixture?.fixtureId) throw new Error('예상과 다른 경기 상세 응답입니다.'); setDetail({ loading: false, error: '', fixture: data.fixture, events: data.events }); })
+    Promise.allSettled([getFixture(id, controller.signal), getFixtureStatistics(id, controller.signal), getFixturePlayerStatistics(id, controller.signal)])
+      .then(([detailResponse, statisticsResponse, playerStatisticsResponse]) => {
+        if (detailResponse.status !== 'fulfilled') throw detailResponse.reason;
+        const data = detailResponse.value;
+        if (!data.fixture?.fixtureId) throw new Error('예상과 다른 경기 상세 응답입니다.');
+        setDetail({ loading: false, error: '', fixture: data.fixture, events: data.events, lineups: data.lineups, statistics: statisticsResponse.status === 'fulfilled' && Array.isArray(statisticsResponse.value) ? statisticsResponse.value : [], playerStatistics: playerStatisticsResponse.status === 'fulfilled' && Array.isArray(playerStatisticsResponse.value) ? playerStatisticsResponse.value : [] });
+      })
       .catch(error => { if (error.name !== 'AbortError') setDetail(current => ({ ...current, loading: false, error: error.message || '경기 상세를 불러오지 못했습니다.' })); });
     return () => controller.abort();
   }, [fixtureId, state.fixtures]);
@@ -239,6 +321,7 @@ export default function FixturesPage({ teams }) {
     <div className="fixture-toolbar"><button type="button" onClick={() => updateFilter(shiftDate(selectedDate, -1))} aria-label="이전 날짜">‹</button><div className="fixture-date-heading">{dateLabel(selectedDate)}</div><button type="button" onClick={() => updateFilter(shiftDate(selectedDate, 1))} aria-label="다음 날짜">›</button></div>
     <div className="fixture-date-strip" aria-label="날짜 선택">{dateStrip.map(date => <button type="button" key={date} className={date === selectedDate ? 'active' : ''} onClick={() => updateFilter(date)}>{dateLabel(date, true)}</button>)}<label className="fixture-date-picker">날짜 선택<input type="date" value={selectedDate} onChange={event => updateFilter(event.target.value)} /></label></div>
     <div className="fixture-league-filter" aria-label="리그 필터"><button type="button" className={!selectedLeague ? 'active' : ''} onClick={() => updateFilter(selectedDate, '')}>전체</button>{LEAGUES.filter(([code]) => code !== 'unclassified').map(([code, name]) => <button key={code} type="button" className={selectedLeague === code ? 'active' : ''} onClick={() => updateFilter(selectedDate, code)}>{name}</button>)}</div>
+    {selectedLeague && <LeagueStandings leagueCode={selectedLeague} />}
     <div className="fixture-layout"><main className="fixture-list-panel"><div className="fixture-list-title"><div><p className="eyebrow">{selectedDate}</p><h2>{dateLabel(selectedDate)}</h2></div><span>{state.fixtures.length}경기</span></div>{state.loading && <div className="fixture-empty">경기 정보를 불러오는 중입니다.</div>}{!state.loading && state.error && <div className="fixture-empty error">{state.error}<button type="button" onClick={() => updateFilter(selectedDate, selectedLeague)}>다시 시도</button></div>}{!state.loading && !state.error && !state.fixtures.length && <div className="fixture-empty"><strong>선택한 날짜에 저장된 경기가 없습니다.</strong><span>날짜를 바꾸거나, 경기 데이터 동기화 후 다시 확인해 주세요.</span></div>}{!state.loading && !state.error && Object.entries(grouped).map(([leagueCode, fixtures]) => <section className="fixture-league-group" key={leagueCode}><h3><span>{leagueLabel(leagueCode)}</span><small>{fixtures.length}경기</small></h3>{fixtures.map(fixture => <FixtureRow key={fixture.fixtureId} fixture={fixture} teams={teams} selected={String(fixture.fixtureId) === String(fixtureId)} onSelect={selectFixture} />)}</section>)}</main><FixtureDetail {...detail} teams={teams} onClose={closeDetail} /></div>
   </section>;
 }

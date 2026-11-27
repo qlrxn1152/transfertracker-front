@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getPlayers } from '../api/client';
+import { getPlayerRankings, getPlayers } from '../api/client';
 import { demo } from '../demo';
 import { leagueName, logoUrl, photoUrl, teamDisplayName } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
@@ -7,6 +7,25 @@ import Pagination from '../components/Pagination';
 import PlayerCompare from '../components/PlayerCompare';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import './PlayersPage.css';
+
+function PlayerRankings({ leagueCode, onPlayerOpen }) {
+  const [state, setState] = useState({ goals: [], assists: [] });
+  useEffect(() => {
+    if (!leagueCode) { setState({ goals: [], assists: [] }); return undefined; }
+    const controller = new AbortController();
+    Promise.allSettled([
+      getPlayerRankings({ leagueCode, type: 'GOALS' }, controller.signal),
+      getPlayerRankings({ leagueCode, type: 'ASSISTS' }, controller.signal)
+    ]).then(([goals, assists]) => {
+      if (controller.signal.aborted) return;
+      setState({ goals: goals.status === 'fulfilled' && Array.isArray(goals.value) ? goals.value : [], assists: assists.status === 'fulfilled' && Array.isArray(assists.value) ? assists.value : [] });
+    });
+    return () => controller.abort();
+  }, [leagueCode]);
+  if (!state.goals.length && !state.assists.length) return null;
+  const render = (title, rows, unit) => <section><h3>{title}</h3>{rows.slice(0, 5).map(item => <button type="button" key={`${title}-${item.playerId}`} onClick={() => onPlayerOpen(Number(item.playerId))}><span className="player-ranking-position">{item.ranking}</span><span className="player-ranking-photo">{item.playerName?.slice(0, 1)}{photoUrl(item.photoUrl) && <img src={item.photoUrl} alt="" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span><strong>{item.playerName || '선수 정보 없음'}</strong><b>{item.value ?? 0}<small>{unit}</small></b></button>)}</section>;
+  return <div className="player-rankings">{render('득점 랭킹', state.goals, '골')}{render('도움 랭킹', state.assists, '도움')}</div>;
+}
 
 export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen }) {
   const [state, setState] = useState({
@@ -113,6 +132,8 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
         onLeagueChange={leagueCode => setState(current => ({ ...current, page: 0, leagueCode, teamId: '' }))}
         onTeamChange={teamId => setState(current => ({ ...current, page: 0, teamId }))}
       />
+
+      {!sample && state.leagueCode && <PlayerRankings leagueCode={state.leagueCode} onPlayerOpen={onPlayerOpen} />}
 
       {!state.loading && <PlayerCompare players={players} sample={sample} onPlayerOpen={onPlayerOpen} />}
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { followPlayer, getFollowedPlayers, getPlayer, getPlayerTransfers, getPostsByPlayer, unfollowPlayer } from '../api/client';
+import { followPlayer, getFollowedPlayers, getPlayer, getPlayerSeasonStatistics, getPlayerTransfers, getPostsByPlayer, unfollowPlayer } from '../api/client';
 import { demo } from '../demo';
 import { POST_SOURCES } from '../constants';
 import { displayDate, formatPostDate, logoUrl, photoUrl, teamDisplayName, typeLabel } from '../utils';
@@ -14,11 +14,19 @@ function feeText(move) {
   return raw == null || raw === '' ? null : String(raw);
 }
 
+function SeasonStatistics({ statistics }) {
+  if (!statistics.length) return null;
+  return <section className="player-detail-statistics">
+    <div className="player-detail-section-head"><div><p className="eyebrow">SEASON STATISTICS</p><h3>시즌 기록</h3></div><span>{statistics.length}개 대회</span></div>
+    <div className="player-season-stat-list">{statistics.map(item => <article key={item.id ?? `${item.leagueCode}-${item.season}`}><header><strong>{item.teamName || '소속팀 정보 없음'}</strong><span>{item.leagueCode} · {item.season} 시즌</span></header><div><span><small>출전</small><b>{item.appearances ?? '—'}</b></span><span><small>득점</small><b>{item.goals ?? 0}</b></span><span><small>도움</small><b>{item.assists ?? 0}</b></span><span><small>평점</small><b>{item.rating ?? '—'}</b></span><span><small>출전 시간</small><b>{item.minutes ?? 0}분</b></span></div></article>)}</div>
+  </section>;
+}
+
 export default function PlayerDialog({ playerId, selectedTransfer, sample, teams, session, onClose, onFavoriteChange }) {
   const ref = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const [state, setState] = useState({ loading: true, error: '', player: null, moves: [], relatedPosts: [] });
+  const [state, setState] = useState({ loading: true, error: '', player: null, moves: [], relatedPosts: [], seasonStatistics: [] });
   const [favorite, setFavorite] = useState({ loading: false, following: false, busy: false, status: '' });
 
   const resolveTeam = name => {
@@ -48,13 +56,14 @@ export default function PlayerDialog({ playerId, selectedTransfer, sample, teams
     if (!playerId) return;
 
     const controller = new AbortController();
-    setState({ loading: true, error: '', player: null, moves: [], relatedPosts: [] });
+    setState({ loading: true, error: '', player: null, moves: [], relatedPosts: [], seasonStatistics: [] });
 
     async function run() {
       try {
         let player;
         let moves;
         let relatedPosts;
+        let seasonStatistics = [];
 
         if (sample) {
           player = demo.players.find(item => item.playerId === playerId);
@@ -63,10 +72,11 @@ export default function PlayerDialog({ playerId, selectedTransfer, sample, teams
             .flat()
             .filter(item => String(item.playerId) === String(playerId));
         } else {
-          const [playerResponse, history, postsResponse] = await Promise.all([
+          const [playerResponse, history, postsResponse, statisticsResponse] = await Promise.all([
             getPlayer(playerId, controller.signal),
             getPlayerTransfers(playerId, controller.signal),
-            getPostsByPlayer(playerId, controller.signal)
+            getPostsByPlayer(playerId, controller.signal),
+            getPlayerSeasonStatistics(playerId, controller.signal).catch(() => [])
           ]);
           player = playerResponse;
 
@@ -76,6 +86,7 @@ export default function PlayerDialog({ playerId, selectedTransfer, sample, teams
 
           moves = history.playerTransfers;
           relatedPosts = Array.isArray(postsResponse?.posts) ? postsResponse.posts : [];
+          seasonStatistics = Array.isArray(statisticsResponse) ? statisticsResponse : [];
         }
 
         if (!player) throw new Error('선수를 찾을 수 없습니다.');
@@ -85,11 +96,12 @@ export default function PlayerDialog({ playerId, selectedTransfer, sample, teams
           error: '',
           player,
           moves: [...moves].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))),
-          relatedPosts
+          relatedPosts,
+          seasonStatistics
         });
       } catch (error) {
         if (error.name !== 'AbortError') {
-          setState({ loading: false, error: error.message, player: null, moves: [], relatedPosts: [] });
+          setState({ loading: false, error: error.message, player: null, moves: [], relatedPosts: [], seasonStatistics: [] });
         }
       }
     }
@@ -379,6 +391,8 @@ export default function PlayerDialog({ playerId, selectedTransfer, sample, teams
               </section>
             );
           })()}
+
+          <SeasonStatistics statistics={state.seasonStatistics} />
 
           <section className="player-detail-history">
             <div className="player-detail-section-head">
