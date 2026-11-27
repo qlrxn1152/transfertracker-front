@@ -222,3 +222,113 @@ select option{background:var(--v-surface-raised);color:var(--v-text)}
 .team-detail-tabs{border-color:var(--v-line-soft)!important;background:rgba(16,16,18,.92)!important;box-shadow:none!important}.team-detail-tabs button{color:var(--v-text-muted)!important}.team-detail-tabs button:hover{background:rgba(255,255,255,.06)!important;color:var(--v-text)!important}.team-detail-tabs button.active{border-color:rgba(52,120,246,.65)!important;background:rgba(52,120,246,.16)!important;color:#a9c4ff!important}.team-detail-tabs button.active span{color:#a9c4ff!important}
 .team-transfer-section,.team-news-section,.team-roster-panel{border-color:var(--v-line-soft)!important;background:var(--v-surface)!important;color:var(--v-text)!important;box-shadow:none!important}.team-transfer-head h2,.team-transfer-column-head strong,.team-transfer-copy strong,.team-transfer-meta strong,.team-detail-section-head h2,.team-news-list-title h3{color:var(--v-text)!important}.team-transfer-head>div>p:last-child,.team-transfer-list>p,.team-transfer-copy small,.team-transfer-meta small,.team-detail-section-head>div>p:last-child,.team-news-list-title span{color:var(--v-text-muted)!important}.team-transfer-column,.team-transfer-column-head{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important}.team-transfer-row{border-color:var(--v-line-soft)!important;color:var(--v-text)!important}.team-transfer-row:hover{background:rgba(255,255,255,.05)!important}.team-transfer-player,.team-news-row-source{background:#252832!important;color:#a9c4ff!important}.team-transfer-column.inbound .team-transfer-column-head span{background:rgba(34,197,94,.16)!important;color:#4ade80!important}.team-transfer-column.outbound .team-transfer-column-head span{background:rgba(239,68,68,.16)!important;color:#fca5a5!important}
 .team-news-feature{border:1px solid var(--v-line-soft)!important;background:linear-gradient(145deg,#1a1b21,#101116)!important}.team-news-feature.secondary{background:linear-gradient(145deg,#1a1b21,#101116)!important}.team-news-feature-overlay{background:linear-gradient(180deg,rgba(4,5,8,.12),rgba(4,5,8,.92))!important}.team-news-feature h3,.team-news-feature-copy p,.team-news-feature-meta,.team-news-feature-foot,.team-news-row-meta strong,.team-news-row p{color:var(--v-text)!important}.team-news-row{border-color:var(--v-line-soft)!important}.team-news-row-copy{background:transparent!important;color:var(--v-text)!important}.team-news-row-meta time{color:var(--v-text-muted)!important}.team-news-row-meta span{background:rgba(249,115,22,.16)!important;color:#fb923c!important}.team-news-row-link{border-color:var(--v-line-strong)!important;color:#a9c4ff!important}
+
+/*
+  Dark-surface authority
+  ----------------------
+  Some early screens still ship component-local rules from the retired
+  daylight prototype.  Keep the component layouts, but make every surface
+  consume the shared night tokens instead of hard-coded white/cream values.
+*/
+.search,.search input,.filter,.compact-filter,.pagination button,.league-filter,
+.journal-source-tabs button,.journal-team-select select,.journal-transfer-only,
+.journal-time-filter button,.journal-reset-filters,.team-select-filter select,
+.account-add-row select,.account-form input,.post-club-picker select,
+.player-compare select,.team-compare select{
+  border-color:var(--v-line-strong)!important;
+  background:var(--v-surface-raised)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.search input::placeholder,.global-search-box input::placeholder{color:var(--v-text-faint)!important}
+.filter:hover,.compact-filter:hover,.pagination button:hover:not(:disabled),.league-filter:hover,
+.journal-source-tabs button:hover,.journal-time-filter button:hover{
+  border-color:rgba(52,120,246,.65)!important;
+  background:rgba(52,120,246,.12)!important;
+  color:#c9daff!important;
+}
+.filter.selected,.compact-filter.selected,.league-filter.selected,.post-type.selected,
+.journal-source-tabs button.active,.journal-time-filter button.active,.journal-transfer-only.active{
+  border-color:rgba(52,120,246,.72)!important;
+  background:rgba(52,120,246,.18)!important;
+  color:#c9daff!important;
+}
+.filter:disabled,.league-filter:disabled,.pagination button:disabled{background:var(--v-surface)!important;color:var(--v-text-faint)!important}
+
+.player-compare,.team-compare{
+  border-color:var(--v-line-soft)!important;
+  background:linear-gradient(145deg,#1a1b21,#111217)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.player-compare h2,.team-compare h2,.player-compare-result strong,.team-compare-result strong{color:var(--v-text)!important}
+.player-compare p:last-child,.team-compare p:last-child,.player-compare-result span,.team-compare-result span,.player-compare-result small,.team-compare-result small{color:var(--v-text-muted)!important}
+.player-compare-result article,.team-compare-result article{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface-raised)!important;
+}
+.player-compare-result button{color:#8eb3ff!important}
+
+.player-detail-dialog,.transfer-dialog,.keyboard-shortcuts,.client-preferences-dialog{
+  border-color:var(--v-line-strong)!important;
+  background:var(--v-bg)!important;
+  color:var(--v-text)!important;
+}
+.player-detail-dialog::backdrop,.transfer-dialog::backdrop,.keyboard-shortcuts::backdrop,.client-preferences-dialog::backdrop{background:rgba(0,0,0,.7)!important}
+.player-detail-history,.player-detail-highlight,.player-detail-news,.player-detail-statistics,
+.transfer-dialog .transfer-history,.transfer-history,.roster-list,.roster-list li,.team-roster{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  color:var(--v-text)!important;
+}
+.player-detail-history-row,.player-detail-news-row{border-color:var(--v-line-soft)!important}
+.player-detail-history-row time,.player-detail-history-type,.player-detail-history-fee,.player-detail-news-content,.transfer-history>p,.transfer-history time,.history-type{color:var(--v-text-muted)!important}
+.player-detail-history-club>span,.player-detail-club-logo,.roster-avatar{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface-raised)!important;
+  color:#a9c4ff!important;
+}
+.player-detail-history-club strong,.history-route,.roster-name{color:var(--v-text)!important}
+.player-detail-history-type{background:rgba(52,120,246,.15)!important;color:#a9c4ff!important}
+
+.post-detail-page,.post-detail-page h1,.post-detail-page b{color:var(--v-text)!important}
+.post-detail-page .post-detail-source,.post-detail-page .post-detail-head,.post-detail-page .post-detail-foot{background:transparent!important}
+.post-detail-page .post-detail-back,.post-detail-page .post-detail-source small,.post-detail-page time,.post-detail-page .post-detail-foot>span{color:var(--v-text-muted)!important}
+.post-detail-page .post-detail-back:hover,.post-detail-page .post-detail-foot>a{color:#8eb3ff!important}
+.post-detail-page .post-detail-original,.post-detail-page .post-detail-empty{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  color:var(--v-text)!important;
+}
+.post-detail-page .post-detail-original p{color:#8eb3ff!important}
+.post-detail-page .post-detail-original blockquote,.post-detail-page .post-detail-empty p{color:var(--v-text-muted)!important}
+.post-detail-page .post-detail-media,.post-detail-page .post-detail-media img{border-color:var(--v-line-soft)!important;background:var(--v-surface-raised)!important}
+
+.journal-source-profile,.journal-follow-panel,.journal-follow-source,.journal-team-banner,
+.transfer-market-summary>div,.team-notification-card,.team-news-feature,.team-news-row-copy,
+.home-briefing,.home-desk,.home-starter,.pwa-install-prompt,.home-desk-block,.home-briefing-stats a,
+.home-starter li span,.home-saved-list a,.home-recent-items a,.home-desk-recent a{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.journal-source-profile>span,.journal-follow-source>span,.team-news-row-source,.home-transfer-player,
+.home-news-avatar,.post-avatar,.player-avatar,.club-logo,.team-page-emblem,.players-photo,.players-team>span{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface-raised)!important;
+  color:#8eb3ff!important;
+}
+.journal-source-profile h2,.journal-follow-source strong,.team-notification-card h2,.team-news-feature h3,
+.team-news-feature-copy p,.team-news-row-meta strong,.team-news-row p{color:var(--v-text)!important}
+.journal-source-profile p:not(.eyebrow),.journal-follow-copy p:last-child,.journal-follow-source button,
+.team-notification-card p:not(.eyebrow),.team-news-row-meta time,.home-desk-muted,.home-desk-posts small{color:var(--v-text-muted)!important}
+.journal-source-profile button,.team-notification-action{border-color:rgba(52,120,246,.7)!important;background:rgba(52,120,246,.2)!important;color:#c9daff!important}
+
+.global-search-box,.app-menu,.app-menu-head button,.app-menu-shortcuts a,.app-menu-row{
+  border-color:var(--v-line-soft)!important;
+  background:var(--v-surface)!important;
+  color:var(--v-text)!important;
+  box-shadow:none!important;
+}
+.app-menu-head button,.global-search-box{background:var(--v-surface-raised)!important}
