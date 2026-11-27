@@ -73,8 +73,14 @@ export const getFixtures = ({ date, leagueCode } = {}, signal) => {
   return getJson(`/api/fixtures?${params.toString()}`, signal);
 };
 
+// 상세 API는 경기 본문과 이벤트 타임라인을 함께 반환한다. 목록 응답과
+// 혼용하지 않아야 점수·팀명·이벤트가 모두 정상적으로 표시된다.
 export const getFixture = (fixtureId, signal) =>
-  getJson(`/api/fixtures/${encodeURIComponent(fixtureId)}`, signal);
+  getJson(`/api/fixtures/${encodeURIComponent(fixtureId)}`, signal)
+    .then(data => ({
+      fixture: data?.fixture ?? data ?? null,
+      events: Array.isArray(data?.events) ? data.events : []
+    }));
 
 export const getTeamFixtures = (teamId, page = 0, signal) =>
   getJson(`/api/fixtures/teams/${encodeURIComponent(teamId)}?page=${page}`, signal);
