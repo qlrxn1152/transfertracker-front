@@ -88,6 +88,19 @@ function eventMeta(event) {
   return { label: event.detail || '경기 이벤트' };
 }
 
+function goalInfo(event) {
+  const detail = String(event?.detail || '').toLowerCase();
+  if (detail.includes('own')) return { label: '자책골', scored: true, assistApplies: false };
+  if (detail.includes('missed')) return { label: 'PK 실축', scored: false, assistApplies: false };
+  if (detail.includes('penalty')) return { label: 'PK 득점', scored: true, assistApplies: true };
+  return { label: '일반 득점', scored: true, assistApplies: true };
+}
+
+function eventStyle(event) {
+  if (event?.type !== 'CARD') return '';
+  return /red/i.test(event?.detail || '') ? 'card-red' : 'card-yellow';
+}
+
 function eventPlayerName(player) {
   return player?.displayName || player?.playerName || '';
 }
@@ -108,17 +121,18 @@ function EventParticipant({ player, label, fallbackName }) {
 
 function FixtureGoalSummary({ events, teamId, side }) {
   const goals = events
-    .filter(event => event?.type === 'GOAL' && String(event?.team?.teamId) === String(teamId))
+    .filter(event => event?.type === 'GOAL' && goalInfo(event).scored && String(event?.team?.teamId) === String(teamId))
     .map(event => ({
       minute: event.elapsed == null ? '' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`,
       scorer: eventPlayerName(event.player),
-      assist: eventPlayerName(event.relatedPlayer)
+      assist: eventPlayerName(event.relatedPlayer),
+      kind: goalInfo(event)
     }))
     .filter(goal => goal.scorer);
 
   if (!goals.length) return null;
   return <div className={`fixture-goals fixture-goals-${side}`} aria-label={`${side === 'home' ? '홈팀' : '원정팀'} 득점 기록`}>
-    {goals.map((goal, index) => <p key={`${goal.scorer}-${goal.minute}-${index}`}><span>{goal.scorer} {goal.minute}</span>{goal.assist && <small>도움 {goal.assist}</small>}</p>)}
+    {goals.map((goal, index) => <p key={`${goal.scorer}-${goal.minute}-${index}`}><span>{goal.scorer} {goal.minute}</span><small>{goal.kind.label}{goal.assist ? ` · 도움 ${goal.assist}` : goal.kind.assistApplies ? ' · 도움 기록 없음' : ''}</small></p>)}
   </div>;
 }
 
@@ -128,14 +142,17 @@ function FixtureEventRow({ event, fixture }) {
   const player = eventPlayerName(event?.player) || event?.team?.teamName || '선수 정보 없음';
   const relatedPlayer = eventPlayerName(event?.relatedPlayer);
   const type = String(event?.type || '');
+  const goal = type === 'GOAL' ? goalInfo(event) : null;
   const labels = type === 'GOAL'
-    ? { primary: '득점', related: '도움' }
+    ? { primary: goal.scored ? `득점 · ${goal.label}` : goal.label, related: '도움' }
     : type === 'SUBSTITUTION'
       ? { primary: '교체 투입', related: '교체 아웃' }
       : { primary: meta.label, related: '' };
-  const detail = !relatedPlayer ? (event?.comments || (type === 'CARD' ? event.detail : '')) : '';
+  const detail = type === 'GOAL' && !relatedPlayer
+    ? (goal.assistApplies ? '도움 기록 없음' : '도움 적용 없음')
+    : !relatedPlayer ? (event?.comments || (type === 'CARD' ? event.detail : '')) : '';
   const minute = event?.elapsed == null ? '—' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`;
-  return <article className={`fixture-event ${home ? 'home' : 'away'} ${type.toLowerCase()}`}>
+  return <article className={`fixture-event ${home ? 'home' : 'away'} ${type.toLowerCase()} ${eventStyle(event)}`}>
     <div className="fixture-event-copy">
       <div className="fixture-event-participants"><EventParticipant player={event?.player} label={labels.primary} fallbackName={player} />{relatedPlayer && <EventParticipant player={event?.relatedPlayer} label={labels.related} fallbackName={relatedPlayer} />}</div>
       {detail && <small className="fixture-event-note">{detail}</small>}
