@@ -62,7 +62,7 @@ export function getPlayers({ page, keyWord, leagueCode, teamId }, signal) {
 
 export const getTeams = signal => getJson('/api/teams', signal);
 export const getTeamsByLeague = (leagueCode, signal) =>
-  getJson(`/api/teams/league?leagueCode=${encodeURIComponent(leagueCode)}`, signal);
+  getJson(`/api/teams/collection/league?leagueCode=${encodeURIComponent(leagueCode)}`, signal);
 
 // Fixture API는 경기 결과를 프론트에서 추정하지 않고, 서버가 저장한 최신
 // 상태·점수만 그대로 사용한다. date는 백엔드 조회 정책과 동일하게 KST 날짜다.

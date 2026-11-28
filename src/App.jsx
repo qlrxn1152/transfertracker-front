@@ -15,7 +15,7 @@ import FixturesPage from './pages/FixturesPage';
 import LeaguesPage from './pages/LeaguesPage';
 import KakaoAuthCallbackPage from './pages/KakaoAuthCallbackPage';
 import { getTeams, getTeamsByLeague } from './api/client';
-import { CORE_SERVER_LEAGUE_CODES, SERVER_LEAGUE_CODES } from './constants';
+import { CORE_SERVER_LEAGUE_CODES, TEAM_COLLECTION_LEAGUES } from './constants';
 import { demo } from './demo';
 import { leagueName } from './utils';
 import { trackPageView } from './firebase/analytics';
@@ -108,7 +108,7 @@ function AppRoutes() {
       setConnection({ message: '불러오는 중', state: '' });
 
       try {
-        const codes = [...SERVER_LEAGUE_CODES];
+        const codes = TEAM_COLLECTION_LEAGUES.map(([code]) => code);
         const results = await Promise.allSettled([
           getTeams(controller.signal),
           ...codes.map(code => getTeamsByLeague(code, controller.signal))

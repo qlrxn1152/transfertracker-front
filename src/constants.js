@@ -69,10 +69,12 @@ export const STANDING_LEAGUE_CODES = new Set(
     .flatMap(group => group.leagues.map(([code]) => code))
 );
 
-// 서버가 leagueCode로 처리하는 전체 수집 범위다. 팀 전역 목록을 이 범위로
-// 보강해 TeamCollectionLeague의 유럽 주요 리그도 클럽·선수·경기 화면에서
-// 동일하게 참조한다.
-export const SERVER_LEAGUE_CODES = new Set(LEAGUES.map(([code]) => code));
+// 경기·선수·이적 API가 직접 지원하는 대회다. 수집 리그 기반 팀 목록은
+// TEAM_COLLECTION_LEAGUES와 별도 API에서 조회한다.
+export const SERVER_LEAGUE_CODES = new Set([
+  'EPL', 'LA_LIGA', 'BUNDESLIGA', 'SERIE_A', 'LIGUE_1', 'K_LEAGUE',
+  'CHAMPIONS_LEAGUE', 'EUROPA_LEAGUE', 'CONFERENCE_LEAGUE', 'FA_CUP', 'EFL_CUP'
+]);
 export const CORE_SERVER_LEAGUE_CODES = new Set([
   'EPL', 'LA_LIGA', 'BUNDESLIGA', 'SERIE_A', 'LIGUE_1', 'K_LEAGUE'
 ]);
