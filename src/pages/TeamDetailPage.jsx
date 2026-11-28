@@ -478,7 +478,6 @@ export default function TeamDetailPage({ sample, teams, session, onSelectTeamPos
 
       <nav className="team-detail-tabs" aria-label="팀 상세 바로가기">
         <button className={activeTab === 'overview' ? 'active' : ''} type="button" onClick={() => selectTab('overview', 'team-overview')}>개요</button>
-        <button className={activeTab === 'matches' ? 'active' : ''} type="button" onClick={() => selectTab('matches', 'team-matches')}>경기</button>
         <button className={activeTab === 'transfers' ? 'active' : ''} type="button" onClick={() => selectTab('transfers', 'team-transfers')}>이적 <span>{transfers.length}</span></button>
         <button className={activeTab === 'news' ? 'active' : ''} type="button" onClick={() => selectTab('news', 'team-news')}>소식 <span>{news.length}</span></button>
         <button className={activeTab === 'squad' ? 'active' : ''} type="button" onClick={() => selectTab('squad', 'team-squad')}>선수단 <span>{roster.length}</span></button>

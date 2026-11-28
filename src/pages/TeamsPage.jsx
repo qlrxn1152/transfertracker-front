@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLeagueStandings, getPlayer, getPlayerRankings, getPlayerSeasonStatistics } from '../api/client';
+import { getFixtures, getLeagueStandings, getPlayer, getPlayerRankings, getPlayerSeasonStatistics } from '../api/client';
 import { LEAGUES, OTHER_LEAGUE, STANDING_LEAGUE_CODES } from '../constants';
 import { logoUrl, photoUrl, teamDisplayName, teamLeague, text } from '../utils';
 
 const INITIALS = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const FINISHED_FIXTURE_STATUSES = new Set(['FINISHED', 'AFTER_EXTRA_TIME', 'AFTER_PENALTY']);
 const matchesClubSearch = (name, query) => {
   const value = String(name || '');
   const initials = value.split('').map(character => {
@@ -45,7 +46,51 @@ function rankingTeam(item, teamsByPlayer, teams) {
   return { name: teamName, crest: logoUrl(item?.teamLogoUrl || item?.teamLogo || club?.logoUrl) };
 }
 
+function kstDateOffset(offset) {
+  const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const today = formatter.formatToParts(new Date()).reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
+  const date = new Date(`${today.year}-${today.month}-${today.day}T12:00:00+09:00`);
+  date.setDate(date.getDate() + offset);
+  const parts = formatter.formatToParts(date).reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function fixtureDateLabel(value) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '시간 미정';
+  return new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }).format(date);
+}
+
+function LeagueUpcomingFixtures({ leagueCode, teams, onFixtureOpen }) {
+  const [state, setState] = useState({ loading: true, fixtures: [] });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setState({ loading: true, fixtures: [] });
+    Promise.allSettled(Array.from({ length: 14 }, (_, index) => getFixtures({ date: kstDateOffset(index), leagueCode }, controller.signal))).then(results => {
+      if (controller.signal.aborted) return;
+      const fixtures = [...new Map(results.flatMap(result => result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []).filter(fixture => !FINISHED_FIXTURE_STATUSES.has(fixture?.status)).sort((a, b) => Date.parse(a?.kickoffAt || 0) - Date.parse(b?.kickoffAt || 0)).map(fixture => [fixture.fixtureId, fixture])).values()].slice(0, 10);
+      setState({ loading: false, fixtures });
+    });
+    return () => controller.abort();
+  }, [leagueCode]);
+
+  if (state.loading) return <p className="team-league-fixtures-empty">다가오는 경기를 불러오는 중입니다.</p>;
+  if (!state.fixtures.length) return <p className="team-league-fixtures-empty">앞으로 2주 안에 등록된 경기가 없습니다.</p>;
+
+  const club = team => {
+    const found = teams.find(candidate => String(candidate?.teamId) === String(team?.teamId));
+    return { name: team?.teamName || teamDisplayName(found) || '팀 정보 없음', logo: logoUrl(found?.logoUrl) };
+  };
+  return <ol className="team-league-fixtures">{state.fixtures.map(fixture => {
+    const home = club(fixture.homeTeam);
+    const away = club(fixture.awayTeam);
+    return <li key={fixture.fixtureId}><button type="button" onClick={() => onFixtureOpen(fixture.fixtureId)}><time>{fixtureDateLabel(fixture.kickoffAt)}</time><span className="team-league-fixture-club home"><strong>{home.name}</strong>{home.logo && <img src={home.logo} alt="" referrerPolicy="no-referrer" />}</span><b>vs</b><span className="team-league-fixture-club away">{away.logo && <img src={away.logo} alt="" referrerPolicy="no-referrer" />}<strong>{away.name}</strong></span></button></li>;
+  })}</ol>;
+}
+
 function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('standings');
   const [state, setState] = useState({ loading: false, groups: [], goals: [], assists: [] });
   const [rankingTeams, setRankingTeams] = useState({});
@@ -128,6 +173,7 @@ function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
       <button className={tab === 'standings' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'standings'} onClick={() => setTab('standings')}>순위</button>
       <button className={tab === 'goals' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'goals'} onClick={() => setTab('goals')}>득점 순위</button>
       <button className={tab === 'assists' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'assists'} onClick={() => setTab('assists')}>도움 순위</button>
+      <button className={tab === 'fixtures' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'fixtures'} onClick={() => setTab('fixtures')}>다가오는 경기</button>
     </div>
     {tab === 'standings' && <>
       {state.groups.length > 1 && <div className="team-league-stage-tabs" role="tablist" aria-label="리그 단계">{state.groups.map(group => <button type="button" role="tab" aria-selected={group === selectedStandingGroup} className={group === selectedStandingGroup ? 'active' : ''} key={group.groupName || 'default'} onClick={() => setStandingGroup(group.groupName || '')}>{standingGroupLabel(group.groupName)}</button>)}</div>}
@@ -139,7 +185,7 @@ function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
         return <li className={`${outcome ? `is-${outcome.code} ` : ''}${leader ? 'is-league-leader' : ''}`} key={row.leagueStandingId ?? row.team?.teamId}><button type="button" onClick={() => row?.team?.teamId && onTeamOpen(row.team.teamId)}><b>{row.ranking ?? '—'}</b><span className="team-league-standing-club">{row.team?.logoUrl && <img src={logoUrl(row.team.logoUrl)} alt="" referrerPolicy="no-referrer" />}<span>{nameFor(row)}{leader && <em className="team-league-standing-leader">🏆 리그 1위</em>}{outcome && <em className={outcome.code} title={row.description || outcome.label}>{outcome.label}</em>}</span></span><small>{row.all?.played ?? 0}</small><small>{row.goalsDiff ?? 0}</small><strong>{row.points ?? 0}</strong></button></li>;
       })}</ol>
     </>}
-    {tab !== 'standings' && <ol className="team-league-ranking-list">{rankingRows.map(item => {
+    {(tab === 'goals' || tab === 'assists') && <ol className="team-league-ranking-list">{rankingRows.map(item => {
       const name = rankingPlayerName(item);
       const photo = photoUrl(item?.photoUrl);
       const club = rankingTeam(item, rankingTeams, teams);
@@ -147,7 +193,8 @@ function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
       const leaderLabel = tab === 'goals' ? '득점왕' : '도움왕';
       return <li className={leader ? 'is-ranking-leader' : ''} key={`${tab}-${item.playerId ?? name}-${item.ranking ?? ''}`}><button type="button" onClick={() => item?.playerId && onPlayerOpen?.(Number(item.playerId))}><b>{item.ranking ?? '—'}</b><span className="team-league-ranking-photo">{name.slice(0, 1)}{photo && <img src={photo} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span><span className="team-league-ranking-player"><strong>{name}</strong>{leader && <em className="team-league-ranking-leader" aria-label={leaderLabel}>🏆 {leaderLabel}</em>}</span><span className="team-league-ranking-team">{club.crest && <img src={club.crest} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}<em>{club.name}</em></span><span className="team-league-ranking-value">{item.value ?? 0}<small>{rankingLabel}</small></span></button></li>;
     })}</ol>}
-    {tab !== 'standings' && !state.loading && !rankingRows.length && <p className="team-league-ranking-empty">등록된 {rankingLabel} 랭킹이 없습니다.</p>}
+    {(tab === 'goals' || tab === 'assists') && !state.loading && !rankingRows.length && <p className="team-league-ranking-empty">등록된 {rankingLabel} 랭킹이 없습니다.</p>}
+    {tab === 'fixtures' && <LeagueUpcomingFixtures leagueCode={leagueCode} teams={teams} onFixtureOpen={fixtureId => navigate(`/fixtures/${fixtureId}`)} />}
   </section>;
 }
 
