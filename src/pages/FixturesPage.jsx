@@ -230,10 +230,10 @@ function formationRows(starters, formation) {
   return layout.map(count => starters.slice(cursor, cursor += count).map((player, index) => ({ player, index, row: 0, column: index + 1 }))).filter(row => row.length);
 }
 
-function FormationPlayer({ player, position, event }) {
+function FormationPlayer({ player, position, event, side }) {
   const name = fixtureLineupName(player);
   const image = photoUrl(player?.photoUrl);
-  return <li className="fixture-formation-player" style={{ '--formation-x': `${position.x}%`, '--formation-y': `${position.y}%` }}>
+  return <li className={`fixture-formation-player ${side}`} style={{ '--formation-x': `${position.x}%`, '--formation-y': `${position.y}%` }}>
     <span className="fixture-lineup-photo">{name.slice(0, 1)}{image && <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={loadEvent => loadEvent.currentTarget.remove()} />}</span>
     <strong><small>{player?.number != null ? `${player.number} ` : ''}</small>{name}</strong>
     {event && <em className={`fixture-lineup-change ${event.type}`}>{event.type === 'out' ? '↓' : '↑'} {event.text}</em>}
@@ -249,36 +249,46 @@ function LineupSubstitute({ player, event }) {
   </li>;
 }
 
-function FixtureFormation({ starters, formation, events, teamId }) {
-  const rows = formationRows(starters, formation);
-  return <div className="fixture-formation-pitch" aria-label={`${formation || '선발'} 포메이션`}>
-    <span className="fixture-formation-mark fixture-formation-mark-top" aria-hidden="true" />
-    <span className="fixture-formation-mark fixture-formation-mark-middle" aria-hidden="true" />
-    <span className="fixture-formation-mark fixture-formation-mark-bottom" aria-hidden="true" />
-    <ol>{rows.flatMap((row, rowIndex) => row.map((item, index) => <FormationPlayer
-      key={item.player.playerId ?? `${item.player.number}-${item.player.playerName}`}
+function FixtureFormation({ homeLineup, awayLineup, teams, events }) {
+  const renderTeam = (lineup, side) => {
+    if (!lineup) return null;
+    const starters = Array.isArray(lineup.startXI) ? lineup.startXI : [];
+    const rows = formationRows(starters, lineup.formation);
+    const team = lineup.team || {};
+    const name = teamMeta(team, teams).name;
+    return <>{starters.length > 0 && <span className={`fixture-formation-team-name ${side}`}><strong>{name}</strong><small>{lineup.formation ? `${lineup.formation} 포메이션` : '포메이션 정보 없음'}</small></span>}{rows.flatMap((row, rowIndex) => row.map((item, index) => <FormationPlayer
+      key={`${side}-${item.player.playerId ?? `${item.player.number}-${item.player.playerName}`}`}
+      side={side}
       player={item.player}
-      event={lineupSubstitution(item.player, events, teamId, 'starter')}
-      position={{ x: ((index + 1) / (row.length + 1)) * 100, y: rows.length === 1 ? 50 : 8 + (rowIndex / (rows.length - 1)) * 84 }}
-    />))}</ol>
-  </div>;
+      event={lineupSubstitution(item.player, events, team.teamId, 'starter')}
+      position={{ x: ((index + 1) / (row.length + 1)) * 100, y: rows.length === 1 ? 50 : side === 'home' ? 11 + (rowIndex / (rows.length - 1)) * 32 : 89 - (rowIndex / (rows.length - 1)) * 32 }}
+    />))}</>;
+  };
+  return <section className="fixture-formation-match" aria-label="양 팀 선발 포메이션">
+    <div className="fixture-formation-match-head"><span>선발 포메이션</span><strong>{(homeLineup?.startXI?.length || 0) + (awayLineup?.startXI?.length || 0)}명</strong></div>
+    <div className="fixture-formation-pitch">
+      <span className="fixture-formation-mark fixture-formation-mark-top" aria-hidden="true" />
+      <span className="fixture-formation-mark fixture-formation-mark-middle" aria-hidden="true" />
+      <span className="fixture-formation-mark fixture-formation-mark-bottom" aria-hidden="true" />
+      <ol>{renderTeam(homeLineup, 'home')}{renderTeam(awayLineup, 'away')}</ol>
+    </div>
+  </section>;
 }
 
 function FixtureLineups({ lineups, fixture, teams, events }) {
   if (!lineups.length) return <div className="fixture-events-empty">등록된 선발 명단과 포메이션이 없습니다.</div>;
   const ordered = [...lineups].sort((a, b) => String(a?.team?.teamId) === String(fixture?.homeTeam?.teamId) ? -1 : String(b?.team?.teamId) === String(fixture?.homeTeam?.teamId) ? 1 : 0);
-  return <div className="fixture-lineups">{ordered.map(lineup => {
+  const homeLineup = ordered.find(lineup => String(lineup?.team?.teamId) === String(fixture?.homeTeam?.teamId)) || ordered[0];
+  const awayLineup = ordered.find(lineup => String(lineup?.team?.teamId) === String(fixture?.awayTeam?.teamId)) || ordered.find(lineup => lineup !== homeLineup);
+  return <><FixtureFormation homeLineup={homeLineup} awayLineup={awayLineup} teams={teams} events={events} /><div className="fixture-lineups">{ordered.map(lineup => {
     const team = lineup.team || {};
     const name = teamMeta(team, teams).name;
-    const starters = Array.isArray(lineup.startXI) ? lineup.startXI : [];
     const substitutes = Array.isArray(lineup.substitutes) ? lineup.substitutes : [];
     return <section className="fixture-lineup-team" key={lineup.fixtureLineupId ?? team.teamId}>
-      <header><strong>{name}</strong><span>{lineup.formation ? `${lineup.formation} 포메이션` : '포메이션 정보 없음'}</span></header>
-      <h3>선발 포메이션 <small>{starters.length}명</small></h3>
-      {starters.length ? <FixtureFormation starters={starters} formation={lineup.formation} events={events} teamId={team.teamId} /> : <p>등록된 선발 선수가 없습니다.</p>}
+      <header><strong>{name}</strong><span>대기 명단 {substitutes.length}명</span></header>
       {substitutes.length > 0 && <details className="fixture-lineup-substitutes"><summary>대기 명단 {substitutes.length}명</summary><ul>{substitutes.map(player => <LineupSubstitute key={player.playerId ?? `${player.number}-${player.playerName}`} player={player} event={lineupSubstitution(player, events, team.teamId, 'substitute')} />)}</ul></details>}
     </section>;
-  })}</div>;
+  })}</div></>;
 }
 
 const TEAM_STAT_ROWS = [

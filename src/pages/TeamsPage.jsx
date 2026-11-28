@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLeagueStandings, getPlayerRankings } from '../api/client';
+import { getLeagueStandings, getPlayerRankings, getPlayerSeasonStatistics } from '../api/client';
 import { LEAGUES, OTHER_LEAGUE, STANDING_LEAGUE_CODES } from '../constants';
 import { logoUrl, photoUrl, teamDisplayName, teamLeague, text } from '../utils';
 import TeamCompare from '../components/TeamCompare';
@@ -30,9 +30,17 @@ function rankingPlayerName(item) {
   return item?.displayName || item?.playerDisplayName || item?.playerNameKo || item?.playerName || '선수 정보 없음';
 }
 
+function rankingTeamName(item, teamsByPlayer) {
+  const key = String(item?.playerId ?? '');
+  if (item?.teamName) return item.teamName;
+  if (Object.hasOwn(teamsByPlayer, key)) return teamsByPlayer[key] || '리그 소속팀 미등록';
+  return '소속팀 확인 중';
+}
+
 function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
   const [tab, setTab] = useState('standings');
   const [state, setState] = useState({ loading: false, rows: [], goals: [], assists: [] });
+  const [rankingTeams, setRankingTeams] = useState({});
 
   useEffect(() => {
     if (!STANDING_LEAGUE_CODES.has(leagueCode)) {
@@ -60,6 +68,35 @@ function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
     });
     return () => controller.abort();
   }, [leagueCode]);
+
+  useEffect(() => {
+    setRankingTeams({});
+  }, [leagueCode]);
+
+  useEffect(() => {
+    if (tab === 'standings') return undefined;
+    const rows = tab === 'goals' ? state.goals : state.assists;
+    const unresolved = rows.filter(item => item?.playerId && !item?.teamName && !Object.hasOwn(rankingTeams, String(item.playerId)));
+    if (!unresolved.length) return undefined;
+
+    const controller = new AbortController();
+    Promise.allSettled(unresolved.map(async item => {
+      const statistics = await getPlayerSeasonStatistics(item.playerId, controller.signal);
+      const team = Array.isArray(statistics)
+        ? [...statistics]
+          .filter(entry => String(entry?.leagueCode || '') === String(leagueCode))
+          .sort((a, b) => Number(b?.minutes || 0) - Number(a?.minutes || 0) || Number(b?.appearances || 0) - Number(a?.appearances || 0))[0]?.teamName
+        : '';
+      return [String(item.playerId), team || ''];
+    })).then(results => {
+      if (controller.signal.aborted) return;
+      setRankingTeams(current => ({
+        ...current,
+        ...Object.fromEntries(results.filter(result => result.status === 'fulfilled').map(result => result.value))
+      }));
+    });
+    return () => controller.abort();
+  }, [leagueCode, rankingTeams, state.assists, state.goals, tab]);
 
   if (!STANDING_LEAGUE_CODES.has(leagueCode) || (!state.loading && !state.rows.length && !state.goals.length && !state.assists.length)) return null;
 
@@ -89,7 +126,9 @@ function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
     {tab !== 'standings' && <ol className="team-league-ranking-list">{rankingRows.map(item => {
       const name = rankingPlayerName(item);
       const photo = photoUrl(item?.photoUrl);
-      return <li key={`${tab}-${item.playerId ?? name}-${item.ranking ?? ''}`}><button type="button" onClick={() => item?.playerId && onPlayerOpen?.(Number(item.playerId))}><b>{item.ranking ?? '—'}</b><span className="team-league-ranking-photo">{name.slice(0, 1)}{photo && <img src={photo} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span><strong>{name}</strong><em>{item.teamName || '소속팀 정보 없음'}</em><span className="team-league-ranking-value">{item.value ?? 0}<small>{rankingLabel}</small></span></button></li>;
+      const leader = Number(item?.ranking) === 1;
+      const leaderLabel = tab === 'goals' ? '득점왕' : '도움왕';
+      return <li className={leader ? 'is-ranking-leader' : ''} key={`${tab}-${item.playerId ?? name}-${item.ranking ?? ''}`}><button type="button" onClick={() => item?.playerId && onPlayerOpen?.(Number(item.playerId))}><b>{item.ranking ?? '—'}</b><span className="team-league-ranking-photo">{name.slice(0, 1)}{photo && <img src={photo} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span><span className="team-league-ranking-player"><strong>{name}</strong>{leader && <em className="team-league-ranking-leader" aria-label={leaderLabel}>🏆 {leaderLabel}</em>}</span><em>{rankingTeamName(item, rankingTeams)}</em><span className="team-league-ranking-value">{item.value ?? 0}<small>{rankingLabel}</small></span></button></li>;
     })}</ol>}
     {tab !== 'standings' && !state.loading && !rankingRows.length && <p className="team-league-ranking-empty">등록된 {rankingLabel} 랭킹이 없습니다.</p>}
   </section>;
