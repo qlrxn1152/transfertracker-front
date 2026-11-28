@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react';
-import { getPlayerRankings, getPlayers } from '../api/client';
+import { getPlayer, getPlayerRankings, getPlayerSeasonStatistics, getPlayers } from '../api/client';
 import { demo } from '../demo';
 import { leagueName, logoUrl, photoUrl, teamDisplayName, teamLeague } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import './PlayersPage.css';
-import { OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
+import { CORE_SERVER_LEAGUE_CODES, OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
 
-function PlayerRankings({ leagueCode, onPlayerOpen }) {
+const CORE_PLAYER_FILTER = 'CORE';
+const rankingPlayerName = item => item?.displayName || item?.playerDisplayName || item?.playerNameKo || item?.playerName || '선수 정보 없음';
+
+function rankingClub(item, resolvedTeams, teams) {
+  const key = String(item?.playerId ?? '');
+  const teamName = item?.teamName || resolvedTeams[key];
+  if (!teamName) return { name: Object.hasOwn(resolvedTeams, key) ? '소속팀 미등록' : '소속팀 확인 중', crest: '' };
+  const team = teams.find(candidate => candidate?.teamName === teamName || teamDisplayName(candidate) === teamName);
+  return { name: team ? teamDisplayName(team) : teamName, crest: logoUrl(item?.teamLogoUrl || item?.teamLogo || team?.logoUrl) };
+}
+
+function PlayerRankings({ leagueCode, onPlayerOpen, teams }) {
   const [state, setState] = useState({ goals: [], assists: [] });
+  const [resolvedTeams, setResolvedTeams] = useState({});
   useEffect(() => {
     if (!leagueCode) { setState({ goals: [], assists: [] }); return undefined; }
     const controller = new AbortController();
@@ -22,8 +34,35 @@ function PlayerRankings({ leagueCode, onPlayerOpen }) {
     });
     return () => controller.abort();
   }, [leagueCode]);
+  useEffect(() => {
+    setResolvedTeams({});
+  }, [leagueCode]);
+  useEffect(() => {
+    const rows = [...state.goals, ...state.assists];
+    const unresolved = [...new Map(rows.filter(item => item?.playerId && !item?.teamName && !Object.hasOwn(resolvedTeams, String(item.playerId))).map(item => [item.playerId, item])).values()];
+    if (!unresolved.length) return undefined;
+    const controller = new AbortController();
+    Promise.allSettled(unresolved.map(async item => {
+      const player = await getPlayer(item.playerId, controller.signal);
+      if (player?.teamName) return [String(item.playerId), player.teamName];
+      const statistics = await getPlayerSeasonStatistics(item.playerId, controller.signal);
+      const record = Array.isArray(statistics)
+        ? [...statistics].filter(entry => String(entry?.leagueCode || '') === String(leagueCode)).sort((a, b) => Number(b?.minutes || 0) - Number(a?.minutes || 0))[0]
+        : null;
+      return [String(item.playerId), record?.teamName || ''];
+    })).then(results => {
+      if (controller.signal.aborted) return;
+      setResolvedTeams(current => ({ ...current, ...Object.fromEntries(results.filter(result => result.status === 'fulfilled').map(result => result.value)) }));
+    });
+    return () => controller.abort();
+  }, [leagueCode, resolvedTeams, state.assists, state.goals]);
   if (!state.goals.length && !state.assists.length) return null;
-  const render = (title, rows, unit) => <section><h3>{title}</h3>{rows.slice(0, 5).map(item => <button type="button" key={`${title}-${item.playerId}`} onClick={() => onPlayerOpen(Number(item.playerId))}><span className="player-ranking-position">{item.ranking}</span><span className="player-ranking-photo">{item.playerName?.slice(0, 1)}{photoUrl(item.photoUrl) && <img src={item.photoUrl} alt="" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span><strong>{item.playerName || '선수 정보 없음'}</strong><b>{item.value ?? 0}<small>{unit}</small></b></button>)}</section>;
+  const render = (title, rows, unit) => <section><h3>{title}</h3>{rows.slice(0, 5).map(item => {
+    const name = rankingPlayerName(item);
+    const club = rankingClub(item, resolvedTeams, teams);
+    const leader = Number(item.ranking) === 1;
+    return <button type="button" key={`${title}-${item.playerId}`} onClick={() => onPlayerOpen(Number(item.playerId))}><span className="player-ranking-position">{item.ranking}</span><span className="player-ranking-photo">{name.slice(0, 1)}{photoUrl(item.photoUrl) && <img src={photoUrl(item.photoUrl)} alt="" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span><span className="player-ranking-copy"><strong>{leader && <span className="player-ranking-trophy" title={title === '득점 랭킹' ? '득점왕' : '도움왕'}>🏆</span>}{name}</strong><span className="player-ranking-club">{club.crest && <img src={club.crest} alt="" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}<em>{club.name}</em></span></span><b>{item.value ?? 0}<small>{unit}</small></b></button>;
+  })}</section>;
   return <div className="player-rankings">{render('득점 랭킹', state.goals, '골')}{render('도움 랭킹', state.assists, '도움')}</div>;
 }
 
@@ -31,7 +70,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
   const [state, setState] = useState({
     page: 0,
     keyWord: '',
-    leagueCode: '',
+    leagueCode: CORE_PLAYER_FILTER,
     teamId: '',
     hasNext: false,
     hasPrevious: false,
@@ -70,6 +109,11 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
             hasNext: (state.page + 1) * size < source.length,
             hasPrevious: state.page > 0
           };
+        } else if (state.leagueCode === CORE_PLAYER_FILTER) {
+          const sources = await Promise.all([...CORE_SERVER_LEAGUE_CODES].map(leagueCode => getPlayers({ ...state, leagueCode }, controller.signal)));
+          const slots = 8;
+          const players = Array.from({ length: slots }, (_, index) => sources.map(source => source?.players?.[index]).filter(Boolean)).flat();
+          data = { players, hasNext: sources.some(source => source?.hasNext), hasPrevious: state.page > 0 };
         } else {
           data = await getPlayers({
             ...state,
@@ -99,7 +143,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
     return () => controller.abort();
   }, [sample, state.page, state.keyWord, state.leagueCode, state.teamId, refreshKey]);
 
-  const visiblePlayers = state.leagueCode && !SERVER_LEAGUE_CODES.has(state.leagueCode)
+  const visiblePlayers = state.leagueCode && state.leagueCode !== CORE_PLAYER_FILTER && !SERVER_LEAGUE_CODES.has(state.leagueCode)
     ? players.filter(player => {
       const team = teams.find(candidate => candidate.teamName === player.teamName || teamDisplayName(candidate) === (player.teamNameKo ?? player.teamName));
       const playerLeague = teamLeague(team);
@@ -108,7 +152,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
     : players;
 
   const filters = [];
-  if (state.leagueCode) filters.push(leagueName(state.leagueCode));
+  if (state.leagueCode) filters.push(state.leagueCode === CORE_PLAYER_FILTER ? '주요 리그' : leagueName(state.leagueCode));
   if (state.teamId) {
     const selected = teams.find(team => String(team.teamId) === String(state.teamId));
     if (selected) filters.push(teamDisplayName(selected));
@@ -120,7 +164,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
         <div>
           <p className="eyebrow">PLAYER DIRECTORY</p>
           <h1>선수</h1>
-          <p>선수를 검색하고 현재 소속팀과 이적 기록으로 바로 이동하세요.</p>
+          <p>주요 리그 선수를 먼저 보고, 소속팀과 이적 기록으로 바로 이동하세요.</p>
         </div>
         <strong>{visiblePlayers.length}<span>현재 페이지</span></strong>
       </header>
@@ -144,7 +188,7 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
         onTeamChange={teamId => setState(current => ({ ...current, page: 0, teamId }))}
       />
 
-      {!sample && SERVER_LEAGUE_CODES.has(state.leagueCode) && <PlayerRankings leagueCode={state.leagueCode} onPlayerOpen={onPlayerOpen} />}
+      {!sample && SERVER_LEAGUE_CODES.has(state.leagueCode) && <PlayerRankings leagueCode={state.leagueCode} teams={teams} onPlayerOpen={onPlayerOpen} />}
 
       {state.loading ? (
         <LoadingPlaceholder label="선수 목록을 불러오는 중입니다." />

@@ -1,4 +1,4 @@
-import { LEAGUE_GROUPS, OTHER_LEAGUE_CODE } from '../constants';
+import { CORE_SERVER_LEAGUE_CODES, LEAGUE_GROUPS, OTHER_LEAGUE_CODE } from '../constants';
 import { teamDisplayName, teamLeague } from '../utils';
 
 const TRANSFER_RELATED_GROUPS = new Set(['EUROPEAN_COMPETITIONS', 'DOMESTIC_CUPS']);
@@ -16,8 +16,9 @@ export default function LeagueTeamFilters({
   const groups = LEAGUE_GROUPS.filter(group =>
     prefix === 'fixtures' || !TRANSFER_RELATED_GROUPS.has(group.code)
   );
+  const isCorePlayerView = prefix === 'players' && leagueCode === 'CORE';
   const candidates = [...teams]
-    .filter(team => !leagueCode || teamLeague(team) === leagueCode)
+    .filter(team => !leagueCode || (isCorePlayerView ? CORE_SERVER_LEAGUE_CODES.has(teamLeague(team)) : teamLeague(team) === leagueCode))
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko'));
 
   return (
@@ -33,6 +34,14 @@ export default function LeagueTeamFilters({
           >
             전체
           </button>
+          {prefix === 'players' && <button
+            type="button"
+            className={`compact-filter ${isCorePlayerView ? 'selected' : ''}`}
+            aria-pressed={isCorePlayerView}
+            onClick={() => onLeagueChange('CORE')}
+          >
+            주요 리그
+          </button>}
 
           {groups.map(group => (
             <div className="compact-filter-group" key={group.code}>
