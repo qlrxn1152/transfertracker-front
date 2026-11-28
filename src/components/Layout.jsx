@@ -30,6 +30,7 @@ export default function Layout({ sample, teams, onPlayerOpen, session, onLogout 
           <NavItem to="/posts" icon="↔">이적 소식</NavItem>
           <NavItem to="/transfers" icon="✓">공식 이적 기록</NavItem>
           <NavItem to="/fixtures" icon="♜">경기</NavItem>
+          <NavItem to="/leagues" icon="▦">리그</NavItem>
           <NavItem to="/teams" icon="◇">팀</NavItem>
           <NavItem to="/players" icon="♙">선수</NavItem>
           <NavItem to="/account#favorite-teams" icon="☆">관심</NavItem>
@@ -73,6 +74,7 @@ export default function Layout({ sample, teams, onPlayerOpen, session, onLogout 
         <NavItem end to="/" icon="⌂">홈</NavItem>
         <NavItem to="/posts" icon="↔">이적</NavItem>
         <NavItem to="/fixtures" icon="♜">경기</NavItem>
+        <NavItem to="/leagues" icon="▦">리그</NavItem>
         <NavItem to="/account#favorite-teams" icon="☆">관심</NavItem>
         <NavItem to="/account" icon="♙">MY</NavItem>
       </nav>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFixtures, getLeagueStandings, getPlayer, getPlayerRankings, getPlayerSeasonStatistics } from '../api/client';
-import { LEAGUES, OTHER_LEAGUE, STANDING_LEAGUE_CODES } from '../constants';
+import { STANDING_LEAGUE_CODES, TEAM_COLLECTION_LEAGUES } from '../constants';
 import { logoUrl, photoUrl, teamDisplayName, teamLeague, text } from '../utils';
 
 const INITIALS = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
@@ -91,7 +91,7 @@ function LeagueUpcomingFixtures({ leagueCode, teams, onFixtureOpen }) {
   })}</ol>;
 }
 
-function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
+export function LeagueCentre({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState('standings');
   const [state, setState] = useState({ loading: false, groups: [], goals: [], assists: [] });
@@ -157,7 +157,7 @@ function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
     return () => controller.abort();
   }, [leagueCode, rankingTeams, state.assists, state.goals, tab]);
 
-  if (!STANDING_LEAGUE_CODES.has(leagueCode) || (!state.loading && !state.groups.some(group => group.standings?.length) && !state.goals.length && !state.assists.length)) return null;
+  if (!STANDING_LEAGUE_CODES.has(leagueCode)) return null;
 
   const nameFor = row => {
     const team = teams.find(candidate => String(candidate.teamId) === String(row?.team?.teamId));
@@ -205,10 +205,11 @@ export default function TeamsPage({ teams, error, sample, onPlayerOpen }) {
   const [leagueFilter, setLeagueFilter] = useState('all');
   const [search, setSearch] = useState('');
 
+  const teamPool = useMemo(() => teams.filter(team => TEAM_COLLECTION_LEAGUES.some(([code]) => code === teamLeague(team))), [teams]);
   const counts = useMemo(() => {
-    const result = new Map([...LEAGUES, OTHER_LEAGUE].map(([code]) => [code, 0]));
+    const result = new Map(TEAM_COLLECTION_LEAGUES.map(([code]) => [code, 0]));
 
-    for (const team of teams) {
+    for (const team of teamPool) {
       result.set(
         teamLeague(team),
         (result.get(teamLeague(team)) || 0) + 1
@@ -216,14 +217,14 @@ export default function TeamsPage({ teams, error, sample, onPlayerOpen }) {
     }
 
     return result;
-  }, [teams]);
+  }, [teamPool]);
 
-  const filtered = teams.filter(item =>
+  const filtered = teamPool.filter(item =>
     (leagueFilter === 'all' || teamLeague(item) === leagueFilter)
     && [item.teamName, item.teamNameKo].some(name => matchesClubSearch(name, search))
   );
 
-  const allLeagueOptions = [...LEAGUES, OTHER_LEAGUE];
+  const allLeagueOptions = TEAM_COLLECTION_LEAGUES;
   const order = leagueFilter === 'all'
     ? allLeagueOptions
     : allLeagueOptions.filter(([code]) => code === leagueFilter);
@@ -238,12 +239,12 @@ export default function TeamsPage({ teams, error, sample, onPlayerOpen }) {
             클럽 목록
             {' '}
             <span className="count">
-              {teams.length.toLocaleString()}
+            {teamPool.length.toLocaleString()}
             </span>
           </h2>
 
           <p>
-            주요 리그와 유럽 대항전, 국내 컵, 유럽 주요 리그, J리그를
+            주요 리그와 TeamCollectionLeague의 유럽 주요 리그 클럽을
             한곳에서 살펴보세요.
           </p>
         </div>
@@ -265,7 +266,7 @@ export default function TeamsPage({ teams, error, sample, onPlayerOpen }) {
           </span>
 
           <strong>
-            {teams.length}
+            {teamPool.length}
           </strong>
         </button>
 
@@ -345,13 +346,6 @@ export default function TeamsPage({ teams, error, sample, onPlayerOpen }) {
                   </h3>
                 </div>
               </div>
-
-              <TeamLeagueStandings
-                leagueCode={code}
-                teams={teams}
-                onTeamOpen={teamId => navigate(`/teams/${teamId}`)}
-                onPlayerOpen={onPlayerOpen}
-              />
 
               <div className="team-grid">
                 {clubs.map(item => {

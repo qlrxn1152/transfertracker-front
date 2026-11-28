@@ -5,6 +5,7 @@ const shortcuts = [
   ['g, h', '홈으로 이동'],
   ['g, t', '이적 현황으로 이동'],
   ['g, j', '기자 소식으로 이동'],
+  ['g, l', '리그로 이동'],
   ['g, c', '팀 목록으로 이동'],
   ['g, p', '선수 목록으로 이동'],
   ['/', '전체 검색'],
@@ -24,7 +25,7 @@ export default function KeyboardShortcuts() {
       if (event.key === 'Escape') { setOpen(false); pending = false; return; }
       if (event.key === '?') { event.preventDefault(); setOpen(current => !current); return; }
       if (pending) {
-        const routes = { h: '/', t: '/transfers', j: '/posts', c: '/teams', p: '/players' };
+        const routes = { h: '/', t: '/transfers', j: '/posts', l: '/leagues', c: '/teams', p: '/players' };
         if (routes[event.key.toLowerCase()]) {
           event.preventDefault();
           navigate(routes[event.key.toLowerCase()]);

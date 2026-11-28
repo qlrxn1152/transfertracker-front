@@ -56,6 +56,11 @@ export const LEAGUE_GROUPS = [
 ];
 
 export const LEAGUES = LEAGUE_GROUPS.flatMap(group => group.leagues);
+// 팀 탐색은 리그 소속이 안정적으로 관리되는 정규 리그만 다룬다.
+// 대항전과 컵대회는 같은 팀이 여러 대회에 중복되므로 경기/리그 화면에서 본다.
+export const TEAM_COLLECTION_LEAGUES = LEAGUE_GROUPS
+  .filter(group => ['CORE', 'EUROPEAN_MAJOR'].includes(group.code))
+  .flatMap(group => group.leagues);
 export const OTHER_LEAGUE_CODE = 'OTHER';
 export const OTHER_LEAGUE = [OTHER_LEAGUE_CODE, '기타 리그', '기타'];
 export const STANDING_LEAGUE_CODES = new Set(
