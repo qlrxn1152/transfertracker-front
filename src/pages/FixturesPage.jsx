@@ -60,7 +60,10 @@ function leagueLabel(code) {
 
 function teamMeta(team, teams) {
   const registered = teams.find(value => String(value.teamId) === String(team?.teamId));
-  return { name: team?.teamName || teamDisplayName(registered) || '팀 정보 없음', logo: logoUrl(registered?.logoUrl) };
+  return {
+    name: team?.teamName || teamDisplayName(registered) || '팀 정보 없음',
+    logo: logoUrl(team?.logoUrl) || logoUrl(registered?.logoUrl)
+  };
 }
 
 function TeamBadge({ team, teams, side, large = false }) {
