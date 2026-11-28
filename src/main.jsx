@@ -4,6 +4,7 @@ import App from './App';
 import './styles.css';
 import './veyro-theme.css';
 import './veyro-reference.css';
+import './mobile-experience.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

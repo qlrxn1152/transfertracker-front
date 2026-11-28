@@ -1,0 +1,238 @@
+/*
+  Mobile experience authority
+  ---------------------------
+  Kept separate from the desktop presentation rules so compact-device fixes
+  remain deliberate: controls stay reachable, dense data remains readable,
+  and long Korean names never force a horizontal page scroll.
+*/
+@media (max-width: 760px) {
+  html { -webkit-text-size-adjust: 100%; }
+
+  .app-shell,
+  .app-main,
+  .view,
+  .section-head,
+  .league-centre-panel,
+  .fixture-layout,
+  .fixture-list-panel,
+  .fixture-detail-panel,
+  .team-detail-page,
+  .post-detail-page {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .app-main {
+    width: 100%;
+    padding-inline: 12px !important;
+  }
+
+  .app-header-inner {
+    column-gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .app-header-actions { gap: 5px; }
+
+  .app-nav {
+    padding-inline: 4px;
+  }
+
+  .app-nav-link {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    min-width: 0;
+    min-height: 58px;
+    padding: 7px 1px 6px;
+    line-height: 1.15;
+  }
+
+  .app-nav-link > span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-nav-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .section-head,
+  .players-head,
+  .fixture-page-head,
+  .transfer-market-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .section-head > div,
+  .players-head > div,
+  .fixture-page-head > div { min-width: 0; }
+
+  .section-head h2,
+  .players-head h1 { font-size: clamp(24px, 8vw, 30px); }
+
+  .league-page-schedule-link,
+  .league-selected-summary button {
+    min-height: 42px;
+  }
+
+  /* Chip rows retain every option without making the document wider. */
+  .compact-filters,
+  .fixture-league-filter,
+  .league-discovery-group > div,
+  .post-types,
+  .journal-source-tabs,
+  .team-detail-tabs {
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+
+  .compact-filter,
+  .fixture-league-filter button,
+  .league-discovery-group button,
+  .post-type,
+  .journal-source-tabs button {
+    min-height: 40px;
+    scroll-snap-align: start;
+  }
+
+  /* The directory's horizontal league rail intentionally reaches the edge
+     of the content area. Match that negative margin to the mobile gutter. */
+  .league-filters {
+    margin-right: -12px;
+    padding-right: 12px;
+  }
+
+  /* Four long labels must not be compressed into unreadable tab buttons. */
+  .team-league-metric-tabs {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .team-league-metric-tabs button {
+    flex: 0 0 auto;
+    min-height: 43px;
+    padding-inline: 13px;
+    white-space: nowrap;
+  }
+
+  .team-league-stage-tabs { padding-inline: 12px; }
+
+  /* Keep a player's team crest and name on mobile instead of hiding it. */
+  .team-league-ranking-list li button {
+    grid-template-columns: 25px 30px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      'rank photo player value'
+      'rank photo team value';
+    column-gap: 7px;
+    row-gap: 3px;
+    min-height: 62px;
+    padding-block: 8px;
+  }
+
+  .team-league-ranking-list li button > b { grid-area: rank; }
+  .team-league-ranking-photo { grid-area: photo; }
+  .team-league-ranking-player { grid-area: player; }
+  .team-league-ranking-team {
+    display: flex !important;
+    grid-area: team;
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+  .team-league-ranking-team em { text-align: left; }
+  .team-league-ranking-value { grid-area: value; align-self: center; }
+
+  .team-standing-legend { padding-inline: 12px; }
+  .team-league-standings-head,
+  .team-league-standings li button { padding-inline: 12px; }
+
+  /* Fixture cards reserve a compact, fixed score column and let both club
+     names ellipsize inside their own cells instead of pushing the row wide. */
+  .fixture-row {
+    grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr) !important;
+    column-gap: 5px;
+    min-height: 76px !important;
+    padding-inline: 8px;
+  }
+
+  .fixture-team { gap: 5px; }
+  .fixture-team-logo { width: 28px; height: 28px; }
+  .fixture-team strong { font-size: 10px !important; }
+  .fixture-score strong { font-size: 15px !important; }
+  .fixture-score small { font-size: 8px; }
+
+  .fixture-detail-score {
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr) !important;
+    column-gap: 4px;
+  }
+
+  .fixture-detail-tabs {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+  }
+
+  .fixture-detail-tabs button {
+    flex: 0 0 auto;
+    min-width: 72px;
+    min-height: 43px;
+    scroll-snap-align: start;
+  }
+
+  .fixture-detail-links { flex-wrap: wrap; }
+  .fixture-detail-links a { min-width: min(100%, 132px); }
+
+  .fixture-formation-match { padding: 10px; }
+  .fixture-formation-pitch { min-height: 660px; }
+  .fixture-formation-team-name strong { max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+
+  .player-detail-dialog,
+  .transfer-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-main { padding-inline: 10px !important; }
+  .app-mobile-brand { font-size: 17px; }
+  .app-nav-link { font-size: 8px; }
+  .app-nav-icon { font-size: 17px; }
+
+  .league-discovery,
+  .league-selected-summary,
+  .fixture-list-panel,
+  .fixture-detail-panel { padding-inline: 11px; }
+
+  .league-filters {
+    margin-right: -10px;
+    padding-right: 10px;
+  }
+
+  .team-league-standings-head,
+  .team-league-standings li button {
+    grid-template-columns: 29px minmax(0, 1fr) 26px 26px 33px;
+    gap: 4px;
+    padding-inline: 9px;
+  }
+
+  .team-league-standings li small { font-size: 9px; }
+  .team-league-standing-club { gap: 5px; font-size: 10px; }
+  .team-league-standing-club img { width: 17px; height: 17px; }
+
+  .fixture-row { grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr) !important; }
+  .fixture-team-logo { width: 25px; height: 25px; }
+  .fixture-team strong { font-size: 9px !important; }
+}
