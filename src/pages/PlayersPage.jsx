@@ -4,7 +4,6 @@ import { demo } from '../demo';
 import { leagueName, logoUrl, photoUrl, teamDisplayName, teamLeague } from '../utils';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
-import PlayerCompare from '../components/PlayerCompare';
 import LoadingPlaceholder from '../components/LoadingPlaceholder';
 import './PlayersPage.css';
 import { OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
@@ -146,8 +145,6 @@ export default function PlayersPage({ sample, teams, refreshKey, onPlayerOpen })
       />
 
       {!sample && SERVER_LEAGUE_CODES.has(state.leagueCode) && <PlayerRankings leagueCode={state.leagueCode} onPlayerOpen={onPlayerOpen} />}
-
-      {!state.loading && <PlayerCompare players={visiblePlayers} sample={sample} onPlayerOpen={onPlayerOpen} />}
 
       {state.loading ? (
         <LoadingPlaceholder label="선수 목록을 불러오는 중입니다." />

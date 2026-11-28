@@ -1,0 +1,6 @@
+.fixture-status-filter{display:flex;align-items:center;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px;border-bottom:1px solid var(--v-line-soft)}
+.fixture-status-filter button{flex:none;height:42px;border:1px solid transparent;border-radius:11px;background:var(--v-surface-raised);padding:0 14px;color:var(--v-text-muted);font:inherit;font-size:11px;font-weight:800}
+.fixture-status-filter button:hover{background:#2a2c33;color:var(--v-text)}
+.fixture-status-filter button.active{border-color:rgba(52,120,246,.65);background:rgba(52,120,246,.22);color:#cbdcff}
+@media(max-width:900px){.fixture-page-detail-open>.fixture-status-filter{display:none}}
+@media(max-width:560px){.fixture-status-filter button{height:36px;padding:0 11px;font-size:10px}}
