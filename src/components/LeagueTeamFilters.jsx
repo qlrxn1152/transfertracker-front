@@ -16,7 +16,8 @@ export default function LeagueTeamFilters({
   const groups = LEAGUE_GROUPS.filter(group =>
     prefix === 'fixtures' || !TRANSFER_RELATED_GROUPS.has(group.code)
   );
-  const isCorePlayerView = prefix === 'players' && leagueCode === 'CORE';
+  const supportsCoreView = ['players', 'transfers'].includes(prefix);
+  const isCorePlayerView = supportsCoreView && leagueCode === 'CORE';
   const candidates = [...teams]
     .filter(team => !leagueCode || (isCorePlayerView ? CORE_SERVER_LEAGUE_CODES.has(teamLeague(team)) : teamLeague(team) === leagueCode))
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b), 'ko'));
@@ -34,7 +35,7 @@ export default function LeagueTeamFilters({
           >
             전체
           </button>
-          {prefix === 'players' && <button
+          {supportsCoreView && <button
             type="button"
             className={`compact-filter ${isCorePlayerView ? 'selected' : ''}`}
             aria-pressed={isCorePlayerView}

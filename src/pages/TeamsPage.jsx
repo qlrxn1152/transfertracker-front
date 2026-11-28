@@ -25,6 +25,14 @@ function standingOutcome(row) {
   return null;
 }
 
+function standingGroupLabel(groupName) {
+  const value = String(groupName || '');
+  if (value === 'K-League: Regular season') return '정규리그';
+  if (value === 'K-League: Championship Group') return '파이널 A';
+  if (value === 'K-League: Relegation Group') return '파이널 B';
+  return value || '리그 순위';
+}
+
 function rankingPlayerName(item) {
   return item?.displayName || item?.playerDisplayName || item?.playerNameKo || item?.playerName || '선수 정보 없음';
 }
@@ -39,29 +47,31 @@ function rankingTeam(item, teamsByPlayer, teams) {
 
 function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
   const [tab, setTab] = useState('standings');
-  const [state, setState] = useState({ loading: false, rows: [], goals: [], assists: [] });
+  const [state, setState] = useState({ loading: false, groups: [], goals: [], assists: [] });
   const [rankingTeams, setRankingTeams] = useState({});
+  const [standingGroup, setStandingGroup] = useState('');
 
   useEffect(() => {
     if (!STANDING_LEAGUE_CODES.has(leagueCode)) {
-      setState({ loading: false, rows: [], goals: [], assists: [] });
+      setState({ loading: false, groups: [], goals: [], assists: [] });
       return undefined;
     }
 
     const controller = new AbortController();
-    setState({ loading: true, rows: [], goals: [], assists: [] });
+    setState({ loading: true, groups: [], goals: [], assists: [] });
     Promise.allSettled([
       getLeagueStandings({ leagueCode }, controller.signal),
       getPlayerRankings({ leagueCode, type: 'GOALS' }, controller.signal),
       getPlayerRankings({ leagueCode, type: 'ASSISTS' }, controller.signal)
     ]).then(([standings, goals, assists]) => {
       if (controller.signal.aborted) return;
-      const rows = standings.status === 'fulfilled' && Array.isArray(standings.value)
-        ? standings.value.flatMap(group => Array.isArray(group?.standings) ? group.standings : [])
+      const groups = standings.status === 'fulfilled' && Array.isArray(standings.value)
+        ? standings.value.filter(group => Array.isArray(group?.standings) && group.standings.length)
         : [];
+      setStandingGroup(groups[0]?.groupName || '');
       setState({
         loading: false,
-        rows,
+        groups,
         goals: goals.status === 'fulfilled' && Array.isArray(goals.value) ? goals.value : [],
         assists: assists.status === 'fulfilled' && Array.isArray(assists.value) ? assists.value : []
       });
@@ -100,27 +110,30 @@ function TeamLeagueStandings({ leagueCode, teams, onTeamOpen, onPlayerOpen }) {
     return () => controller.abort();
   }, [leagueCode, rankingTeams, state.assists, state.goals, tab]);
 
-  if (!STANDING_LEAGUE_CODES.has(leagueCode) || (!state.loading && !state.rows.length && !state.goals.length && !state.assists.length)) return null;
+  if (!STANDING_LEAGUE_CODES.has(leagueCode) || (!state.loading && !state.groups.some(group => group.standings?.length) && !state.goals.length && !state.assists.length)) return null;
 
   const nameFor = row => {
     const team = teams.find(candidate => String(candidate.teamId) === String(row?.team?.teamId));
     return team ? teamDisplayName(team) : row?.team?.teamName || '팀 정보 없음';
   };
-  const outcomes = [...new Map(state.rows.map(standingOutcome).filter(Boolean).map(outcome => [outcome.code, outcome])).values()];
+  const selectedStandingGroup = state.groups.find(group => String(group.groupName || '') === String(standingGroup)) || state.groups[0];
+  const standingRows = selectedStandingGroup?.standings || [];
+  const outcomes = [...new Map(standingRows.map(standingOutcome).filter(Boolean).map(outcome => [outcome.code, outcome])).values()];
   const rankingRows = tab === 'goals' ? state.goals : state.assists;
   const rankingLabel = tab === 'goals' ? '골' : '도움';
 
   return <section className="team-league-standings" aria-label="리그 주요 지표">
-    <header><div><p className="eyebrow">LEAGUE CENTRE</p><h3>리그 주요 지표</h3></div><span>{state.loading ? '기록을 불러오는 중' : `${state.rows.length || Math.max(state.goals.length, state.assists.length)}개 기록`}</span></header>
+    <header><div><p className="eyebrow">LEAGUE CENTRE</p><h3>리그 주요 지표</h3></div><span>{state.loading ? '기록을 불러오는 중' : `${standingRows.length || Math.max(state.goals.length, state.assists.length)}개 기록`}</span></header>
     <div className="team-league-metric-tabs" role="tablist" aria-label="리그 주요 지표 탭">
       <button className={tab === 'standings' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'standings'} onClick={() => setTab('standings')}>순위</button>
       <button className={tab === 'goals' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'goals'} onClick={() => setTab('goals')}>득점 순위</button>
       <button className={tab === 'assists' ? 'active' : ''} type="button" role="tab" aria-selected={tab === 'assists'} onClick={() => setTab('assists')}>도움 순위</button>
     </div>
     {tab === 'standings' && <>
+      {state.groups.length > 1 && <div className="team-league-stage-tabs" role="tablist" aria-label="리그 단계">{state.groups.map(group => <button type="button" role="tab" aria-selected={group === selectedStandingGroup} className={group === selectedStandingGroup ? 'active' : ''} key={group.groupName || 'default'} onClick={() => setStandingGroup(group.groupName || '')}>{standingGroupLabel(group.groupName)}</button>)}</div>}
       {outcomes.length > 0 && <div className="team-standing-legend" aria-label="순위 구간 안내">{outcomes.map(outcome => <span className={outcome.code} key={outcome.code}>{outcome.label}</span>)}<small>컵 대회 결과에 따라 실제 진출권은 달라질 수 있습니다.</small></div>}
       {!state.loading && <div className="team-league-standings-head"><span>순위</span><span>클럽</span><span>경기</span><span>득실</span><span>승점</span></div>}
-      <ol>{state.rows.map(row => {
+      <ol>{standingRows.map(row => {
         const outcome = standingOutcome(row);
         const leader = Number(row?.ranking) === 1;
         return <li className={`${outcome ? `is-${outcome.code} ` : ''}${leader ? 'is-league-leader' : ''}`} key={row.leagueStandingId ?? row.team?.teamId}><button type="button" onClick={() => row?.team?.teamId && onTeamOpen(row.team.teamId)}><b>{row.ranking ?? '—'}</b><span className="team-league-standing-club">{row.team?.logoUrl && <img src={logoUrl(row.team.logoUrl)} alt="" referrerPolicy="no-referrer" />}<span>{nameFor(row)}{leader && <em className="team-league-standing-leader">🏆 리그 1위</em>}{outcome && <em className={outcome.code} title={row.description || outcome.label}>{outcome.label}</em>}</span></span><small>{row.all?.played ?? 0}</small><small>{row.goalsDiff ?? 0}</small><strong>{row.points ?? 0}</strong></button></li>;

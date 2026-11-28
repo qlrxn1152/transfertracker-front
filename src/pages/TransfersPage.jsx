@@ -11,7 +11,7 @@ import {
   teamDisplayName,
   typeLabel
 } from '../utils';
-import { OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
+import { CORE_SERVER_LEAGUE_CODES, OTHER_LEAGUE_CODE, SERVER_LEAGUE_CODES } from '../constants';
 import LeagueTeamFilters from '../components/LeagueTeamFilters';
 import Pagination from '../components/Pagination';
 import SavedSearches from '../components/SavedSearches';
@@ -21,7 +21,7 @@ import './TransfersPage.css';
 const initial = {
   page: 0,
   keyWord: '',
-  leagueCode: '',
+  leagueCode: 'CORE',
   teamId: '',
   hasNext: false,
   hasPrevious: false,
@@ -43,7 +43,7 @@ function readFilterParams(params) {
   return {
     page: Math.max(0, Number(params.get('page') || 0) || 0),
     keyWord: params.get('q') || '',
-    leagueCode: params.get('league') || '',
+    leagueCode: params.has('league') ? params.get('league') : 'CORE',
     teamId: params.get('teamId') || ''
   };
 }
@@ -125,7 +125,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
           if (state.leagueCode) {
             const allowed = new Set(
-              demo.teams.filter(team => team.leagueCode === state.leagueCode).map(team => team.teamName)
+              demo.teams.filter(team => state.leagueCode === 'CORE' ? CORE_SERVER_LEAGUE_CODES.has(team.leagueCode) : team.leagueCode === state.leagueCode).map(team => team.teamName)
             );
             source = source.filter(item => allowed.has(item.inTeamName) || allowed.has(item.outTeamName));
           }
@@ -143,6 +143,11 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
             hasNext: (state.page + 1) * size < source.length,
             hasPrevious: state.page > 0
           };
+        } else if (state.leagueCode === 'CORE') {
+          const sources = await Promise.all([...CORE_SERVER_LEAGUE_CODES].map(leagueCode => getTransfers({ ...state, leagueCode }, controller.signal)));
+          const slots = 4;
+          const transfers = Array.from({ length: slots }, (_, index) => sources.map(source => source?.transfers?.[index]).filter(Boolean)).flat();
+          data = { transfers, hasNext: sources.some(source => source?.hasNext), hasPrevious: state.page > 0 };
         } else {
           data = await getTransfers({
             ...state,
@@ -178,7 +183,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
   // 한 선수의 여러 이적도 별개의 사건으로 모두 보여 준다. 카드 하나가 이적 한 건이다.
   const clientFilteredTransfers = useMemo(() => {
-    if (!state.leagueCode || SERVER_LEAGUE_CODES.has(state.leagueCode)) return transfers;
+    if (!state.leagueCode || state.leagueCode === 'CORE' || SERVER_LEAGUE_CODES.has(state.leagueCode)) return transfers;
     const leagueForTeam = name => teamLeague(teams.find(team => team.teamName === name || teamDisplayName(team) === name));
     return transfers.filter(item => {
       const leagues = [leagueForTeam(item.inTeamName), leagueForTeam(item.outTeamName)];
@@ -288,7 +293,7 @@ export default function TransfersPage({ sample, teams, refreshKey, onPlayerOpen 
 
       <SavedSearches
         scope="transfers"
-        label={state.keyWord || selectedTeam ? `${state.keyWord || teamDisplayName(selectedTeam) || '전체'} 이적` : '전체 이적'}
+        label={state.keyWord || selectedTeam ? `${state.keyWord || teamDisplayName(selectedTeam) || (state.leagueCode === 'CORE' ? '주요 리그' : '전체')} 이적` : (state.leagueCode === 'CORE' ? '주요 리그 이적' : '전체 이적')}
         path={`/transfers${paramsKey ? `?${paramsKey}` : ''}`}
       />
 
