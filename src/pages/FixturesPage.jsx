@@ -186,16 +186,85 @@ function fixtureLineupName(player) {
   return player?.displayName || player?.playerName || '선수 정보 없음';
 }
 
-function LineupPlayer({ player }) {
+function lineupPlayerKey(player) {
+  return String(player?.playerId ?? player?.apiFootballId ?? '');
+}
+
+function lineupMinute(event) {
+  return event?.elapsed == null ? '' : `${event.elapsed}${event.extra ? `+${event.extra}` : ''}'`;
+}
+
+function lineupSubstitution(player, events, teamId, role) {
+  const key = lineupPlayerKey(player);
+  if (!key) return null;
+  const event = events.find(item => item?.type === 'SUBSTITUTION'
+    && String(item?.team?.teamId) === String(teamId)
+    && String(role === 'starter' ? lineupPlayerKey(item?.player) : lineupPlayerKey(item?.relatedPlayer)) === key);
+  if (!event) return null;
+  const paired = role === 'starter' ? event?.relatedPlayer : event?.player;
+  const pairedName = eventPlayerName(paired) || '선수 정보 없음';
+  const minute = lineupMinute(event);
+  return role === 'starter'
+    ? { type: 'out', text: `${minute} 교체 아웃 · ${pairedName} 투입` }
+    : { type: 'in', text: `${minute} 투입 · ${pairedName} 교체 아웃` };
+}
+
+function formationRows(starters, formation) {
+  const fromGrid = starters.map((player, index) => {
+    const [row, column] = String(player?.grid || '').split(':').map(Number);
+    return Number.isFinite(row) && row > 0 && Number.isFinite(column) && column > 0
+      ? { player, index, row, column }
+      : null;
+  });
+
+  if (fromGrid.every(Boolean)) {
+    const rows = [...new Set(fromGrid.map(item => item.row))].sort((a, b) => a - b);
+    return rows.map(row => fromGrid.filter(item => item.row === row).sort((a, b) => a.column - b.column));
+  }
+
+  const counts = String(formation || '').match(/\d+/g)?.map(Number) || [];
+  const layout = counts.reduce((sum, count) => sum + count, 0) === starters.length
+    ? counts
+    : [1, 4, 3, Math.max(1, starters.length - 8)];
+  let cursor = 0;
+  return layout.map(count => starters.slice(cursor, cursor += count).map((player, index) => ({ player, index, row: 0, column: index + 1 }))).filter(row => row.length);
+}
+
+function FormationPlayer({ player, position, event }) {
   const name = fixtureLineupName(player);
   const image = photoUrl(player?.photoUrl);
-  return <li className="fixture-lineup-player">
-    <span className="fixture-lineup-photo">{name.slice(0, 1)}{image && <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={event => event.currentTarget.remove()} />}</span>
-    <span><strong>{player?.number != null ? `${player.number}. ` : ''}{name}</strong><small>{player?.position || '포지션 정보 없음'}</small></span>
+  return <li className="fixture-formation-player" style={{ '--formation-x': `${position.x}%`, '--formation-y': `${position.y}%` }}>
+    <span className="fixture-lineup-photo">{name.slice(0, 1)}{image && <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={loadEvent => loadEvent.currentTarget.remove()} />}</span>
+    <strong><small>{player?.number != null ? `${player.number} ` : ''}</small>{name}</strong>
+    {event && <em className={`fixture-lineup-change ${event.type}`}>{event.type === 'out' ? '↓' : '↑'} {event.text}</em>}
   </li>;
 }
 
-function FixtureLineups({ lineups, fixture, teams }) {
+function LineupSubstitute({ player, event }) {
+  const name = fixtureLineupName(player);
+  const image = photoUrl(player?.photoUrl);
+  return <li className="fixture-lineup-player">
+    <span className="fixture-lineup-photo">{name.slice(0, 1)}{image && <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={loadEvent => loadEvent.currentTarget.remove()} />}</span>
+    <span><strong>{player?.number != null ? `${player.number}. ` : ''}{name}</strong><small className={event ? `fixture-lineup-change ${event.type}` : ''}>{event ? `${event.type === 'in' ? '↑ 투입' : '↓ 교체 아웃'} · ${event.text.replace(/^.*?\s투입\s·\s|^.*?\s교체 아웃\s·\s/, '')}` : '대기 명단'}</small></span>
+  </li>;
+}
+
+function FixtureFormation({ starters, formation, events, teamId }) {
+  const rows = formationRows(starters, formation);
+  return <div className="fixture-formation-pitch" aria-label={`${formation || '선발'} 포메이션`}>
+    <span className="fixture-formation-mark fixture-formation-mark-top" aria-hidden="true" />
+    <span className="fixture-formation-mark fixture-formation-mark-middle" aria-hidden="true" />
+    <span className="fixture-formation-mark fixture-formation-mark-bottom" aria-hidden="true" />
+    <ol>{rows.flatMap((row, rowIndex) => row.map((item, index) => <FormationPlayer
+      key={item.player.playerId ?? `${item.player.number}-${item.player.playerName}`}
+      player={item.player}
+      event={lineupSubstitution(item.player, events, teamId, 'starter')}
+      position={{ x: ((index + 1) / (row.length + 1)) * 100, y: rows.length === 1 ? 50 : 8 + (rowIndex / (rows.length - 1)) * 84 }}
+    />))}</ol>
+  </div>;
+}
+
+function FixtureLineups({ lineups, fixture, teams, events }) {
   if (!lineups.length) return <div className="fixture-events-empty">등록된 선발 명단과 포메이션이 없습니다.</div>;
   const ordered = [...lineups].sort((a, b) => String(a?.team?.teamId) === String(fixture?.homeTeam?.teamId) ? -1 : String(b?.team?.teamId) === String(fixture?.homeTeam?.teamId) ? 1 : 0);
   return <div className="fixture-lineups">{ordered.map(lineup => {
@@ -205,9 +274,9 @@ function FixtureLineups({ lineups, fixture, teams }) {
     const substitutes = Array.isArray(lineup.substitutes) ? lineup.substitutes : [];
     return <section className="fixture-lineup-team" key={lineup.fixtureLineupId ?? team.teamId}>
       <header><strong>{name}</strong><span>{lineup.formation ? `${lineup.formation} 포메이션` : '포메이션 정보 없음'}</span></header>
-      <h3>선발 명단 <small>{starters.length}</small></h3>
-      {starters.length ? <ul>{starters.map(player => <LineupPlayer key={player.playerId ?? `${player.number}-${player.playerName}`} player={player} />)}</ul> : <p>등록된 선발 선수가 없습니다.</p>}
-      {substitutes.length > 0 && <details className="fixture-lineup-substitutes"><summary>대기 명단 {substitutes.length}명</summary><ul>{substitutes.map(player => <LineupPlayer key={player.playerId ?? `${player.number}-${player.playerName}`} player={player} />)}</ul></details>}
+      <h3>선발 포메이션 <small>{starters.length}명</small></h3>
+      {starters.length ? <FixtureFormation starters={starters} formation={lineup.formation} events={events} teamId={team.teamId} /> : <p>등록된 선발 선수가 없습니다.</p>}
+      {substitutes.length > 0 && <details className="fixture-lineup-substitutes"><summary>대기 명단 {substitutes.length}명</summary><ul>{substitutes.map(player => <LineupSubstitute key={player.playerId ?? `${player.number}-${player.playerName}`} player={player} event={lineupSubstitution(player, events, team.teamId, 'substitute')} />)}</ul></details>}
     </section>;
   })}</div>;
 }
@@ -272,7 +341,7 @@ function FixtureDetail({ fixture, events, lineups, statistics, playerStatistics,
     </div>
     <div className="fixture-detail-tabs" role="tablist" aria-label="경기 상세 탭"><button type="button" role="tab" aria-selected={tab === 'events'} className={tab === 'events' ? 'active' : ''} onClick={() => setTab('events')}>이벤트 {orderedEvents.length ? `(${orderedEvents.length})` : ''}</button><button type="button" role="tab" aria-selected={tab === 'lineups'} className={tab === 'lineups' ? 'active' : ''} onClick={() => setTab('lineups')}>라인업</button><button type="button" role="tab" aria-selected={tab === 'stats'} className={tab === 'stats' ? 'active' : ''} onClick={() => setTab('stats')}>기록</button><button type="button" role="tab" aria-selected={tab === 'players'} className={tab === 'players' ? 'active' : ''} onClick={() => setTab('players')}>선수</button><button type="button" role="tab" aria-selected={tab === 'info'} className={tab === 'info' ? 'active' : ''} onClick={() => setTab('info')}>기본</button></div>
     {tab === 'events' && (orderedEvents.length ? <div className="fixture-events" aria-label="경기 이벤트 타임라인">{orderedEvents.map(event => <FixtureEventRow key={event.fixtureEventId} event={event} fixture={fixture} />)}</div> : <div className="fixture-events-empty">등록된 경기 이벤트가 없습니다.</div>)}
-    {tab === 'lineups' && <FixtureLineups lineups={lineups} fixture={fixture} teams={teams} />}
+    {tab === 'lineups' && <FixtureLineups lineups={lineups} fixture={fixture} teams={teams} events={orderedEvents} />}
     {tab === 'stats' && <FixtureTeamStatistics statistics={statistics} fixture={fixture} />}
     {tab === 'players' && <FixturePlayerStatistics statistics={playerStatistics} fixture={fixture} />}
     {tab === 'info' && <FixtureInformation fixture={fixture} teams={teams} />}
