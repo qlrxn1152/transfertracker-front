@@ -257,7 +257,7 @@ function AppRoutes() {
           <Route path="/fixtures" element={<FixturesPage teams={teams} />} />
           <Route path="/fixtures/:fixtureId" element={<FixturesPage teams={teams} />} />
           <Route path="/posts/:postId" element={<PostDetailPage sample={sample} teams={teams} />} />
-          <Route path="/teams" element={<TeamsPage teams={teams} error={teamError} sample={sample} />} />
+          <Route path="/teams" element={<TeamsPage teams={teams} error={teamError} sample={sample} onPlayerOpen={openPlayer} />} />
           <Route
             path="/teams/:teamId"
             element={
