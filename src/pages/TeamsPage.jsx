@@ -80,7 +80,9 @@ function LeagueUpcomingFixtures({ leagueCode, teams, onFixtureOpen }) {
 
   const club = team => {
     const found = teams.find(candidate => String(candidate?.teamId) === String(team?.teamId));
-    return { name: team?.teamName || teamDisplayName(found) || '팀 정보 없음', logo: logoUrl(found?.logoUrl) };
+    // 경기 목록 응답은 팀의 원문 이름만 포함한다. 전역 팀 목록에 있는
+    // 한글 표시명을 우선 사용해 목록과 상세 화면의 표기를 일치시킨다.
+    return { name: teamDisplayName(found) || team?.teamName || '팀 정보 없음', logo: logoUrl(found?.logoUrl) };
   };
   return <ol className="team-league-fixtures">{state.fixtures.map(fixture => {
     const home = club(fixture.homeTeam);
